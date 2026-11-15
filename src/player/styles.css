@@ -23,6 +23,12 @@
   --cs-focus: #1a4fd0;
   --cs-radius: 10px;
   --cs-shadow: 0 8px 28px rgb(20 28 45 / 0.16);
+  --cs-window: #ffffff;
+  --cs-window-edge: rgb(15 23 42 / 0.12);
+  --cs-app-deep: #173c8f;
+  --cs-desktop-base: #e9edf4;
+  --cs-desktop-a: #d4def2;
+  --cs-desktop-b: #e3dcef;
   color-scheme: light;
 }
 
@@ -43,6 +49,12 @@
     --cs-success-text: #9fdcb0;
     --cs-focus: #9ab9ff;
     --cs-shadow: 0 8px 28px rgb(0 0 0 / 0.45);
+    --cs-window: #23272f;
+    --cs-window-edge: rgb(255 255 255 / 0.1);
+    --cs-app-deep: #2a4fa8;
+    --cs-desktop-base: #161a21;
+    --cs-desktop-a: #1d2840;
+    --cs-desktop-b: #2a2238;
     color-scheme: dark;
   }
 }
@@ -226,7 +238,6 @@ body {
 
 /* Overlays --------------------------------------------------------------- */
 
-.cs-auth,
 .cs-window,
 .cs-image {
   border: 1px solid var(--cs-border);
@@ -234,48 +245,246 @@ body {
   background: var(--cs-surface);
 }
 
-.cs-layout-split .cs-auth,
 .cs-layout-split .cs-window {
   box-shadow: var(--cs-shadow);
 }
 
-.cs-auth {
-  padding: 18px;
-  border-top: 4px solid var(--cs-accent);
+/* Auth prompt: a desktop app window. In split view it sits on a soft
+   "desktop" backdrop so it reads as a separate application. */
+
+.cs-layout-split .cs-desktop {
+  padding: 28px 20px;
+  border-radius: var(--cs-radius);
+  background:
+    radial-gradient(120% 90% at 15% 10%, var(--cs-desktop-a), transparent 60%),
+    radial-gradient(120% 90% at 90% 100%, var(--cs-desktop-b), transparent 60%),
+    var(--cs-desktop-base);
 }
 
-.cs-auth__app {
+@media (max-width: 480px) {
+  .cs-layout-split .cs-desktop {
+    padding: 16px 10px;
+  }
+}
+
+.cs-auth {
+  max-width: 380px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--cs-window);
+  box-shadow:
+    0 0 0 1px var(--cs-window-edge),
+    0 18px 50px rgb(15 23 42 / 0.28);
+  text-align: center;
+}
+
+.cs-auth__chrome {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--cs-text-muted);
-  font-size: 0.85rem;
+  justify-content: center;
+  height: 32px;
+  font-size: 0.78rem;
   font-weight: 600;
+  color: var(--cs-text-muted);
 }
 
-.cs-auth__icon {
-  display: inline-grid;
+.cs-auth__lights {
+  position: absolute;
+  left: 12px;
+  display: inline-flex;
+  gap: 7px;
+}
+
+.cs-auth__lights span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--cs-border);
+}
+
+.cs-auth__body {
+  padding: 6px 22px 20px;
+}
+
+.cs-auth__parties {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cs-auth__party {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 96px;
+}
+
+.cs-auth__party-icon {
+  display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--cs-accent-soft);
-  color: var(--cs-accent);
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+}
+
+.cs-auth__party-icon--requester {
+  background: #1f2329;
+  color: #e9edf2;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.cs-auth__party-icon--app {
+  background: linear-gradient(160deg, var(--cs-accent), var(--cs-app-deep));
+  color: #fff;
+}
+
+.cs-auth__party-label {
+  max-width: 100%;
+  color: var(--cs-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cs-auth__link {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 23px;
+}
+
+.cs-auth__link span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cs-text-muted);
+  opacity: 0.5;
 }
 
 .cs-auth__title {
-  margin: 12px 0 4px;
+  margin: 0 0 4px;
   font-size: 1.05rem;
+  line-height: 1.3;
 }
 
 .cs-auth__message {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 32ch;
+  color: var(--cs-text-muted);
+  font-size: 0.86rem;
+}
+
+.cs-auth__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.cs-auth__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cs-accent-soft);
+  color: var(--cs-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cs-auth__account-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.cs-auth__account-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.cs-auth__account-email {
+  overflow: hidden;
+  color: var(--cs-text-muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-auth__details {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.cs-auth__details li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.cs-auth__check {
+  flex: none;
+  margin-top: 2px;
+  color: var(--cs-success-text);
+}
+
+.cs-auth__verify {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-top: 16px;
+  color: var(--cs-text-muted);
+  font-size: 0.78rem;
+}
+
+.cs-auth__fingerprint {
+  color: var(--cs-accent);
+}
+
+.cs-auth__password {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  text-align: left;
+}
+
+.cs-auth__password-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cs-auth__password-field {
+  padding: 6px 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  letter-spacing: 0.15em;
 }
 
 .cs-auth__waiting {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   color: var(--cs-text-muted);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+}
+
+.cs-auth__actions .cs-actions {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  margin-top: 14px;
 }
 
 .cs-window {
@@ -516,6 +725,7 @@ body {
 
 .cs-badge {
   display: inline-block;
+  white-space: nowrap;
   margin-left: 8px;
   padding: 1px 8px;
   border-radius: 999px;
@@ -563,6 +773,7 @@ body {
   color: var(--cs-text);
   font: inherit;
   font-size: 0.85rem;
+  text-align: left;
   cursor: pointer;
 }
 

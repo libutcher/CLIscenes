@@ -24,10 +24,18 @@ export const actionSchema = z.strictObject({
 
 export const authPromptSchema = z.strictObject({
   type: z.literal("auth-prompt"),
-  /** Name of the (fictional) application asking for approval. */
+  /** Name of the (fictional) desktop application showing the prompt. */
   app: text.default("Desktop app"),
+  /** The program asking for access, such as "Terminal". Shown beside the app. */
+  requester: text.optional(),
   title: text,
   message: text,
+  /** The account the request is for. */
+  account: z.strictObject({ name: text, email: text.optional() }).optional(),
+  /** What approving allows, one short line each. */
+  details: z.array(text).optional(),
+  /** How the reader confirms: a fingerprint cue, a (simulated) password field, or buttons only. */
+  verification: z.enum(["none", "biometric", "password"]).default("none"),
   actions: z.array(actionSchema).min(1),
 });
 

@@ -26,8 +26,16 @@ steps:
     overlay:
       type: auth-prompt
       app: CLIscenes Desktop
+      requester: Terminal
       title: Allow CLI sign-in?
-      message: The command-line tool "cli-scenes" on this computer wants to sign in to your account.
+      message: Terminal is running "cli-scenes signin" and wants to access your account.
+      account:
+        name: Demo Account
+        email: demo@example.com
+      details:
+        - Run commands as you from this terminal
+        - Access ends after 30 minutes of inactivity
+      verification: biometric
       actions:
         - label: Approve
           next: success

@@ -45,20 +45,32 @@ A terminal block needs at least one of `command`, `output`, or `clear: true`.
 
 ### `auth-prompt`
 
-A desktop authentication request.
+A desktop authentication request, drawn as an app window. In split layout it sits on a soft desktop backdrop. Only `title`, `message`, and `actions` are required. The other fields add detail so the prompt looks like what the real app shows.
 
 ```yaml
 overlay:
   type: auth-prompt
-  app: Example Desktop     # optional, default "Desktop app"
+  app: Example Desktop       # optional, default "Desktop app"; shown in the title bar
+  requester: Terminal        # optional; shown as an icon beside the app
   title: Allow CLI sign-in?
-  message: The CLI wants to sign in to your account.
+  message: Terminal is running "example signin" and wants to access your account.
+  account:                   # optional
+    name: Demo Account
+    email: demo@example.com  # optional
+  details:                   # optional; what approving allows
+    - Run commands as you from this terminal
+    - Access ends after 30 minutes of inactivity
+  verification: biometric    # optional: none (default), biometric, or password
   actions:
-    - label: Approve        # goes to the following step
+    - label: Approve          # goes to the following step
     - label: Deny
-      style: secondary      # primary (default) or secondary
-      next: denied          # step id to go to
+      style: secondary        # primary (default) or secondary
+      next: denied            # step id to go to
 ```
+
+Buttons are laid out the way desktop dialogs usually are: secondary actions on the left, the primary action on the right. `verification: biometric` shows a fingerprint cue, and `password` shows a filled-in, read-only password field. Neither asks the reader for anything real.
+
+The prompt is a generic design. When you model it on a real product's prompt, copy its structure and wording, not its logo or brand colors.
 
 ### `app-window`
 

@@ -30,6 +30,25 @@ describe("source schema", () => {
     expect(problems(minimal(steps))).toEqual([]);
   });
 
+  it("accepts the optional auth-prompt details and defaults verification to none", () => {
+    const prompt = {
+      type: "auth-prompt",
+      requester: "Terminal",
+      title: "Allow?",
+      message: "M",
+      account: { name: "Demo Account", email: "demo@example.com" },
+      details: ["Run commands as you"],
+      verification: "biometric",
+      actions: [{ label: "Approve" }],
+    };
+    expect(problems(minimal([{ id: "a", title: "A", overlay: prompt }]))).toEqual([]);
+    const plain = demoSchema.parse(minimal([{ id: "a", title: "A", overlay: { ...prompt, verification: undefined } }]));
+    expect(plain.steps[0]!.overlay).toMatchObject({ verification: "none" });
+    expect(problems(minimal([{ id: "a", title: "A", overlay: { ...prompt, verification: "face" } }]))[0]).toMatch(
+      /verification/,
+    );
+  });
+
   it("rejects an action pointing at an unknown step", () => {
     const steps = [
       { id: "a", title: "A", overlay: { type: "auth-prompt", title: "T", message: "M", actions: [{ label: "OK", next: "nope" }] } },

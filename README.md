@@ -109,7 +109,7 @@ The full format is in [docs/authoring.md](docs/authoring.md).
 
 | Type | Use it for | Can gate playback |
 | --- | --- | --- |
-| `auth-prompt` | A desktop app asking the reader to approve or deny a request | Yes |
+| `auth-prompt` | A desktop app's approval window: requesting app, account, what approving allows, and a fingerprint or password cue | Yes |
 | `app-window` | A mock app window with a title bar, text, read-only settings, and buttons | Yes |
 | `image` | A local screenshot or illustration, with required alt text and an optional caption | No |
 | `annotation` | A short callout explaining what's happening | No |
