@@ -1,10 +1,10 @@
 # CLIscenes
 
-Create interactive, embeddable walkthroughs of developer workflows that move between the terminal and other applications, from plain YAML files.
+CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows. A walkthrough shows the terminal and the apps around it together.
 
-A CLIscenes walkthrough plays terminal commands and output as real, selectable text. It shows what happens outside the terminal (an authentication prompt, an app's settings window, a browser page) at the right moment. When a step needs the reader to do something, playback waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. Prompts, settings windows, and screenshots appear at the right moment. When a step needs the reader to act, the walkthrough waits until they do.
 
-> **Status:** working MVP. The format and APIs may still change.
+> **Status:** early release (v0). The format and APIs may change.
 
 ## The problem
 
@@ -12,51 +12,51 @@ Many developer workflows don't stay in the terminal:
 
 1. You run a CLI command.
 2. A desktop app asks you to approve the request.
-3. You approve it, and the CLI carries on.
-4. Later, you change a setting in an app or paste something into a browser.
+3. You approve it, and the CLI continues.
+4. You change a setting in an app.
 
-Documentation usually stitches this together from code blocks, screenshots, videos, and prose. These are hard to follow as one flow and hard to keep up to date. Terminal recordings help with the terminal part, but they can't show the dialog the reader has to click. A video can show everything, but the reader can't copy its text or interact with it, and a product change means re-recording it.
+Docs usually show this flow with code blocks, screenshots, videos, and prose. Readers struggle to follow these as one flow. Writers struggle to keep them up to date. A terminal replay can't show the dialog the reader clicks. A video shows everything, but readers can't copy its text. Each product change also means a new video.
 
-## What CLIscenes does
+## Features
 
-- **One timeline for the terminal and everything around it.** A small orchestrator owns playback, so a dialog can never be out of step with the terminal.
-- **Gates.** Playback stops where the real CLI would wait. The reader clicks **Approve** (or **Deny**) to continue, and can branch to a different path.
-- **Selectable, copyable text.** The terminal is text, not video, and a **Copy command** button copies the current command.
-- **Docs as code.** Authors write steps, commands, output, and overlays in YAML or JSON. There are no timestamps to calculate and nothing to re-record. Validation errors name the exact field.
-- **Static output.** Generation produces an asciicast v3 recording, a JSON manifest, and a small web player that you can host anywhere and embed with an iframe.
+- **One timeline.** The terminal and the apps around it stay in step.
+- **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
+- **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
+- **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
+- **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
-CLIscenes builds on existing tools instead of replacing them. Terminal rendering is [asciinema-player](https://github.com/asciinema/asciinema-player). See [docs/prior-art.md](docs/prior-art.md) for how CLIscenes relates to VHS, demorec, terminal-demo, Termynal, and others.
+CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal. [docs/prior-art.md](docs/prior-art.md) compares CLIscenes with related tools.
 
 ## Quick start
 
-Requires Node.js 20.19 or later.
+You need Node.js 20.19 or later.
 
 ```sh
 npm install
 npm run dev
 ```
 
-Open the URL that Vite prints (usually http://localhost:5173). The dev server generates the walkthroughs from `demos/` and regenerates them whenever you save a source file.
+Open the URL that the command prints, usually http://localhost:5173. The page updates each time you save a file in `demos/`.
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Generate demos, start the local player, and regenerate on change |
-| `npm run generate` | Generate `generated/demos/` from `demos/` |
-| `npm run validate` | Check every source file without writing anything |
-| `npm run build` | Build the static site to `dist/` |
-| `npm run preview` | Serve `dist/` locally |
-| `npm test` | Unit tests |
-| `npm run test:e2e` | Browser smoke tests (first run: `npx playwright install chromium`) |
-| `npm run typecheck` | TypeScript checks |
-| `npm run check` | Type check, unit tests, and build |
+| `npm run dev` | Starts the local player and updates it when files change |
+| `npm run validate` | Checks every walkthrough file for errors |
+| `npm run generate` | Writes the walkthrough files to `generated/demos/` |
+| `npm run build` | Builds the static site in `dist/` |
+| `npm run preview` | Serves `dist/` on your computer |
+| `npm test` | Runs the unit tests |
+| `npm run test:e2e` | Runs the browser tests (first run `npx playwright install chromium`) |
+| `npm run typecheck` | Checks the TypeScript code |
+| `npm run check` | Runs the type check, unit tests, and build |
 
 ## Example
 
-`demos/cli-signin.yaml` (shortened). The `your-cli` CLI and its desktop app are fictional.
+This example is a shortened version of `demos/cli-signin.yaml`. The `your-cli` command and the YourApp desktop app are fictional.
 
 ```yaml
 title: Sign in to a CLI with a desktop app
-layout: overlay            # the prompt pops up over the terminal
+layout: overlay            # the prompt appears over the terminal
 
 steps:
   - id: signin
@@ -78,7 +78,7 @@ steps:
         - label: Deny
           style: secondary
           next: denied
-    waitForAction: true        # playback waits here for the reader
+    waitForAction: true        # the walkthrough waits here for the reader
 
   - id: success
     title: Sign-in succeeds
@@ -92,7 +92,7 @@ steps:
       output: |
         ID        NAME
         prj_001   Website
-    finish: true               # end of the main path
+    finish: true               # the main path ends here
 
   - id: denied
     title: If you deny the request
@@ -101,55 +101,61 @@ steps:
       output: "Error: sign-in request was denied in the desktop app."
 ```
 
-To add a walkthrough, create a new `.yaml` file in `demos/`. The file name becomes its id (`?demo=<file-name>`).
+To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes the walkthrough's id, as in `?demo=<file-name>`.
 
-The full format is in [docs/authoring.md](docs/authoring.md).
+[docs/authoring.md](docs/authoring.md) describes the full format.
 
 ## Overlay types
 
-| Type | Use it for | Can gate playback |
+An overlay shows an app or note outside the terminal.
+
+| Type | Shows | Can wait for the reader |
 | --- | --- | --- |
-| `auth-prompt` | A desktop app's approval window: requesting app, account, what approving allows, and a fingerprint or password cue | Yes |
-| `app-window` | A mock app window with a title bar, text, read-only settings, and buttons | Yes |
-| `settings-window` | A text-only wireframe of an app's settings, with left-hand nav and toggle switches readers turn on themselves | Yes |
-| `image` | A local screenshot or illustration, with required alt text and an optional caption | No |
-| `annotation` | A short callout explaining what's happening | No |
+| `auth-prompt` | An app's request for approval | Yes |
+| `settings-window` | An app's settings, with switches the reader turns on | Yes |
+| `app-window` | A simple app window with text and buttons | Yes |
+| `image` | A screenshot or illustration | No |
+| `annotation` | A short note | No |
 
-To add an overlay type, see [docs/architecture.md](docs/architecture.md#adding-an-overlay-type).
+[docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add a type.
 
-## Make it look like your product
+## Customization
 
-You can customize each walkthrough from its source file. You don't need to change code.
+You can match a walkthrough to your product without code changes:
 
-- **Your app's icon** in authentication prompts: `icon: assets/your-app.svg`, plus `requesterIcon` for the program asking for access.
-- **Your brand colors:** a `theme` block with an `accent` color, plus optional text color and dark-mode overrides. Text on the accent stays readable: CLIscenes picks the text color automatically, or rejects a combination with too little contrast.
-- **All of the prompt's text:** the app name, title, message, account, the list of what approving allows, and the button labels.
+- **Icon:** set `icon` on an `auth-prompt` to your app's icon.
+- **Colors:** set `theme.accent` to your brand color. CLIscenes picks a readable text color for you.
+- **Text:** set the app name, title, message, account, and button labels.
 
 ```yaml
 theme:
   accent: "#0f7b6c"
 ```
 
-Use your own product's branding. To show how another app behaves, describe its structure and wording, not its logo or colors. See [docs/authoring.md](docs/authoring.md#theme).
+Use your own product's logo and colors, never another company's. [docs/authoring.md](docs/authoring.md#theme) covers themes in detail.
 
-## Playback and navigation
+## AI assistants
 
-The controls are Restart, Previous step, Play/Pause, and Next step, plus a step list. The progress bar has one segment per step.
+A [skill file](.claude/skills/cliscenes-authoring/SKILL.md) tells AI assistants how to write walkthroughs. It covers the workflow, the choice of overlay and layout, and fixes for common errors.
 
-During normal playback, the reader never sees a step's result before completing the action it waits for. Readers can still move around freely:
+- **Claude Code** loads the skill automatically. You can ask, for example, "Create a walkthrough that shows sign-in to our CLI."
+- **Other assistants** find the skill through [AGENTS.md](AGENTS.md).
+- **People** can read the skill as plain Markdown.
 
-- Going back to a step resets it and every later step. Replaying a gated step asks for the action again.
-- Jumping forward past an unanswered gate is allowed, and the step list marks it "Skipped".
+## Playback
 
-The full policy is in [docs/architecture.md](docs/architecture.md#gate-policy).
+The reader controls the walkthrough with Restart, Previous step, Play or Pause, and Next step. A step list lets the reader jump to any step.
 
-## Embedding
+The reader never sees a step's result before they complete its action. The reader can still move freely:
 
-```sh
-npm run build    # writes dist/
-```
+- **Back:** the reader returns to a step, and that step asks for the action again.
+- **Forward:** the reader skips a step that waits for an action, and the step list marks it "Skipped".
 
-Host `dist/` on any static server, then embed:
+[docs/architecture.md](docs/architecture.md#gate-policy) describes these rules in full.
+
+## Embeds
+
+Run `npm run build`, then host the `dist/` folder on any static web server. Add the walkthrough to a page with an iframe:
 
 ```html
 <iframe
@@ -161,66 +167,67 @@ Host `dist/` on any static server, then embed:
 ></iframe>
 ```
 
-`dist/embed-example.html` shows a working embed, including optional automatic iframe resizing.
+- **Docusaurus and Mintlify:** copy a ready-made component from [`examples/`](examples/). The component matches the site's light or dark mode and sets the iframe height.
+- **Light or dark mode:** add `&theme=light` or `&theme=dark` to the URL.
+- **Example page:** open `dist/embed-example.html` to see a live embed.
 
-- **Docusaurus and Mintlify:** copy-in components in [`examples/`](examples/) embed a walkthrough that follows the site's light/dark toggle live and sizes itself. Both were tested on real sites.
-- **Light or dark mode:** add `&theme=light` or `&theme=dark` to the URL, or send a `cliscenes:set-theme` message to switch it live.
-
-See [docs/embedding.md](docs/embedding.md) for details and other platforms.
+[docs/embedding.md](docs/embedding.md) covers other docs platforms.
 
 ## Accessibility
 
-- Every control is a real button with an accessible name and a visible focus ring.
-- Authentication prompts are labelled dialogs that don't block the page. The terminal stays visible and selectable.
-- When a gated dialog appears and the reader is using the walkthrough, focus moves to its primary action. If the reader is elsewhere on the page, focus stays where it is and the page doesn't scroll.
-- A live region announces each step change and what the walkthrough is waiting for.
-- Images require alt text (`alt: ""` marks a decorative image).
-- When the reader prefers reduced motion, commands appear whole instead of being typed, and overlays appear without animation. Timing and gates are unchanged.
-- Light or dark mode follows the reader's system, or the host docs site's theme toggle when embedded (see Embedding).
-- The player's single-key shortcuts are turned off, so they can't conflict with the host page or assistive technology.
+- **Controls:** each control is a button with a clear name and a visible focus ring.
+- **Prompts:** each prompt is a labeled dialog. The terminal stays visible behind it.
+- **Focus:** when a prompt appears, focus moves to its main button, but only if the reader already uses the walkthrough.
+- **Announcements:** screen readers announce each new step and what the walkthrough waits for.
+- **Images:** each image needs alt text.
+- **Motion:** when the reader prefers reduced motion, commands appear whole and overlays don't animate.
+- **Shortcuts:** the player has no single-key shortcuts, so it can't conflict with the page or assistive technology.
 
-See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checklist.
+[docs/manual-testing.md](docs/manual-testing.md) lists the manual checks.
 
 ## Limitations
 
-- All terminal output is authored text. CLIscenes never runs commands or records real sessions.
-- One terminal per walkthrough, played as a single linear recording. Branches are later steps that you reach through `next`, and `finish` keeps the main path from playing into them.
-- Overlays belong to one step. An overlay that stays across several steps has to be repeated.
-- On narrow screens, wide terminals scale down. Keep `cols` near 64 for walkthroughs that will be read on phones.
-- Themes set colors only. Fonts and corner styles follow the player's design.
-- Embedding uses an iframe. Tested copy-in components for Docusaurus and Mintlify wrap it; native, iframe-free components are planned.
+- **Authored output:** writers type all terminal output. CLIscenes never runs commands.
+- **One terminal:** each walkthrough has one terminal, which plays from start to end. Branches are steps that the reader reaches through `next`.
+- **One step per overlay:** an overlay appears in one step. To keep it on screen longer, repeat it in each step.
+- **Small screens:** wide terminals shrink on phones. Keep `cols` near 64 for phone readers.
+- **Colors only:** themes change colors, not fonts or shapes.
+- **Iframe embeds:** each embed uses an iframe. Native components are planned.
 
 ## Roadmap
 
-- Import real output from asciinema or VHS recordings, so examples can be checked against the actual CLI.
-- Generate walkthrough sources from CLI help text, tested docs examples, SDK comments, or test runs.
-- Overlays that stay across a range of steps.
-- Native components for documentation frameworks (MDX, Docusaurus, Mintlify) as an alternative to iframes.
-- More overlay types, such as a browser window with a URL bar and simple form fields.
+- **Recorded output:** import output from asciinema or VHS files.
+- **Generated walkthroughs:** build walkthroughs from CLI help, tested examples, SDK comments, or tests.
+- **Longer overlays:** keep one overlay on screen across several steps.
+- **Native components:** embed walkthroughs in Docusaurus and Mintlify without an iframe.
+- **More overlays:** add a browser window with an address bar and form fields.
+
+[GitHub issues](https://github.com/libutcher/CLIscenes/issues) track each item.
 
 ## Project docs
 
-- [docs/authoring.md](docs/authoring.md): source file reference
-- [docs/architecture.md](docs/architecture.md): layers, timeline compilation, orchestrator, and gate policy
-- [docs/adr/0001-terminal-player.md](docs/adr/0001-terminal-player.md): why asciinema-player
-- [docs/prior-art.md](docs/prior-art.md): related projects
-- [docs/embedding.md](docs/embedding.md): static output and embedding
-- [docs/manual-testing.md](docs/manual-testing.md): browser test checklist
+- [docs/authoring.md](docs/authoring.md): the walkthrough format
+- [docs/embedding.md](docs/embedding.md): static output and embeds
+- [docs/architecture.md](docs/architecture.md): the design and gate rules
+- [docs/adr/0001-terminal-player.md](docs/adr/0001-terminal-player.md): the choice of terminal player
+- [docs/prior-art.md](docs/prior-art.md): related tools
+- [docs/manual-testing.md](docs/manual-testing.md): the manual test checklist
+- [AGENTS.md](AGENTS.md): notes for AI assistants
 
 ## License and attribution
 
-CLIscenes is released under the [MIT License](LICENSE).
+CLIscenes uses the [MIT License](LICENSE).
 
-The built player bundles these packages:
+The built player includes these packages:
 
 | Package | License | Role |
 | --- | --- | --- |
 | [asciinema-player](https://github.com/asciinema/asciinema-player) | Apache-2.0 | Terminal playback |
-| [solid-js](https://github.com/solidjs/solid) | MIT | Used internally by asciinema-player |
-| [React](https://react.dev) and React DOM | MIT | Player UI |
+| [solid-js](https://github.com/solidjs/solid) | MIT | Part of asciinema-player |
+| [React](https://react.dev) and React DOM | MIT | Player interface |
 
-These are used at build time only: [Vite](https://vite.dev) (MIT), [yaml](https://github.com/eemeli/yaml) (ISC), [zod](https://zod.dev) (MIT), [Vitest](https://vitest.dev) (MIT), [Playwright](https://playwright.dev) (Apache-2.0), [tsx](https://github.com/privatenumber/tsx) (MIT), and [TypeScript](https://www.typescriptlang.org) (Apache-2.0).
+The build process also uses [Vite](https://vite.dev) (MIT), [yaml](https://github.com/eemeli/yaml) (ISC), [zod](https://zod.dev) (MIT), [Vitest](https://vitest.dev) (MIT), [Playwright](https://playwright.dev) (Apache-2.0), [tsx](https://github.com/privatenumber/tsx) (MIT), and [TypeScript](https://www.typescriptlang.org) (Apache-2.0).
 
-`npm run build` writes these packages' license texts to `dist/THIRD_PARTY_LICENSES.txt`. Keep that file when you redistribute a built player, because asciinema-player's Apache-2.0 license requires it.
+`npm run build` writes the license texts to `dist/THIRD_PARTY_LICENSES.txt`. Keep this file when you share a built player. The asciinema-player license requires it.
 
-The example walkthroughs use a fictional CLI and fictional apps. Any resemblance to a real product's interface is generic.
+The examples use a fictional CLI and fictional apps.
