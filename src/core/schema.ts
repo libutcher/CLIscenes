@@ -5,8 +5,56 @@
  * path ("steps[2].overlay.actions[0].next") before anything is generated.
  */
 import { z } from "zod";
+import { contrast, HEX_COLOR, MIN_TEXT_CONTRAST, resolvedAccent } from "./theme.ts";
 
 const text = z.string().trim().min(1);
+
+/** A path to a local file, relative to the source file. */
+const localPath = text.refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/"), {
+  message: "Use a relative path to a local image file (remote URLs are not supported).",
+});
+
+const color = z.string().regex(HEX_COLOR, 'Use a hex color such as "#2457c5".');
+
+const themeColors = z.strictObject({
+  accent: color.optional(),
+  accentText: color.optional(),
+});
+
+/** Brand colors for one walkthrough. Text on the accent must stay readable. */
+export const themeSchema = themeColors
+  .extend({ dark: themeColors.optional() })
+  .superRefine((theme, ctx) => {
+    const valid = (value?: string): value is string => value !== undefined && HEX_COLOR.test(value);
+    const check = (accent: string | undefined, text: string | undefined, path: (string | number)[]) => {
+      // Invalid colors are already reported by the field rules.
+      if (!valid(accent) || !valid(text)) return;
+      const ratio = contrast(accent, text);
+      if (ratio < MIN_TEXT_CONTRAST) {
+        ctx.addIssue({
+          code: "custom",
+          path,
+          message: `Text color ${text} on ${accent} has a contrast of ${ratio.toFixed(2)}:1; it needs at least ${MIN_TEXT_CONTRAST}:1. Remove accentText to choose one automatically.`,
+        });
+      }
+    };
+    if (theme.accentText && !theme.accent) {
+      ctx.addIssue({ code: "custom", path: ["accentText"], message: "accentText needs an accent color to go with it." });
+    }
+    if (theme.dark?.accentText && !(theme.dark.accent ?? theme.accent)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dark", "accentText"],
+        message: "dark.accentText needs an accent color (dark.accent or accent) to go with it.",
+      });
+    }
+    // Check text against the accents the player will actually use, which may
+    // be adjusted to stay visible in each color scheme.
+    const colorsValid = [theme.accent, theme.dark?.accent].every((c) => c === undefined || valid(c));
+    if (!colorsValid) return;
+    check(resolvedAccent(theme, "light"), theme.accentText, ["accentText"]);
+    check(resolvedAccent(theme, "dark"), theme.dark?.accentText, ["dark", "accentText"]);
+  });
 
 /** A button on an overlay. Clicking it moves the walkthrough to `next`. */
 export const actionSchema = z.strictObject({
@@ -24,10 +72,22 @@ export const actionSchema = z.strictObject({
 
 export const authPromptSchema = z.strictObject({
   type: z.literal("auth-prompt"),
-  /** Name of the (fictional) application asking for approval. */
+  /** Name of the (fictional) desktop application showing the prompt. */
   app: text.default("Desktop app"),
+  /** Local image for the app's icon. Defaults to a generic icon. */
+  icon: localPath.optional(),
+  /** The program asking for access, such as "Terminal". Shown beside the app. */
+  requester: text.optional(),
+  /** Local image for the requester's icon. Defaults to a terminal icon. */
+  requesterIcon: localPath.optional(),
   title: text,
   message: text,
+  /** The account the request is for. */
+  account: z.strictObject({ name: text, email: text.optional() }).optional(),
+  /** What approving allows, one short line each. */
+  details: z.array(text).optional(),
+  /** How the reader confirms: a fingerprint cue, a (simulated) password field, or buttons only. */
+  verification: z.enum(["none", "biometric", "password"]).default("none"),
   actions: z.array(actionSchema).min(1),
 });
 
@@ -50,9 +110,7 @@ export const appWindowSchema = z.strictObject({
 export const imageSchema = z.strictObject({
   type: z.literal("image"),
   /** Path to a local image, relative to the source file. */
-  src: text.refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/"), {
-    message: "Use a relative path to a local image file (remote URLs are not supported).",
-  }),
+  src: localPath,
   alt: z.string(),
   caption: text.optional(),
 });
@@ -62,12 +120,65 @@ export const annotationSchema = z.strictObject({
   text: text,
 });
 
+/** One row in a settings window: a toggle switch or a plain value. */
+export const settingSchema = z
+  .strictObject({
+    label: text,
+    description: text.optional(),
+    /** Show a toggle switch, on (true) or off (false). */
+    toggle: z.boolean().optional(),
+    /** Show a plain value instead of a switch, such as "30 minutes". */
+    value: text.optional(),
+    /**
+     * The reader must turn this toggle on. It starts off and is highlighted,
+     * and a waiting step continues once every such toggle is on.
+     */
+    turnOn: z.boolean().default(false),
+  })
+  .refine((s) => (s.toggle === undefined) !== (s.value === undefined), {
+    message: "A setting needs either `toggle` (true or false) or `value`, not both.",
+  })
+  .refine((s) => !s.turnOn || s.toggle === false, {
+    message: "turnOn needs a toggle that starts off (`toggle: false`).",
+  });
+
+/**
+ * A text-only wireframe of an app's settings: left-hand navigation and a
+ * list of settings. Readers practice turning settings on themselves.
+ */
+export const settingsWindowSchema = z
+  .strictObject({
+    type: z.literal("settings-window"),
+    /** Text in the window's title bar. */
+    title: text,
+    /** Sections in the left-hand navigation. */
+    nav: z.array(text).min(1),
+    /** The highlighted section. Must be one of `nav`. */
+    section: text,
+    settings: z.array(settingSchema).min(1),
+    /** Step to go to once every `turnOn` setting is on. Defaults to the following step. */
+    next: text.optional(),
+    /** Short instructional notes under the settings. */
+    annotations: z.array(text).optional(),
+  })
+  .refine((w) => w.nav.includes(w.section), {
+    message: "section must be one of the nav items.",
+    path: ["section"],
+  });
+
 export const overlaySchema = z.discriminatedUnion("type", [
   authPromptSchema,
   appWindowSchema,
+  settingsWindowSchema,
   imageSchema,
   annotationSchema,
 ]);
+
+/** True when the reader can do something in this overlay to answer a gate. */
+export function overlayCanAnswerGate(overlay: z.infer<typeof overlaySchema>): boolean {
+  if (overlay.type === "settings-window") return overlay.settings.some((s) => s.turnOn);
+  return "actions" in overlay && (overlay.actions?.length ?? 0) > 0;
+}
 
 export const terminalStepSchema = z
   .strictObject({
@@ -121,8 +232,12 @@ export const demoSchema = z
   .strictObject({
     title: text,
     description: z.string().default(""),
+    /** What readers need before they start. Shown as "Before you start". */
+    prerequisites: z.array(text).optional(),
     /** `split`: terminal beside the external UI. `overlay`: UI floats over the terminal. */
     layout: z.enum(["split", "overlay"]).default("split"),
+    /** Brand colors for this walkthrough. */
+    theme: themeSchema.optional(),
     terminal: z
       .strictObject({
         cols: z.number().int().min(20).max(240).default(80),
@@ -150,6 +265,13 @@ export const demoSchema = z
       const key = step.overlays ? "overlays" : "overlay";
 
       overlays.forEach((overlay, o) => {
+        if (overlay.type === "settings-window" && overlay.next !== undefined && !ids.includes(overlay.next)) {
+          ctx.addIssue({
+            code: "custom",
+            path: key === "overlays" ? ["steps", i, key, o, "next"] : ["steps", i, key, "next"],
+            message: `Unknown step "${overlay.next}". Known steps: ${ids.join(", ")}.`,
+          });
+        }
         const actions = "actions" in overlay ? (overlay.actions ?? []) : [];
         actions.forEach((action, a) => {
           if (action.next !== undefined && !ids.includes(action.next)) {
@@ -164,12 +286,12 @@ export const demoSchema = z
       });
 
       if (step.waitForAction) {
-        const hasAction = overlays.some((o) => "actions" in o && (o.actions?.length ?? 0) > 0);
-        if (!hasAction) {
+        if (!overlays.some(overlayCanAnswerGate)) {
           ctx.addIssue({
             code: "custom",
             path: ["steps", i, "waitForAction"],
-            message: "waitForAction needs an overlay with at least one action, or readers would be stuck.",
+            message:
+              "waitForAction needs an overlay the reader can answer (an action, or a setting with turnOn), or readers would be stuck.",
           });
         }
       }

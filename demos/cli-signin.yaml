@@ -1,22 +1,27 @@
-# A fictional CLI sign-in flow. `cli-scenes` here is a made-up CLI used only
-# for this example: the command, dialog, and output are invented, and nothing
-# in this file is ever executed.
+# A fictional CLI sign-in flow. `your-cli` and YourApp are made up for this
+# example: the command, dialog, and output are invented, and nothing in this
+# file is ever executed.
 title: Sign in to a CLI with a desktop app
 description: >-
   Run a CLI command, approve the request in the desktop app, and continue in
   the terminal.
-layout: split
+layout: overlay
+
+# Brand colors for this walkthrough only. Text on the accent and the
+# dark-mode accent are worked out automatically.
+theme:
+  accent: "#0f7b6c"
 
 terminal:
-  cols: 64
-  rows: 12
+  cols: 80
+  rows: 20
 
 steps:
   - id: signin
     title: Run a command
     terminal:
-      command: cli-scenes signin
-      output: Waiting for approval in the CLIscenes desktop app...
+      command: your-cli signin
+      output: Waiting for approval in YourApp...
     overlay:
       type: annotation
       text: The CLI asks the desktop app to confirm it's you, then waits.
@@ -25,9 +30,15 @@ steps:
     title: Approve the sign-in request
     overlay:
       type: auth-prompt
-      app: CLIscenes Desktop
+      app: YourApp
+      icon: assets/yourapp-icon.svg
+      requester: Terminal
       title: Allow CLI sign-in?
-      message: The command-line tool "cli-scenes" on this computer wants to sign in to your account.
+      message: Terminal is running "your-cli signin" and wants to access your account.
+      account:
+        name: Demo Account
+        email: demo@example.com
+      verification: biometric
       actions:
         - label: Approve
           next: success
@@ -50,7 +61,7 @@ steps:
   - id: list-projects
     title: Run an authenticated command
     terminal:
-      command: cli-scenes projects list
+      command: your-cli projects list
       output: |
         ID        NAME             UPDATED
         prj_001   Website          2 hours ago
@@ -64,11 +75,11 @@ steps:
     title: If you deny the request
     terminal:
       clear: true
-      command: cli-scenes signin
+      command: your-cli signin
       output: |
-        Waiting for approval in the CLIscenes desktop app...
+        Waiting for approval in YourApp...
         Error: sign-in request was denied in the desktop app.
-        No session was created. Run `cli-scenes signin` to try again.
+        No session was created. Run `your-cli signin` to try again.
     overlay:
       type: annotation
       text: If you deny the request, the CLI stops and nothing is unlocked. Go back to try again.

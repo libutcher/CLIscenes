@@ -6,6 +6,8 @@ import type { CompiledDemo } from "../core/types.ts";
 import { OverlayView } from "./overlays/registry.tsx";
 import { useWalkthrough } from "./useWalkthrough.ts";
 import { copyText } from "./clipboard.ts";
+import { themeVariables } from "../core/theme.ts";
+import { usePrefersDark } from "./usePrefersDark.ts";
 
 interface WalkthroughProps {
   demo: CompiledDemo;
@@ -20,6 +22,8 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
   const step = demo.steps[state.stepIndex]!;
   const overlays = visibleOverlays(demo, state);
   const waiting = state.status === "awaiting-action";
+  const dark = usePrefersDark();
+  const themeStyle = useMemo(() => themeVariables(demo.theme, dark ? "dark" : "light") as React.CSSProperties, [demo.theme, dark]);
 
   // When a gated step's overlay appears, move focus to its primary action, but
   // only if the reader is already using the walkthrough. This avoids focus
@@ -39,15 +43,36 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
   };
 
   return (
-    <div ref={rootRef} className={`cs-walkthrough cs-layout-${demo.layout}`} data-status={state.status}>
+    <div
+      ref={rootRef}
+      className={`cs-walkthrough cs-layout-${demo.layout}`}
+      data-status={state.status}
+      style={themeStyle}
+    >
       <div className="cs-header">
         <h2 className="cs-title">{demo.title}</h2>
         {demo.description && <p className="cs-description">{demo.description}</p>}
+        {demo.prerequisites && (
+          <div className="cs-prereqs">
+            <span className="cs-prereqs__label">Before you start:</span>
+            <ul>
+              {demo.prerequisites.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className="cs-stage">
         <div className="cs-terminal-pane">
-          <div ref={terminalRef} className="cs-terminal" role="region" aria-label="Terminal (text can be selected and copied)" />
+          <div
+            ref={terminalRef}
+            className="cs-terminal"
+            role="region"
+            aria-label="Terminal (text can be selected and copied)"
+            style={{ "--cs-terminal-cols": demo.terminal.cols } as React.CSSProperties}
+          />
         </div>
         <ExternalPane
           demo={demo}
@@ -93,7 +118,7 @@ function ExternalPane({
         </p>
       ) : (
         overlays.map((overlay, i) => (
-          <OverlayView key={`${state.stepIndex}-${i}`} overlay={overlay} baseUrl={baseUrl} waiting={waiting} onAction={onAction} />
+          <OverlayView key={`${state.visit}-${state.stepIndex}-${i}`} overlay={overlay} baseUrl={baseUrl} waiting={waiting} onAction={onAction} />
         ))
       )}
     </div>
@@ -238,6 +263,10 @@ function Announcer({ demo, state }: { demo: CompiledDemo; state: OrchestratorSta
     const step = demo.steps[state.stepIndex]!;
     const base = `Step ${state.stepIndex + 1} of ${demo.steps.length}: ${step.title}.`;
     if (state.status === "awaiting-action") {
+      const toggles = step.overlays.flatMap((o) =>
+        o.type === "settings-window" ? o.settings.filter((s) => s.turnOn).map((s) => s.label) : [],
+      );
+      if (toggles.length) return `${base} Playback is waiting. Turn on ${toggles.join(" and ")} to continue.`;
       const labels = step.overlays.flatMap((o) => ("actions" in o ? (o.actions ?? []).map((a) => a.label) : []));
       return `${base} Playback is waiting. Choose ${labels.join(" or ")} to continue.`;
     }

@@ -30,6 +30,71 @@ describe("source schema", () => {
     expect(problems(minimal(steps))).toEqual([]);
   });
 
+  it("accepts the optional auth-prompt details and defaults verification to none", () => {
+    const prompt = {
+      type: "auth-prompt",
+      requester: "Terminal",
+      title: "Allow?",
+      message: "M",
+      account: { name: "Demo Account", email: "demo@example.com" },
+      details: ["Run commands as you"],
+      verification: "biometric",
+      actions: [{ label: "Approve" }],
+    };
+    expect(problems(minimal([{ id: "a", title: "A", overlay: prompt }]))).toEqual([]);
+    const plain = demoSchema.parse(minimal([{ id: "a", title: "A", overlay: { ...prompt, verification: undefined } }]));
+    expect(plain.steps[0]!.overlay).toMatchObject({ verification: "none" });
+    expect(problems(minimal([{ id: "a", title: "A", overlay: { ...prompt, verification: "face" } }]))[0]).toMatch(
+      /verification/,
+    );
+  });
+
+  describe("settings-window", () => {
+    const window = (settings: unknown[], extra: Record<string, unknown> = {}) => ({
+      type: "settings-window",
+      title: "App — Settings",
+      nav: ["General", "Security"],
+      section: "Security",
+      settings,
+      ...extra,
+    });
+    const practice = { label: "Unlock with fingerprint", toggle: false, turnOn: true };
+
+    it("accepts toggles, values, and a practice toggle that answers a gate", () => {
+      const step = { id: "a", title: "A", overlay: window([practice, { label: "Idle lock", value: "30 minutes" }]), waitForAction: true };
+      expect(problems(minimal([step]))).toEqual([]);
+    });
+
+    it("needs a practice toggle to answer a gate", () => {
+      const step = { id: "a", title: "A", overlay: window([{ label: "X", toggle: true }]), waitForAction: true };
+      expect(problems(minimal([step]))[0]).toMatch(/waitForAction: .*setting with turnOn/);
+    });
+
+    it("rejects a section that isn't in the nav", () => {
+      expect(problems(minimal([{ id: "a", title: "A", overlay: window([practice], { section: "Privacy" }) }]))[0]).toMatch(
+        /^steps\[0\]\.overlay\.section: section must be one of the nav items/,
+      );
+    });
+
+    it("rejects settings with both or neither of toggle and value, and turnOn on a toggle that's already on", () => {
+      const issues = (setting: unknown) => problems(minimal([{ id: "a", title: "A", overlay: window([setting]) }]))[0];
+      expect(issues({ label: "X" })).toMatch(/either `toggle`/);
+      expect(issues({ label: "X", toggle: true, value: "On" })).toMatch(/either `toggle`/);
+      expect(issues({ label: "X", toggle: true, turnOn: true })).toMatch(/starts off/);
+    });
+
+    it("checks the next target", () => {
+      expect(problems(minimal([{ id: "a", title: "A", overlay: window([practice], { next: "nope" }) }]))[0]).toMatch(
+        /^steps\[0\]\.overlay\.next: Unknown step "nope"/,
+      );
+    });
+  });
+
+  it("accepts prerequisites", () => {
+    const demo = demoSchema.parse({ ...minimal([{ id: "a", title: "A", terminal: { output: "x" } }]), prerequisites: ["An app"] });
+    expect(demo.prerequisites).toEqual(["An app"]);
+  });
+
   it("rejects an action pointing at an unknown step", () => {
     const steps = [
       { id: "a", title: "A", overlay: { type: "auth-prompt", title: "T", message: "M", actions: [{ label: "OK", next: "nope" }] } },

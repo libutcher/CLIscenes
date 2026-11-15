@@ -1,5 +1,6 @@
 import { useId } from "react";
 import type { OverlayProps } from "./types.ts";
+import { WindowChrome } from "./WindowChrome.tsx";
 import type { Overlay } from "../../core/schema.ts";
 import { Actions } from "./Actions.tsx";
 
@@ -11,16 +12,7 @@ export function AppWindow({ overlay, onAction }: OverlayProps<AppWindowOverlay>)
   const paragraphs = overlay.body?.split(/\n\s*\n/) ?? [];
   return (
     <section className="cs-window" aria-labelledby={titleId}>
-      <header className="cs-window__chrome">
-        <span className="cs-window__dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span id={titleId} className="cs-window__title">
-          {overlay.title}
-        </span>
-      </header>
+      <WindowChrome title={overlay.title} titleId={titleId} />
       <div className="cs-window__body">
         {overlay.heading && <h3 className="cs-window__heading">{overlay.heading}</h3>}
         {paragraphs.map((p, i) => (
@@ -28,8 +20,8 @@ export function AppWindow({ overlay, onAction }: OverlayProps<AppWindowOverlay>)
         ))}
         {overlay.fields && (
           <dl className="cs-window__fields">
-            {overlay.fields.map((field) => (
-              <div key={field.label} className="cs-window__field">
+            {overlay.fields.map((field, i) => (
+              <div key={i} className="cs-window__field">
                 <dt>{field.label}</dt>
                 <dd>{field.value}</dd>
               </div>

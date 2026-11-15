@@ -22,7 +22,7 @@ afterEach(async () => {
 describe("generator", () => {
   it("validates every example in demos/", async () => {
     const demos = await generateAll({ sourceDir: repoDemos, outDir: "unused", check: true });
-    expect(demos.map((d) => d.id)).toEqual(["cli-signin", "ssh-key-setup"]);
+    expect(demos.map((d) => d.id)).toEqual(["cli-setup", "cli-signin"]);
   });
 
   it("writes a cast, manifest, assets, and index for each demo", async () => {
@@ -30,7 +30,7 @@ describe("generator", () => {
     await generateAll({ sourceDir: repoDemos, outDir: out });
 
     const index: DemoIndexEntry[] = JSON.parse(await readFile(path.join(out, "demos/index.json"), "utf8"));
-    expect(index.map((d) => d.id)).toEqual(["cli-signin", "ssh-key-setup"]);
+    expect(index.map((d) => d.id)).toEqual(["cli-setup", "cli-signin"]);
 
     const dir = path.join(out, "demos/cli-signin");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
@@ -38,10 +38,85 @@ describe("generator", () => {
     expect(manifest.cast).toBe("demo.cast");
     expect(cast.duration).toBeCloseTo(manifest.duration, 2);
 
-    const ssh: CompiledDemo = JSON.parse(await readFile(path.join(out, "demos/ssh-key-setup/demo.json"), "utf8"));
-    const image = ssh.steps.flatMap((s) => s.overlays).find((o) => o.type === "image");
-    expect(image).toMatchObject({ src: "assets/browser-add-key.svg" });
-    await expect(readFile(path.join(out, "demos/ssh-key-setup/assets/browser-add-key.svg"))).resolves.toBeTruthy();
+    const prompt = manifest.steps.flatMap((s) => s.overlays).find((o) => o.type === "auth-prompt");
+    expect(prompt).toMatchObject({ icon: "assets/yourapp-icon.svg" });
+    await expect(readFile(path.join(dir, "assets/yourapp-icon.svg"))).resolves.toBeTruthy();
+
+    const setup: CompiledDemo = JSON.parse(await readFile(path.join(out, "demos/cli-setup/demo.json"), "utf8"));
+    expect(setup.prerequisites?.length).toBeGreaterThan(0);
+    expect(setup.steps.filter((s) => s.gate).map((s) => s.overlays[0]?.type)).toEqual(["settings-window", "settings-window"]);
+  });
+
+  it("copies auth-prompt icons and keeps same-named images in different folders apart", async () => {
+    const src = await tempDir();
+    const out = await tempDir();
+    await mkdir(path.join(src, "assets/a"), { recursive: true });
+    await mkdir(path.join(src, "assets/b"), { recursive: true });
+    await writeFile(path.join(src, "assets/a/logo.svg"), "<svg>a</svg>");
+    await writeFile(path.join(src, "assets/b/logo.svg"), "<svg>b</svg>");
+    await writeFile(
+      path.join(src, "icons.yaml"),
+      [
+        "title: Icons",
+        "steps:",
+        "  - id: a",
+        "    title: A",
+        "    overlay: { type: auth-prompt, title: T, message: M, icon: assets/a/logo.svg, requesterIcon: assets/b/logo.svg, actions: [{ label: OK }] }",
+        "  - id: b",
+        "    title: B",
+        "    overlay: { type: image, src: assets/a/logo.svg, alt: Logo }",
+      ].join("\n"),
+    );
+
+    await generateAll({ sourceDir: src, outDir: out });
+    const dir = path.join(out, "demos/icons");
+    const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
+    expect(manifest.steps[0]!.overlays[0]).toMatchObject({ icon: "assets/a/logo.svg", requesterIcon: "assets/b/logo.svg" });
+    expect(await readFile(path.join(dir, "assets/a/logo.svg"), "utf8")).toBe("<svg>a</svg>");
+    expect(await readFile(path.join(dir, "assets/b/logo.svg"), "utf8")).toBe("<svg>b</svg>");
+  });
+
+  it("keeps same-named images apart, inside and outside the source folder", async () => {
+    const root = await tempDir();
+    const src = path.join(root, "demos");
+    const out = await tempDir();
+    for (const dir of ["demos/assets", "brand-a", "brand-b"]) await mkdir(path.join(root, dir), { recursive: true });
+    await writeFile(path.join(src, "logo.svg"), "<svg>next to source</svg>");
+    await writeFile(path.join(src, "assets/logo.svg"), "<svg>in assets</svg>");
+    await writeFile(path.join(root, "brand-a/logo.svg"), "<svg>a</svg>");
+    await writeFile(path.join(root, "brand-b/logo.svg"), "<svg>b</svg>");
+    const prompt = (icon: string, requesterIcon: string) =>
+      `{ type: auth-prompt, title: T, message: M, icon: ${icon}, requesterIcon: ${requesterIcon}, actions: [{ label: OK }] }`;
+    await writeFile(
+      path.join(src, "logos.yaml"),
+      [
+        "title: Logos",
+        "steps:",
+        "  - id: a",
+        "    title: A",
+        `    overlay: ${prompt("logo.svg", "assets/logo.svg")}`,
+        "  - id: b",
+        "    title: B",
+        `    overlay: ${prompt("../brand-a/logo.svg", "../brand-b/logo.svg")}`,
+      ].join("\n"),
+    );
+
+    await generateAll({ sourceDir: src, outDir: out });
+    const dir = path.join(out, "demos/logos");
+    const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
+    const srcs = manifest.steps.flatMap((s) => s.overlays).flatMap((o) => (o.type === "auth-prompt" ? [o.icon!, o.requesterIcon!] : []));
+    expect(new Set(srcs).size).toBe(4);
+    const contents = await Promise.all(srcs.map((s) => readFile(path.join(dir, s), "utf8")));
+    expect(contents).toEqual(["<svg>next to source</svg>", "<svg>in assets</svg>", "<svg>a</svg>", "<svg>b</svg>"]);
+  });
+
+  it("reports a missing icon", async () => {
+    const src = await tempDir();
+    await writeFile(
+      path.join(src, "x.yaml"),
+      "title: X\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, icon: nope.svg, actions: [{ label: OK }] }\n",
+    );
+    await expect(generateAll({ sourceDir: src, outDir: src, check: true })).rejects.toThrow(/Image not found: nope\.svg/);
   });
 
   it("reports problems from every file and writes nothing", async () => {

@@ -10,7 +10,9 @@ Nothing in a source file is ever executed. All output is text you write.
 | --- | --- | --- | --- |
 | `title` | Yes | | Shown above the walkthrough. |
 | `description` | No | `""` | One or two sentences under the title. |
-| `layout` | No | `split` | `split`: UI outside the terminal appears beside it (stacked on small screens). `overlay`: it floats over the lower right of the terminal. |
+| `prerequisites` | No | | What readers need before they start. Shown as a "Before you start" list. |
+| `layout` | No | `split` | `split`: UI outside the terminal appears beside it (stacked on small screens). `overlay`: it floats over the upper right of the terminal, like a desktop window popping up; a window taller than the terminal hangs past its bottom edge instead of being cut off. Both layouts stack on small screens. Use `overlay` for prompts that interrupt the terminal and `split` for apps readers look at alongside it. |
+| `theme` | No | | Brand colors for this walkthrough. See [Theme](#theme). |
 | `terminal.cols` | No | `80` | Terminal width in characters. |
 | `terminal.rows` | No | `16` | Terminal height in lines. |
 | `terminal.prompt` | No | `"$ "` | Text printed before each command. |
@@ -26,7 +28,7 @@ Nothing in a source file is ever executed. All output is text you write.
 | `terminal` | One of `terminal` or an overlay | | What happens in the terminal. |
 | `overlay` | | | One UI element outside the terminal. |
 | `overlays` | | | A list of UI elements outside the terminal. Use either `overlay` or `overlays`. |
-| `waitForAction` | No | `false` | Stop at the end of this step until the reader clicks an action. Needs an overlay with `actions`. |
+| `waitForAction` | No | `false` | Stop at the end of this step until the reader responds: clicks an action, or turns on every `turnOn` setting in a `settings-window`. Needs an overlay the reader can respond to. |
 | `finish` | No | `false` | End guided playback after this step. Later steps are reachable only through an action's `next` or navigation. Use it to end the main path before an alternative path. |
 | `pause` | No | `1.2` | Seconds to hold after the step's content. |
 
@@ -45,20 +47,36 @@ A terminal block needs at least one of `command`, `output`, or `clear: true`.
 
 ### `auth-prompt`
 
-A desktop authentication request.
+A desktop authentication request, drawn as a plain wireframe app window in the same style as `settings-window`. Only `title`, `message`, and `actions` are required. The other fields add detail so the prompt looks like what the real app shows.
 
 ```yaml
 overlay:
   type: auth-prompt
-  app: Example Desktop     # optional, default "Desktop app"
+  app: Example Desktop       # optional, default "Desktop app"; shown in the title bar
+  icon: assets/app-icon.svg  # optional; your app's icon (default: a generic icon)
+  requester: Terminal        # optional; shown as an icon beside the app
+  requesterIcon: assets/terminal.png  # optional (default: a terminal icon)
   title: Allow CLI sign-in?
-  message: The CLI wants to sign in to your account.
+  message: Terminal is running "example signin" and wants to access your account.
+  account:                   # optional
+    name: Demo Account
+    email: demo@example.com  # optional
+  details:                   # optional; what approving allows
+    - Run commands as you from this terminal
+    - Access ends after 30 minutes of inactivity
+  verification: biometric    # optional: none (default), biometric, or password
   actions:
-    - label: Approve        # goes to the following step
+    - label: Approve          # goes to the following step
     - label: Deny
-      style: secondary      # primary (default) or secondary
-      next: denied          # step id to go to
+      style: secondary        # primary (default) or secondary
+      next: denied            # step id to go to
 ```
+
+Buttons are laid out the way desktop dialogs usually are: secondary actions on the left, the primary action on the right. `verification: biometric` shows a fingerprint cue, and `password` shows a filled-in, read-only password field. Neither asks the reader for anything real.
+
+Icons are local image files, relative to the source file, like `image` overlays. Square images work best. They're shown at 52 × 52 pixels with rounded corners, so SVG or a PNG of at least 104 × 104 pixels stays sharp.
+
+The prompt is a generic design. Use your own product's icon and colors (see [Theme](#theme)). When you model it on another product's prompt, copy its structure and wording, not its logo or brand colors.
 
 ### `app-window`
 
@@ -79,6 +97,36 @@ overlay:
   annotations:                     # optional notes inside the window
     - Select Done to return to the walkthrough.
 ```
+
+### `settings-window`
+
+A text-only wireframe of an app's settings: left-hand navigation and a list of settings with toggle switches. Readers practice turning settings on themselves instead of clicking Next.
+
+```yaml
+overlay:
+  type: settings-window
+  title: YourApp — Settings              # title bar text
+  nav: [General, Security, Developer]    # left-hand navigation
+  section: Security                      # highlighted section; must be in nav
+  settings:
+    - label: Unlock with fingerprint
+      description: Approve CLI requests with a touch.   # optional
+      toggle: false                       # a switch, starting off
+      turnOn: true                        # the reader must turn this on
+    - label: Lock after the computer is idle for
+      value: 30 minutes                   # a plain value instead of a switch
+    - label: Require your password after restarting
+      toggle: true                        # shown on; readers can't change it
+  next: some-step                         # optional; default: the following step
+  annotations:                            # optional notes under the settings
+    - Turn on fingerprint unlock to continue.
+waitForAction: true
+```
+
+- Each setting has either `toggle` (`true` or `false`) or `value`.
+- Settings with `turnOn: true` start off, are highlighted, and are the only switches the reader can operate. Once they're all on, the window shows "All set" and the walkthrough continues by itself, so there's no button to click.
+- With `waitForAction: true`, playback waits until the reader turns them on. Going back to the step resets them, so readers can practice again.
+- Other switches only show their state.
 
 ### `image`
 
@@ -124,6 +172,27 @@ steps:
   - id: denied
     terminal: { output: "Error: request denied." }
 ```
+
+## Theme
+
+Give a walkthrough your brand colors. Each walkthrough has its own theme, so different demos on the same site can look different.
+
+```yaml
+theme:
+  accent: "#0f7b6c"        # buttons, highlights, progress, the default app icon
+  accentText: "#ffffff"    # optional: text on accent buttons (chosen automatically if omitted)
+  dark:                    # optional: overrides for readers in dark mode
+    accent: "#5eead4"
+```
+
+Colors are hex values (`#rgb` or `#rrggbb`). The player keeps text readable:
+
+- Without `accentText`, button text is white or near-black, whichever contrasts better with the accent.
+- If you set `accentText` and it contrasts less than 4.5:1 with the accent (the WCAG AA minimum for text), validation fails and names both colors.
+- Accents are adjusted only as far as needed to stay visible: a pale accent is darkened slightly in light mode, and a dark one is lightened in dark mode (3:1 against the background, the WCAG minimum for controls and focus rings). Set `dark.accent` to choose a different dark-mode color; it gets the same safeguard.
+- `accentText` and `dark.accentText` need an accent to go with them.
+
+Everything else (surfaces, text, borders) follows the reader's light or dark setting.
 
 ## Validation
 

@@ -12,7 +12,7 @@ test("authentication prompt gates the rest of the walkthrough", async ({ page })
   await expect(page.getByRole("button", { name: "Play" })).toBeEnabled();
   await page.getByRole("button", { name: "Play" }).click();
 
-  await expect(terminal).toContainText("cli-scenes signin");
+  await expect(terminal).toContainText("your-cli signin");
   await expect(dialog).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("button", { name: "Waiting for your action" })).toBeVisible();
 
@@ -36,12 +36,12 @@ test("authentication prompt gates the rest of the walkthrough", async ({ page })
     selection.addRange(range);
     return selection.toString();
   });
-  expect(selected).toContain("Waiting for approval in the CLIscenes desktop app");
+  expect(selected).toContain("Waiting for approval in YourApp");
 
   await dialog.getByRole("button", { name: "Approve" }).click();
   await expect(dialog).toBeHidden();
   await expect(terminal).toContainText("Signed in as demo@example.com", { timeout: 10_000 });
-  await expect(terminal).toContainText("cli-scenes projects list", { timeout: 10_000 });
+  await expect(terminal).toContainText("your-cli projects list", { timeout: 10_000 });
   await expect(terminal).toContainText("Internal tools", { timeout: 10_000 });
 
   // The main path ends at the project list; the Deny branch does not play on.
@@ -65,5 +65,30 @@ test("choosing Deny jumps to the denied path", async ({ page }) => {
   await expect(dialog).toBeHidden();
   await expect(terminal).toContainText("sign-in request was denied", { timeout: 10_000 });
   await expect(terminal).not.toContainText("Signed in as");
+  await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
+});
+
+test("setup walkthrough waits until the reader turns each setting on", async ({ page }) => {
+  await page.goto("?demo=cli-setup");
+  const terminal = page.getByRole("region", { name: /Terminal/ });
+  await expect(page.getByText("Before you start:")).toBeVisible();
+
+  await page.getByRole("button", { name: "Play" }).click();
+  const fingerprint = page.getByRole("switch", { name: "Unlock with fingerprint" });
+  await expect(fingerprint).toBeVisible({ timeout: 15_000 });
+  await expect(fingerprint).toHaveAttribute("aria-checked", "false");
+
+  // Nothing moves on until the reader flips the highlighted switch.
+  await page.waitForTimeout(2_000);
+  await expect(page.getByText("Step 3 of 5", { exact: true })).toBeVisible();
+
+  await fingerprint.click();
+  await expect(fingerprint).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByText("All set. Continuing…")).toBeVisible();
+
+  const integrate = page.getByRole("switch", { name: "Integrate with the CLI" });
+  await expect(integrate).toBeVisible({ timeout: 5_000 });
+  await integrate.press("Space");
+  await expect(terminal).toContainText("Session:", { timeout: 15_000 });
   await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
 });

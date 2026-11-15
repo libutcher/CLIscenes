@@ -11,6 +11,7 @@
  */
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { parse as parseYaml, YAMLParseError } from "yaml";
 import { demoSchema, formatIssues, type DemoSource } from "../core/schema.ts";
@@ -67,7 +68,9 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
     rewriteAsset: (src) => {
       const from = path.resolve(path.dirname(sourceFile), src);
       if (!existsSync(from)) missing.push(`Image not found: ${src}`);
-      const to = `assets/${path.basename(src)}`;
+      const existing = assets.find((a) => a.from === from);
+      if (existing) return existing.to;
+      const to = assetOutputPath(path.dirname(sourceFile), from, new Set(assets.map((a) => a.to)));
       assets.push({ from, to });
       return to;
     },
@@ -77,6 +80,23 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
   // Self-check: the cast we produced must be a valid asciicast v3 file.
   parseCast(result.cast);
   return { ...result, id, sourceFile, assets };
+}
+
+/**
+ * Where a referenced file goes in the output. Files keep their path relative
+ * to the source file (a leading `assets/` is not repeated), so same-named
+ * files in different folders stay apart. Files outside the source folder go
+ * in `assets/external/`. If the preferred path is already taken by a
+ * different file, a short hash of the file's location is added.
+ */
+export function assetOutputPath(sourceDir: string, from: string, taken: Set<string>): string {
+  const relative = path.relative(sourceDir, from).split(path.sep).join("/");
+  const preferred = relative.startsWith("../")
+    ? `assets/external/${path.basename(from)}`
+    : `assets/${relative.replace(/^assets\//, "")}`;
+  if (!taken.has(preferred)) return preferred;
+  const hash = createHash("sha256").update(from).digest("hex").slice(0, 8);
+  return `${path.posix.dirname(preferred)}/${hash}-${path.basename(from)}`;
 }
 
 export async function listSources(sourceDir: string): Promise<string[]> {
@@ -127,7 +147,11 @@ export async function generateAll({ sourceDir, outDir, check = false }: Generate
     await mkdir(path.join(dir, "assets"), { recursive: true });
     await writeFile(path.join(dir, "demo.cast"), demo.cast);
     await writeFile(path.join(dir, "demo.json"), JSON.stringify(demo.manifest, null, 2) + "\n");
-    for (const asset of demo.assets) await copyFile(asset.from, path.join(dir, asset.to));
+    for (const asset of demo.assets) {
+      const target = path.join(dir, asset.to);
+      await mkdir(path.dirname(target), { recursive: true });
+      await copyFile(asset.from, target);
+    }
   }
   const index: DemoIndexEntry[] = demos.map((d) => ({
     id: d.id,

@@ -44,6 +44,12 @@ export interface OrchestratorState {
   time: number;
   /** Keyed by step id. Only gated steps appear here. */
   gates: Record<string, GateState>;
+  /**
+   * Increases on every navigation (Restart, Previous, Next, step list,
+   * actions). The UI uses it to reset overlays, even when the step index is
+   * unchanged, for example restarting from step 1.
+   */
+  visit: number;
 }
 
 type Listener = (state: OrchestratorState) => void;
@@ -59,7 +65,7 @@ export class Orchestrator {
     readonly demo: CompiledDemo,
     private readonly terminal: TerminalAdapter,
   ) {
-    this.state = { status: "idle", stepIndex: 0, time: 0, gates: this.freshGates() };
+    this.state = { status: "idle", stepIndex: 0, time: 0, gates: this.freshGates(), visit: 0 };
     terminal.onMarker((label) => this.handleMarker(label));
     terminal.onEnded(() => this.handleEnded());
     terminal.onPlay(() => this.handlePlay());
@@ -116,10 +122,21 @@ export class Orchestrator {
     if (index === -1) return;
     const target = next ? this.demo.steps.findIndex((s) => s.id === next) : index + 1;
 
+    const step = this.demo.steps[index]!;
     if (stepId in this.state.gates) {
       this.set({ gates: { ...this.state.gates, [stepId]: "completed" } });
     }
     if (target === -1) return;
+
+    // Answered before playback reached the gate, and continuing to the
+    // following step: let the rest of this step play instead of skipping it.
+    // When the marker is reached, the completed gate lets playback through.
+    const beforeGate =
+      step.gate !== undefined &&
+      (this.state.status === "playing" || this.state.status === "paused") &&
+      this.terminal.getCurrentTime() < step.gate.time;
+    if (beforeGate && target === index + 1) return;
+
     if (target >= this.demo.steps.length) {
       // Action on the final step: play out whatever remains.
       this.set({ status: "playing" });
@@ -143,7 +160,7 @@ export class Orchestrator {
       if (s.index >= index) gates[s.id] = "pending";
       else gates[s.id] = current === "pending" ? "skipped" : current;
     }
-    this.set({ status: "playing", stepIndex: index, time: step.start, gates });
+    this.set({ status: "playing", stepIndex: index, time: step.start, gates, visit: this.state.visit + 1 });
 
     try {
       await this.terminal.pause();

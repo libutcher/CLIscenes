@@ -158,6 +158,21 @@ body {
   font-size: 0.95rem;
 }
 
+.cs-prereqs {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+}
+
+.cs-prereqs__label {
+  font-weight: 600;
+}
+
+.cs-prereqs ul {
+  margin: 2px 0 0;
+  padding-left: 20px;
+  color: var(--cs-text-muted);
+}
+
 .cs-stage {
   position: relative;
   display: grid;
@@ -169,6 +184,15 @@ body {
   border-radius: var(--cs-radius);
   overflow: hidden;
   background: #121314;
+}
+
+/* The player scales its font to fill the terminal's width. Capping the width
+   per column keeps text the same size (about 16.5px) in every layout; on wide
+   panes the rest is plain terminal background. On narrow screens the text
+   still shrinks to fit. */
+.cs-terminal {
+  --cs-terminal-cell: 10.3px;
+  max-width: calc(var(--cs-terminal-cols, 80) * var(--cs-terminal-cell));
 }
 
 /* The orchestrator owns playback, so the player's own start button is hidden. */
@@ -210,23 +234,33 @@ body {
   }
 }
 
-/* Overlay view: external UI floats over the lower right of the terminal. On
-   small screens it stacks below instead, so it never hides terminal text. */
+/* Overlay view: external UI floats over the upper right of the terminal, the
+   way a desktop app's window pops up over the one you're working in.
+
+   The terminal and the floating window share one grid cell instead of using
+   absolute positioning, so a window taller than the terminal makes the stage
+   grow rather than being clipped. On small screens it stacks below instead,
+   so it never hides terminal text. */
 @media (min-width: 700px) {
+  .cs-layout-overlay .cs-terminal-pane,
   .cs-layout-overlay .cs-external {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-    width: min(380px, 55%);
-    max-height: calc(100% - 32px);
-    overflow: auto;
-    filter: drop-shadow(var(--cs-shadow));
+    grid-area: 1 / 1;
+  }
+  .cs-layout-overlay .cs-terminal-pane {
+    align-self: start;
+  }
+  .cs-layout-overlay .cs-external {
+    z-index: 1;
+    justify-self: end;
+    align-self: start;
+    width: min(400px, 55%);
+    margin: 36px 24px 0 0;
+    filter: drop-shadow(0 14px 32px rgb(0 0 0 / 0.35));
   }
 }
 
 /* Overlays --------------------------------------------------------------- */
 
-.cs-auth,
 .cs-window,
 .cs-image {
   border: 1px solid var(--cs-border);
@@ -234,48 +268,216 @@ body {
   background: var(--cs-surface);
 }
 
-.cs-layout-split .cs-auth,
 .cs-layout-split .cs-window {
   box-shadow: var(--cs-shadow);
 }
 
+/* Auth prompt: a plain wireframe window, matching the settings window.
+   Only the primary button uses the accent color. */
+
 .cs-auth {
-  padding: 18px;
-  border-top: 4px solid var(--cs-accent);
+  overflow: hidden;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius);
+  background: var(--cs-surface);
+  text-align: center;
 }
 
-.cs-auth__app {
+.cs-layout-split .cs-auth {
+  box-shadow: var(--cs-shadow);
+}
+
+.cs-auth .cs-window__chrome {
+  text-align: left;
+}
+
+.cs-auth__body {
+  padding: 16px 20px 18px;
+}
+
+.cs-auth__parties {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--cs-text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.cs-auth__icon {
-  display: inline-grid;
+.cs-auth__party {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 96px;
+}
+
+.cs-auth__party-icon {
+  display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--cs-accent-soft);
-  color: var(--cs-accent);
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--cs-border);
+  border-radius: 10px;
+  background: var(--cs-surface-muted);
+  color: var(--cs-text-muted);
+}
+
+.cs-auth__party-icon--custom {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  object-fit: contain;
+}
+
+.cs-auth__party-label {
+  max-width: 100%;
+  color: var(--cs-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cs-auth__link {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 19px;
+}
+
+.cs-auth__link span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--cs-border);
 }
 
 .cs-auth__title {
-  margin: 12px 0 4px;
-  font-size: 1.05rem;
+  margin: 0 0 4px;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
 .cs-auth__message {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 34ch;
+  color: var(--cs-text-muted);
+  font-size: 0.86rem;
+}
+
+.cs-auth__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.cs-auth__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--cs-border);
+  border-radius: 50%;
+  background: var(--cs-surface-muted);
+  color: var(--cs-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.cs-auth__account-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.cs-auth__account-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.cs-auth__account-email {
+  overflow: hidden;
+  color: var(--cs-text-muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-auth__details {
+  display: grid;
+  gap: 0;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.cs-auth__details li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 2px;
+  border-top: 1px solid var(--cs-border);
+}
+
+.cs-auth__details li:first-child {
+  border-top: 0;
+}
+
+.cs-auth__check {
+  flex: none;
+  margin-top: 2px;
+  color: var(--cs-text-muted);
+}
+
+.cs-auth__verify {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  color: var(--cs-text-muted);
+  font-size: 0.78rem;
+}
+
+.cs-auth__fingerprint {
+  color: var(--cs-text-muted);
+}
+
+.cs-auth__password {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  text-align: left;
+}
+
+.cs-auth__password-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cs-auth__password-field {
+  padding: 6px 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  letter-spacing: 0.15em;
 }
 
 .cs-auth__waiting {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   color: var(--cs-text-muted);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+}
+
+.cs-auth__actions .cs-actions {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  margin-top: 14px;
 }
 
 .cs-window {
@@ -347,6 +549,186 @@ body {
 .cs-window__field dd {
   margin: 0;
   color: var(--cs-text-muted);
+}
+
+/* Settings window: a deliberately plain, text-only wireframe. Only the
+   switches and the setting to turn on use the accent color. */
+
+.cs-settings {
+  overflow: hidden;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius);
+  background: var(--cs-surface);
+  font-size: 0.88rem;
+}
+
+.cs-layout-split .cs-settings {
+  box-shadow: var(--cs-shadow);
+}
+
+.cs-settings__layout {
+  display: grid;
+  grid-template-columns: minmax(96px, 30%) 1fr;
+}
+
+.cs-settings__nav {
+  margin: 0;
+  padding: 10px 8px;
+  border-right: 1px solid var(--cs-border);
+  background: var(--cs-surface-muted);
+  list-style: none;
+  color: var(--cs-text-muted);
+}
+
+.cs-settings__nav li {
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+
+.cs-settings__nav li[aria-current] {
+  background: var(--cs-surface);
+  color: var(--cs-text);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--cs-border);
+}
+
+.cs-settings__content {
+  min-width: 0;
+  padding: 12px 14px 14px;
+}
+
+.cs-settings__heading {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.cs-settings__list {
+  display: grid;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.cs-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 2px;
+  border-top: 1px solid var(--cs-border);
+}
+
+.cs-setting:first-child {
+  border-top: 0;
+}
+
+.cs-setting--practice {
+  margin: 4px -6px;
+  padding: 9px 8px;
+  border: 1px dashed var(--cs-accent);
+  border-radius: 8px;
+  background: var(--cs-accent-soft);
+}
+
+.cs-setting--practice + .cs-setting {
+  border-top: 0;
+}
+
+.cs-setting--done {
+  border-style: solid;
+}
+
+.cs-setting__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cs-setting__label {
+  font-weight: 500;
+}
+
+.cs-setting__label .cs-badge {
+  margin-left: 6px;
+}
+
+.cs-setting__description {
+  color: var(--cs-text-muted);
+  font-size: 0.8rem;
+}
+
+.cs-setting__value {
+  flex: none;
+  color: var(--cs-text-muted);
+}
+
+.cs-switch {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cs-border);
+}
+
+button.cs-switch {
+  cursor: pointer;
+}
+
+.cs-switch[aria-checked="true"],
+.cs-switch[data-on] {
+  background: var(--cs-accent);
+}
+
+.cs-switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.cs-switch[aria-checked="true"] .cs-switch__knob,
+.cs-switch[data-on] .cs-switch__knob {
+  transform: translateX(16px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cs-switch,
+  .cs-switch__knob {
+    transition:
+      background-color 120ms ease,
+      transform 120ms ease;
+  }
+}
+
+.cs-settings__status {
+  margin: 0;
+  color: var(--cs-text-muted);
+  font-size: 0.8rem;
+}
+
+.cs-settings__status--done {
+  color: var(--cs-success-text);
+  font-weight: 600;
+}
+
+@media (max-width: 420px) {
+  .cs-settings__layout {
+    grid-template-columns: 1fr;
+  }
+  .cs-settings__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    border-right: 0;
+    border-bottom: 1px solid var(--cs-border);
+  }
 }
 
 .cs-note {
@@ -516,6 +898,7 @@ body {
 
 .cs-badge {
   display: inline-block;
+  white-space: nowrap;
   margin-left: 8px;
   padding: 1px 8px;
   border-radius: 999px;
@@ -563,6 +946,7 @@ body {
   color: var(--cs-text);
   font: inherit;
   font-size: 0.85rem;
+  text-align: left;
   cursor: pointer;
 }
 
@@ -590,6 +974,7 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .cs-auth,
   .cs-window,
+  .cs-settings,
   .cs-image,
   .cs-annotation {
     animation: cs-appear 160ms ease-out;

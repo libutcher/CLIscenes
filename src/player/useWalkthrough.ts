@@ -7,7 +7,7 @@ import { Orchestrator, type OrchestratorState } from "../core/orchestrator.ts";
 import type { CompiledDemo } from "../core/types.ts";
 import { createAsciinemaAdapter } from "./terminal/asciinemaAdapter.ts";
 
-const IDLE: OrchestratorState = { status: "idle", stepIndex: 0, time: 0, gates: {} };
+const IDLE: OrchestratorState = { status: "idle", stepIndex: 0, time: 0, gates: {}, visit: 0 };
 const noopSubscribe = () => () => {};
 
 export function useWalkthrough(demo: CompiledDemo, baseUrl: string) {

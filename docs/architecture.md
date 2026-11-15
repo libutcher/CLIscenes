@@ -20,6 +20,7 @@ CLIscenes has three layers. Only the middle one is original. The other two are t
 demos/                    Source files (YAML or JSON) and their images
 src/core/                 Framework-free logic, also used by Node
   schema.ts               Authoring format and validation (zod)
+  theme.ts                Brand colors → CSS variables, with contrast checks
   compile.ts              Source → timeline, asciicast, manifest
   asciicast.ts            asciicast v3 writer and validator
   timeline.ts             Time ↔ step helpers
@@ -81,7 +82,7 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 | --- | --- |
 | Playback reaches an unanswered gate | The player has already paused at the marker. Status becomes `awaiting-action`. Play does nothing until the reader acts. |
 | Reader clicks an overlay action | The gate is marked `completed`, and playback jumps to the action's `next` step (default: the following step) and plays. |
-| Reader clicks the action before the gate is reached | Same as above. When the marker is reached later, the orchestrator sees the gate is already completed and continues. |
+| Reader answers before the gate is reached | The gate is marked `completed` and the overlay closes. If the answer leads to the following step, the rest of this step plays out normally; when the marker is reached, the orchestrator sees the gate is completed and continues. If it leads somewhere else (such as a Deny branch), playback jumps there right away. |
 | Reader navigates to a step (Previous, Next, step list, Restart) | Playback starts from the beginning of that step. Every gate at or after the target is reset to `pending`, so a replayed gated step asks again. |
 | Reader navigates forward past an unanswered gate | That gate is marked `skipped`, and the step list shows "Skipped". Skipping is deliberate, so it's allowed. |
 | Something other than the orchestrator starts the player during a gate | The orchestrator pauses it and seeks back to the gate (safety net). |
@@ -95,7 +96,9 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 4. **Styles:** add `cs-`-prefixed styles to `src/player/styles.css`.
 5. **Tests and docs:** add a case to `tests/schema.test.ts` and document the fields in `docs/authoring.md`.
 
-If the overlay references files (like `image`), extend `rewriteOverlay` in `compile.ts` and the asset handling in `generate.ts`.
+If the overlay references files (like `image`, or the icons on `auth-prompt`), extend `rewriteOverlay` in `compile.ts`. The generator copies anything passed to `rewriteAsset`.
+
+If readers can answer a gate with the new overlay, update `overlayCanAnswerGate` in `schema.ts`, and call `onAction` from the component when they do (see `SettingsWindow.tsx`).
 
 ## Replacing the terminal player
 

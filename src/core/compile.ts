@@ -145,7 +145,9 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
       id: options.id,
       title: source.title,
       description: source.description,
+      ...(source.prerequisites?.length ? { prerequisites: source.prerequisites } : {}),
       layout: source.layout,
+      ...(source.theme ? { theme: source.theme } : {}),
       cast: "demo.cast",
       duration: round(t),
       terminal: { cols, rows },
@@ -154,9 +156,18 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
   };
 }
 
+/** Point every local file an overlay references at its copy in the output folder. */
 function rewriteOverlay(overlay: Overlay, rewriteAsset?: (src: string) => string): Overlay {
-  if (overlay.type === "image" && rewriteAsset) {
+  if (!rewriteAsset) return overlay;
+  if (overlay.type === "image") {
     return { ...overlay, src: rewriteAsset(overlay.src) };
+  }
+  if (overlay.type === "auth-prompt") {
+    return {
+      ...overlay,
+      ...(overlay.icon ? { icon: rewriteAsset(overlay.icon) } : {}),
+      ...(overlay.requesterIcon ? { requesterIcon: rewriteAsset(overlay.requesterIcon) } : {}),
+    };
   }
   return overlay;
 }
