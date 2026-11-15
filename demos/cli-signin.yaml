@@ -38,9 +38,6 @@ steps:
       account:
         name: Demo Account
         email: demo@example.com
-      details:
-        - Run commands as you from this terminal
-        - Access ends after 30 minutes of inactivity
       verification: biometric
       actions:
         - label: Approve
