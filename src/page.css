@@ -1,0 +1,76 @@
+/*
+ * Styles for the standalone CLIscenes app (index.html): the page around the
+ * walkthrough. Not part of the library build, so they never reach host pages.
+ */
+
+.cs-app * {
+  box-sizing: border-box;
+}
+
+.cs-app body {
+  margin: 0;
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font: 16px/1.5 var(--cs-font);
+}
+
+.cs-app.cs-embedded body {
+  background: var(--cs-surface);
+}
+
+.cs-page :focus-visible {
+  outline: 3px solid var(--cs-focus);
+  outline-offset: 2px;
+}
+
+/* Page (not part of embeds) --------------------------------------------- */
+
+.cs-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.cs-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: 20px;
+}
+
+.cs-page__brand {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cs-page__demos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.cs-page__demos a {
+  color: var(--cs-accent);
+}
+
+.cs-page__demos a[aria-current="page"] {
+  color: var(--cs-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cs-loading,
+.cs-error {
+  padding: 24px 16px;
+}
+
+.cs-error {
+  color: #b42318;
+}

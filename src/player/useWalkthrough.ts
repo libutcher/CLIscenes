@@ -5,10 +5,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Orchestrator, type OrchestratorState } from "../core/orchestrator.ts";
 import type { CompiledDemo } from "../core/types.ts";
-import { createAsciinemaAdapter } from "./terminal/asciinemaAdapter.ts";
 
 const IDLE: OrchestratorState = { status: "idle", stepIndex: 0, time: 0, gates: {}, visit: 0 };
 const noopSubscribe = () => () => {};
+const idle = () => IDLE;
 
 export function useWalkthrough(demo: CompiledDemo, baseUrl: string) {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -17,28 +17,36 @@ export function useWalkthrough(demo: CompiledDemo, baseUrl: string) {
   useEffect(() => {
     const container = terminalRef.current;
     if (!container) return;
-    // Readers who ask for reduced motion get the recording without the typing
-    // animation. Its timing is identical, so gates and overlays line up.
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const castFile = reduceMotion && demo.castReducedMotion ? demo.castReducedMotion : demo.cast;
-    const adapter = createAsciinemaAdapter(container, {
-      castUrl: new URL(castFile, baseUrl).href,
-      cols: demo.terminal.cols,
-      rows: demo.terminal.rows,
+    let instance: Orchestrator | undefined;
+    let cancelled = false;
+
+    // The terminal player only works in a browser, so it's loaded here rather
+    // than at the top of the file. Pages rendered on the server (for example
+    // by Docusaurus) never import it.
+    void import("./terminal/asciinemaAdapter.ts").then(({ createAsciinemaAdapter }) => {
+      if (cancelled) return;
+      // Readers who ask for reduced motion get the recording without the typing
+      // animation. Its timing is identical, so gates and overlays line up.
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const castFile = reduceMotion && demo.castReducedMotion ? demo.castReducedMotion : demo.cast;
+      const adapter = createAsciinemaAdapter(container, {
+        castUrl: new URL(castFile, baseUrl).href,
+        cols: demo.terminal.cols,
+        rows: demo.terminal.rows,
+      });
+      instance = new Orchestrator(demo, adapter);
+      setOrchestrator(instance);
     });
-    const instance = new Orchestrator(demo, adapter);
-    setOrchestrator(instance);
+
     return () => {
-      instance.dispose();
+      cancelled = true;
+      instance?.dispose();
       container.replaceChildren();
       setOrchestrator(null);
     };
   }, [demo, baseUrl]);
 
-  const state = useSyncExternalStore(
-    orchestrator?.subscribe ?? noopSubscribe,
-    orchestrator?.getState ?? (() => IDLE),
-  );
+  const state = useSyncExternalStore(orchestrator?.subscribe ?? noopSubscribe, orchestrator?.getState ?? idle, idle);
 
   // Poll the terminal clock once per frame while playing.
   useEffect(() => {

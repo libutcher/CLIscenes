@@ -58,6 +58,7 @@ Open the URL that the command prints, usually http://localhost:5173. The page up
 | `npm run typecheck` | Checks the TypeScript code |
 | `npm run check` | Runs the type check, unit tests, and build |
 | `npm run gifs` | Records the demo GIFs in `docs/media/` |
+| `npm run build:lib` | Builds the React and Docusaurus components and the `cliscenes` command into `dist-lib/` |
 
 ## Example
 
@@ -176,7 +177,9 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 ></iframe>
 ```
 
-- **Docusaurus and Mintlify:** copy a ready-made component from [`examples/`](examples/). The component matches the site's light or dark mode and sets the iframe height.
+- **Docusaurus:** add `<CLIscene walkthrough="cli-signin" />` to any MDX page. The native component needs no iframe and follows the site's light or dark mode. [docs/embedding.md](docs/embedding.md#docusaurus) shows the setup.
+- **Mintlify:** copy the ready-made component from [`examples/mintlify/`](examples/mintlify/). The component matches the site's light or dark mode and sets the iframe height.
+- **Other React sites:** import `CLIscene` from `cliscenes/react`.
 - **Light or dark mode:** add `&theme=light` or `&theme=dark` to the URL.
 - **Example page:** open `dist/embed-example.html` to see a live embed.
 
@@ -201,14 +204,14 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - **One step per overlay:** an overlay appears in one step. To keep it on screen longer, repeat it in each step.
 - **Small screens:** wide terminals shrink on phones. Keep `cols` near 64 for phone readers.
 - **Colors only:** themes change colors, not fonts or shapes.
-- **Iframe embeds:** each embed uses an iframe. Native components are planned.
+- **Iframe in Mintlify:** the Mintlify snippet embeds the hosted player in an iframe, so the player needs a host of its own.
 
 ## Roadmap
 
 - **Recorded output:** import output from asciinema or VHS files.
 - **Generated walkthroughs:** build walkthroughs from CLI help, tested examples, SDK comments, or tests.
 - **Longer overlays:** keep one overlay on screen across several steps.
-- **Native components:** embed walkthroughs in Docusaurus and Mintlify without an iframe.
+- **Native Mintlify component:** embed walkthroughs in Mintlify without an iframe.
 - **More overlays:** add a browser window with an address bar and form fields.
 
 [GitHub issues](https://github.com/libutcher/CLIscenes/issues) track each item.

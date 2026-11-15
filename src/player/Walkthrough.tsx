@@ -6,6 +6,7 @@ import type { CompiledDemo } from "../core/types.ts";
 import { OverlayView } from "./overlays/registry.tsx";
 import { useWalkthrough } from "./useWalkthrough.ts";
 import { copyText } from "./clipboard.ts";
+import "./player.css";
 import { themeVariables } from "../core/theme.ts";
 import { useColorScheme } from "./colorScheme.ts";
 
