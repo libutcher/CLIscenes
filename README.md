@@ -187,6 +187,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 ```
 
 - **Docusaurus:** add `<CLIscene walkthrough="cli-signin" />` to any MDX page. The native component needs no iframe and follows the site's light or dark mode. [docs/embedding.md](docs/embedding.md#docusaurus) shows the setup.
+- **Minimal by default:** embeds show the terminal, the app UI, and the controls. Your page supplies the title and introduction. Add `header` or `steps` (or `&header=1`, `&steps=1` on an iframe) to show more.
 - **Mintlify:** copy the ready-made component from [`examples/mintlify/`](examples/mintlify/). The component matches the site's light or dark mode and sets the iframe height.
 - **Other React sites:** import `CLIscene` from `cliscenes/react`.
 - **Light or dark mode:** add `&theme=light` or `&theme=dark` to the URL.

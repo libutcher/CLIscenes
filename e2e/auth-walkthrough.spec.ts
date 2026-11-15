@@ -133,3 +133,24 @@ test("reduced motion shows commands without the typing animation", async ({ page
   await expect(terminal).toContainText("your-cli signin", { timeout: 5_000 });
   await expect(page.getByRole("dialog", { name: "Allow CLI sign-in?" })).toBeVisible({ timeout: 10_000 });
 });
+
+test.describe("embed options", () => {
+  test("embeds show only the terminal and controls by default", async ({ page }) => {
+    await page.goto("?demo=cli-signin&embed=1");
+    await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sign in to a CLI with a desktop app" })).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Walkthrough steps" })).toHaveCount(0);
+    // The walkthrough still has an accessible name.
+    await expect(page.getByRole("region", { name: "Interactive walkthrough: Sign in to a CLI with a desktop app" })).toBeVisible();
+    // Gates still work without the step list.
+    await page.getByRole("button", { name: "Play" }).click();
+    await expect(page.getByRole("dialog", { name: "Allow CLI sign-in?" })).toBeVisible({ timeout: 10_000 });
+  });
+
+  test("header=1 and steps=1 add the title and step list back", async ({ page }) => {
+    await page.goto("?demo=cli-signin&embed=1&header=1&steps=1");
+    await expect(page.getByRole("heading", { name: "Sign in to a CLI with a desktop app" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Walkthrough steps" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Sign in to a CLI with a desktop app" })).toBeVisible();
+  });
+});
