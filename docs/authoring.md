@@ -140,7 +140,13 @@ overlay:
   caption: Paste the key into the form.             # optional
 ```
 
-Write `alt` text that describes what the reader needs from the image. Use `alt: ""` only for purely decorative images. Remote URLs aren't supported.
+Write `alt` text that describes what the reader needs from the image. Use `alt: ""` only for purely decorative images.
+
+Image rules, which also apply to `icon` and `requesterIcon`:
+
+- **Inside the walkthrough's folder:** the file must be in the same folder as the YAML file, or a folder below it, such as `demos/assets/`. Paths with `..`, absolute paths, and symlinks that point outside the folder are rejected. This keeps a walkthrough from publishing other files from your computer.
+- **Images only:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.avif`, or `.svg`.
+- **Local only:** remote URLs aren't supported.
 
 ### `annotation`
 

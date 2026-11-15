@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, mkdir, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -82,38 +82,58 @@ describe("generator", () => {
     expect(await readFile(path.join(dir, "assets/b/logo.svg"), "utf8")).toBe("<svg>b</svg>");
   });
 
-  it("keeps same-named images apart, inside and outside the source folder", async () => {
-    const root = await tempDir();
-    const src = path.join(root, "demos");
+  it("keeps same-named images apart when one sits next to the source and one in assets/", async () => {
+    const src = await tempDir();
     const out = await tempDir();
-    for (const dir of ["demos/assets", "brand-a", "brand-b"]) await mkdir(path.join(root, dir), { recursive: true });
+    await mkdir(path.join(src, "assets"), { recursive: true });
     await writeFile(path.join(src, "logo.svg"), "<svg>next to source</svg>");
     await writeFile(path.join(src, "assets/logo.svg"), "<svg>in assets</svg>");
-    await writeFile(path.join(root, "brand-a/logo.svg"), "<svg>a</svg>");
-    await writeFile(path.join(root, "brand-b/logo.svg"), "<svg>b</svg>");
-    const prompt = (icon: string, requesterIcon: string) =>
-      `{ type: auth-prompt, title: T, message: M, icon: ${icon}, requesterIcon: ${requesterIcon}, actions: [{ label: OK }] }`;
     await writeFile(
       path.join(src, "logos.yaml"),
-      [
-        "title: Logos",
-        "steps:",
-        "  - id: a",
-        "    title: A",
-        `    overlay: ${prompt("logo.svg", "assets/logo.svg")}`,
-        "  - id: b",
-        "    title: B",
-        `    overlay: ${prompt("../brand-a/logo.svg", "../brand-b/logo.svg")}`,
-      ].join("\n"),
+      "title: Logos\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, icon: logo.svg, requesterIcon: assets/logo.svg, actions: [{ label: OK }] }\n",
     );
-
     await generateAll({ sourceDir: src, outDir: out });
     const dir = path.join(out, "demos/logos");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
-    const srcs = manifest.steps.flatMap((s) => s.overlays).flatMap((o) => (o.type === "auth-prompt" ? [o.icon!, o.requesterIcon!] : []));
-    expect(new Set(srcs).size).toBe(4);
-    const contents = await Promise.all(srcs.map((s) => readFile(path.join(dir, s), "utf8")));
-    expect(contents).toEqual(["<svg>next to source</svg>", "<svg>in assets</svg>", "<svg>a</svg>", "<svg>b</svg>"]);
+    const prompt = manifest.steps[0]!.overlays[0] as { icon: string; requesterIcon: string };
+    expect(prompt.icon).not.toBe(prompt.requesterIcon);
+    expect(await readFile(path.join(dir, prompt.icon), "utf8")).toBe("<svg>next to source</svg>");
+    expect(await readFile(path.join(dir, prompt.requesterIcon), "utf8")).toBe("<svg>in assets</svg>");
+  });
+
+  describe("asset safety", () => {
+    const withIcon = (icon: string) =>
+      `title: X\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, icon: "${icon}", actions: [{ label: OK }] }\n`;
+
+    it("rejects paths that leave the walkthrough's folder", async () => {
+      const root = await tempDir();
+      const src = path.join(root, "demos");
+      await mkdir(src);
+      await writeFile(path.join(root, "secret.png"), "not for publishing");
+      await writeFile(path.join(src, "x.yaml"), withIcon("../secret.png"));
+      await expect(generateAll({ sourceDir: src, outDir: root, check: true })).rejects.toThrow(/can't use "\.\."/);
+      await writeFile(path.join(src, "x.yaml"), withIcon(path.join(root, "secret.png")));
+      await expect(generateAll({ sourceDir: src, outDir: root, check: true })).rejects.toThrow(/absolute paths/);
+    });
+
+    it("rejects a symlink that points outside the walkthrough's folder", async () => {
+      const root = await tempDir();
+      const src = path.join(root, "demos");
+      const out = path.join(root, "out");
+      await mkdir(src);
+      await writeFile(path.join(root, "secret.png"), "not for publishing");
+      await symlink(path.join(root, "secret.png"), path.join(src, "innocent.png"));
+      await writeFile(path.join(src, "x.yaml"), withIcon("innocent.png"));
+      await expect(generateAll({ sourceDir: src, outDir: out })).rejects.toThrow(/links to a file outside/);
+      await expect(readFile(path.join(out, "demos/x/assets/innocent.png"))).rejects.toThrow();
+    });
+
+    it("rejects files that aren't images", async () => {
+      const src = await tempDir();
+      await writeFile(path.join(src, ".env"), "TOKEN=abc");
+      await writeFile(path.join(src, "x.yaml"), withIcon(".env"));
+      await expect(generateAll({ sourceDir: src, outDir: src, check: true })).rejects.toThrow(/Not an image file: \.env/);
+    });
   });
 
   describe("flat output (cliscenes build)", () => {

@@ -10,7 +10,7 @@
  * Commands in source files are never executed.
  */
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { parse as parseYaml, YAMLParseError } from "yaml";
@@ -66,12 +66,16 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
   const result = compileDemo(source, {
     id,
     rewriteAsset: (src) => {
-      const from = path.resolve(path.dirname(sourceFile), src);
-      if (!existsSync(from)) missing.push(`Image not found: ${src}`);
-      const existing = assets.find((a) => a.from === from);
+      const sourceDir = path.dirname(sourceFile);
+      const checked = resolveAsset(sourceDir, src);
+      if ("problem" in checked) {
+        missing.push(checked.problem);
+        return src;
+      }
+      const existing = assets.find((a) => a.from === checked.real);
       if (existing) return existing.to;
-      const to = assetOutputPath(path.dirname(sourceFile), from, new Set(assets.map((a) => a.to)));
-      assets.push({ from, to });
+      const to = assetOutputPath(sourceDir, checked.logical, new Set(assets.map((a) => a.to)));
+      assets.push({ from: checked.real, to });
       return to;
     },
   });
@@ -83,18 +87,47 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
   return { ...result, id, sourceFile, assets };
 }
 
+/** File types an overlay may reference. Anything else is refused. */
+export const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".svg"];
+
+const isInside = (dir: string, file: string) => {
+  const relative = path.relative(dir, file);
+  return relative !== "" && relative.split(path.sep)[0] !== ".." && !path.isAbsolute(relative);
+};
+
+/**
+ * Check a referenced file before it's copied into published output. It must
+ * be an image, and both its path and its real location (after following
+ * symlinks) must be inside the walkthrough's folder. This keeps a source file
+ * from publishing anything else on the machine, such as a key or a .env file.
+ */
+export function resolveAsset(sourceDir: string, src: string): { logical: string; real: string } | { problem: string } {
+  const extension = path.extname(src).toLowerCase();
+  if (!IMAGE_EXTENSIONS.includes(extension)) {
+    return { problem: `Not an image file: ${src}. Use ${IMAGE_EXTENSIONS.join(", ")}.` };
+  }
+  const logical = path.resolve(sourceDir, src);
+  if (!isInside(sourceDir, logical)) {
+    return { problem: `Image must be inside the walkthrough's folder: ${src}` };
+  }
+  if (!existsSync(logical)) return { problem: `Image not found: ${src}` };
+  const real = realpathSync(logical);
+  if (!isInside(realpathSync(sourceDir), real)) {
+    return { problem: `Image links to a file outside the walkthrough's folder: ${src}` };
+  }
+  if (!statSync(real).isFile()) return { problem: `Not a file: ${src}` };
+  return { logical, real };
+}
+
 /**
  * Where a referenced file goes in the output. Files keep their path relative
  * to the source file (a leading `assets/` is not repeated), so same-named
- * files in different folders stay apart. Files outside the source folder go
- * in `assets/external/`. If the preferred path is already taken by a
- * different file, a short hash of the file's location is added.
+ * files in different folders stay apart. If the preferred path is already
+ * taken by a different file, a short hash of the file's location is added.
  */
 export function assetOutputPath(sourceDir: string, from: string, taken: Set<string>): string {
   const relative = path.relative(sourceDir, from).split(path.sep).join("/");
-  const preferred = relative.startsWith("../")
-    ? `assets/external/${path.basename(from)}`
-    : `assets/${relative.replace(/^assets\//, "")}`;
+  const preferred = `assets/${relative.replace(/^assets\//, "")}`;
   if (!taken.has(preferred)) return preferred;
   const hash = createHash("sha256").update(from).digest("hex").slice(0, 8);
   return `${path.posix.dirname(preferred)}/${hash}-${path.basename(from)}`;
