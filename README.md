@@ -31,6 +31,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
+- **Clearly practice.** Each app window carries a "Simulated" label. Nothing in a walkthrough runs commands, approves requests, or changes real settings.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
