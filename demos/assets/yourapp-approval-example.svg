@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="540" viewBox="0 0 760 540" role="img" aria-labelledby="t d">
+<title id="t">Illustrative YourApp approval prompt</title><desc id="d">A fictional desktop approval dialog showing a CLI sign-in request and pictured Deny and Approve buttons.</desc>
+<rect width="760" height="540" rx="24" fill="#dce5ed"/>
+<rect x="36" y="28" width="688" height="480" rx="22" fill="#ffffff" stroke="#aab9c8" stroke-width="2"/>
+<path d="M58 28h644a22 22 0 0 1 22 22v48H36V50a22 22 0 0 1 22-22" fill="#f2f5f8"/>
+<circle cx="68" cy="63" r="9" fill="#ff605c"/><circle cx="96" cy="63" r="9" fill="#ffbd44"/><circle cx="124" cy="63" r="9" fill="#00ca4e"/>
+<text x="380" y="71" font-size="23" text-anchor="middle" font-family="Arial,sans-serif" fill="#283749">YourApp</text>
+<rect x="314" y="124" width="132" height="74" rx="18" fill="#d8eaf0"/><path d="M364 146l20 19-20 19" stroke="#24778b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="390" y="179" width="30" height="7" rx="3" fill="#24778b"/>
+<text x="380" y="239" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#162837">Allow CLI sign-in?</text>
+<text x="380" y="276" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="#465665">Terminal wants to access your account</text>
+<rect x="112" y="308" width="536" height="76" rx="12" fill="#f4f7f9" stroke="#d6dfe6"/>
+<circle cx="151" cy="346" r="22" fill="#dbe6ec"/><text x="151" y="353" font-size="18" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif" fill="#334e61">DA</text>
+<text x="188" y="340" font-size="20" font-weight="bold" font-family="Arial,sans-serif" fill="#263747">Demo Account</text><text x="188" y="366" font-size="17" font-family="Arial,sans-serif" fill="#637486">demo@example.com</text>
+<rect x="320" y="422" width="151" height="52" rx="10" fill="#e6ebf0" stroke="#c2ccd7"/><text x="395" y="455" font-size="21" text-anchor="middle" font-family="Arial,sans-serif" fill="#233443">Deny</text>
+<rect x="493" y="422" width="151" height="52" rx="10" fill="#147a86"/><text x="568" y="455" font-size="21" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" fill="#fff">Approve</text>
+</svg>

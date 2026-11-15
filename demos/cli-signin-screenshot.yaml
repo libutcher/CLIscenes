@@ -15,7 +15,7 @@ steps:
     title: See the authentication prompt
     overlay:
       type: image
-      src: assets/yourapp-approval-example.png
+      src: assets/yourapp-approval-example.svg
       alt: Example YourApp approval prompt showing the requesting terminal, account, and Approve and Deny buttons
       caption: Illustrative screenshot of a fictional app. In a real session, approve the request in YourApp.
       continueLabel: Show expected result

@@ -27,7 +27,7 @@ Nothing in a source file is ever executed. All output is text you write.
 | `terminal` | One of `terminal` or an overlay | | What happens in the terminal. |
 | `overlay` | | | One UI element outside the terminal. |
 | `overlays` | | | A list of UI elements outside the terminal. Use either `overlay` or `overlays`. |
-| `waitForAction` | No | `false` | Stop at the end of this step until the reader clicks an action. Needs an overlay with `actions`. |
+| `waitForAction` | No | `false` | Stop at the end of this step until the reader clicks an action. Needs an overlay with `actions` or an `image` with `continueLabel`. |
 | `finish` | No | `false` | End guided playback after this step. Later steps are reachable only through an action's `next` or navigation. Use it to end the main path before an alternative path. |
 | `pause` | No | `1.2` | Seconds to hold after the step's content. |
 
@@ -108,6 +108,22 @@ overlay:
   alt: A browser window showing the Add key form.   # required; describe what matters
   caption: Paste the key into the form.             # optional
 ```
+
+For static screenshots of approval prompts, add `continueLabel` to the image and `waitForAction: true` to its step:
+
+```yaml
+- id: approve
+  title: See the approval prompt
+  overlay:
+    type: image
+    src: assets/yourapp-approval-example.svg
+    alt: Illustrative approval prompt with Approve and Deny buttons
+    caption: Illustrative screenshot of a fictional app.
+    continueLabel: Show expected result
+  waitForAction: true
+```
+
+The screenshot is not clickable. The label creates a separate button in the **player controls**. Choosing it advances the example; it does not approve a real request. You can replace the example SVG with a sanitized PNG screenshot from a real app. Figma import is not required.
 
 Write `alt` text that describes what the reader needs from the image. Use `alt: ""` only for purely decorative images.
 

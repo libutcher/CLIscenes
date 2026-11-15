@@ -120,6 +120,12 @@ To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes t
 
 [docs/authoring.md](docs/authoring.md) describes the full format.
 
+## Static screenshot comparison (experimental)
+
+The `cli-signin-screenshot` example demonstrates the same fictional sign-in flow with an **illustrative static image** of an authentication prompt rather than a clickable mock dialog. The screenshot's buttons do nothing; **Show expected result** appears separately in the player's controls. The existing `cli-signin` demo remains available for comparison.
+
+This is intentionally not a real product screenshot; replace the example image with a genuine sanitized application capture when testing against a product. The image workflow does not require Figma. See [the authoring reference](docs/authoring.md#image).
+
 ## Overlay types
 
 An overlay shows an app or note outside the terminal.

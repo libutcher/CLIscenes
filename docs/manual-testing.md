@@ -21,6 +21,14 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 - [ ] **Pause** mid-command, wait, then **Play**. Playback continues from the same character.
 - [ ] Select the dialog's action button before playback reaches the pause point. Playback continues without stopping.
 
+## Static screenshot comparison (`cli-signin-screenshot`)
+
+- [ ] Select Play. The illustrative approval image appears over the terminal.
+- [ ] Pictured Approve and Deny buttons are not clickable; the terminal does not continue by itself.
+- [ ] **Show expected result** appears in the player controls and works with mouse and keyboard.
+- [ ] The terminal stays blocked until selecting that control, then shows expected output.
+- [ ] The image has descriptive alternative text, and a screen reader announces the separate Continue control.
+
 ## Text and copying
 
 - [ ] Select terminal text with the mouse and copy it (Cmd/Ctrl+C). The pasted text matches.
