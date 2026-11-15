@@ -35,6 +35,8 @@ export interface CompiledDemo {
   theme?: Theme;
   /** Cast file, relative to the manifest. */
   cast: string;
+  /** Same recording without the typing animation (identical timing). Older manifests may lack it. */
+  castReducedMotion?: string;
   duration: number;
   terminal: { cols: number; rows: number };
   steps: CompiledStep[];

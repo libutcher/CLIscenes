@@ -4,15 +4,18 @@
  *   index.html                          first demo, with a demo picker
  *   index.html?demo=cli-signin          a specific demo
  *   index.html?demo=cli-signin&embed=1  walkthrough only, for iframes
+ *   index.html?...&theme=dark           force light or dark (default: follow the system)
  */
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MANIFEST_VERSION, type CompiledDemo, type DemoIndexEntry } from "./core/types.ts";
 import { Walkthrough } from "./player/Walkthrough.tsx";
+import { initColorScheme } from "./player/colorScheme.ts";
 import "./player/styles.css";
 
 const params = new URLSearchParams(location.search);
 const embed = params.get("embed") === "1";
+initColorScheme(params.get("theme"));
 const demosUrl = new URL("demos/", document.baseURI);
 
 type Loaded = { demo: CompiledDemo; baseUrl: string; index: DemoIndexEntry[] };

@@ -92,3 +92,44 @@ test("setup walkthrough waits until the reader turns each setting on", async ({ 
   await expect(terminal).toContainText("Session:", { timeout: 15_000 });
   await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
 });
+
+test.describe("host-controlled theme", () => {
+  const surface = (page: import("@playwright/test").Page) =>
+    page.locator(".cs-walkthrough").evaluate((el) => getComputedStyle(el).backgroundColor);
+  const WHITE = "rgb(255, 255, 255)";
+
+  test("?theme=dark overrides a light system setting, and messages switch it live", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("?demo=cli-signin&theme=dark");
+    await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
+    expect(await surface(page)).not.toBe(WHITE);
+
+    await page.evaluate(() => window.postMessage({ type: "cliscenes:set-theme", theme: "light" }, "*"));
+    await expect.poll(() => surface(page)).toBe(WHITE);
+
+    // "auto" goes back to following the system.
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.evaluate(() => window.postMessage({ type: "cliscenes:set-theme", theme: "auto" }, "*"));
+    await expect.poll(() => surface(page)).not.toBe(WHITE);
+  });
+
+  test("ignores invalid theme values", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("?demo=cli-signin&theme=purple");
+    await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
+    expect(await surface(page)).toBe(WHITE);
+  });
+});
+
+test("reduced motion shows commands without the typing animation", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const castRequest = page.waitForRequest((r) => r.url().endsWith(".cast"));
+  await page.goto("?demo=cli-signin");
+  expect((await castRequest).url()).toContain("demo.reduced-motion.cast");
+
+  const terminal = page.getByRole("region", { name: /Terminal/ });
+  await page.getByRole("button", { name: "Play" }).click();
+  // The full command appears in one go; with typing, "your-cli" would show first.
+  await expect(terminal).toContainText("your-cli signin", { timeout: 5_000 });
+  await expect(page.getByRole("dialog", { name: "Allow CLI sign-in?" })).toBeVisible({ timeout: 10_000 });
+});

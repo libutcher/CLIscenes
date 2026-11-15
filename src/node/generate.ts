@@ -79,6 +79,7 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
 
   // Self-check: the cast we produced must be a valid asciicast v3 file.
   parseCast(result.cast);
+  parseCast(result.castReducedMotion);
   return { ...result, id, sourceFile, assets };
 }
 
@@ -146,6 +147,7 @@ export async function generateAll({ sourceDir, outDir, check = false }: Generate
     const dir = path.join(demosDir, demo.id);
     await mkdir(path.join(dir, "assets"), { recursive: true });
     await writeFile(path.join(dir, "demo.cast"), demo.cast);
+    await writeFile(path.join(dir, "demo.reduced-motion.cast"), demo.castReducedMotion);
     await writeFile(path.join(dir, "demo.json"), JSON.stringify(demo.manifest, null, 2) + "\n");
     for (const asset of demo.assets) {
       const target = path.join(dir, asset.to);

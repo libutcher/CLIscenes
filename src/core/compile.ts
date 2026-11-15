@@ -41,6 +41,12 @@ const CLEAR_SCREEN = "\u001b[2J\u001b[3J\u001b[H";
 export interface CompileResult {
   manifest: CompiledDemo;
   cast: string;
+  /**
+   * The same recording without the typing animation: each command appears
+   * all at once. Every event time, marker, and step boundary is identical to
+   * `cast`, so the manifest works with either.
+   */
+  castReducedMotion: string;
 }
 
 export interface CompileOptions {
@@ -58,8 +64,13 @@ function outputLines(output: string): string[] {
 export function compileDemo(source: DemoSource, options: CompileOptions): CompileResult {
   const { prompt, typingSpeed, cols, rows } = source.terminal;
   const events: TimedEvent[] = [];
+  const reducedEvents: TimedEvent[] = [];
   const steps: CompiledStep[] = [];
-  const emit = (time: number, data: string, code: TimedEvent["code"] = "o") => events.push({ time, code, data });
+  /** Add an event to both recordings. */
+  const emit = (time: number, data: string, code: TimedEvent["code"] = "o") => {
+    events.push({ time, code, data });
+    reducedEvents.push({ time, code, data });
+  };
 
   let t = 0;
   source.steps.forEach((step, index) => {
@@ -76,8 +87,11 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
       emit(t, prompt);
       t += TIMING.beforeTyping;
       if (term.typing) {
+        // The reduced-motion recording shows the whole command at once, then
+        // waits as long as typing would take, so both recordings stay in step.
+        reducedEvents.push({ time: t, code: "o", data: term.command });
         for (const char of term.command) {
-          emit(t, char);
+          events.push({ time: t, code: "o", data: char });
           t += typingSpeed;
         }
       } else {
@@ -133,13 +147,13 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
   // Finish on an idle prompt. It also gives the recording its full duration.
   emit(t, prompt);
 
-  const cast = serializeCast(
-    { version: 3, term: { cols, rows, type: "xterm-256color" }, title: source.title },
-    events,
-  );
+  const header = { version: 3, term: { cols, rows, type: "xterm-256color" }, title: source.title } as const;
+  const cast = serializeCast(header, events);
+  const castReducedMotion = serializeCast(header, reducedEvents);
 
   return {
     cast,
+    castReducedMotion,
     manifest: {
       manifestVersion: MANIFEST_VERSION,
       id: options.id,
@@ -149,6 +163,7 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
       layout: source.layout,
       ...(source.theme ? { theme: source.theme } : {}),
       cast: "demo.cast",
+      castReducedMotion: "demo.reduced-motion.cast",
       duration: round(t),
       terminal: { cols, rows },
       steps,

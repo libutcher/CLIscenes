@@ -17,8 +17,12 @@ export function useWalkthrough(demo: CompiledDemo, baseUrl: string) {
   useEffect(() => {
     const container = terminalRef.current;
     if (!container) return;
+    // Readers who ask for reduced motion get the recording without the typing
+    // animation. Its timing is identical, so gates and overlays line up.
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const castFile = reduceMotion && demo.castReducedMotion ? demo.castReducedMotion : demo.cast;
     const adapter = createAsciinemaAdapter(container, {
-      castUrl: new URL(demo.cast, baseUrl).href,
+      castUrl: new URL(castFile, baseUrl).href,
       cols: demo.terminal.cols,
       rows: demo.terminal.rows,
     });
