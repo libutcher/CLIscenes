@@ -224,6 +224,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - [docs/adr/0001-terminal-player.md](docs/adr/0001-terminal-player.md): the choice of terminal player
 - [docs/manual-testing.md](docs/manual-testing.md): the manual test checklist
 - [AGENTS.md](AGENTS.md): notes for AI assistants
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to report problems and make changes
 
 ## License and attribution
 
