@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { visibleOverlays, type GateState, type OrchestratorState } from "../core/orchestrator.ts";
 import type { OverlayAction } from "../core/schema.ts";
 import { commandForStep, stepProgress } from "../core/timeline.ts";
@@ -10,13 +10,18 @@ import "./player.css";
 import { themeVariables } from "../core/theme.ts";
 import { useColorScheme } from "./colorScheme.ts";
 
-interface WalkthroughProps {
+export interface WalkthroughProps {
   demo: CompiledDemo;
   /** URL of the folder containing demo.json, ending in "/". */
   baseUrl: string;
+  /** Show the title, description, and prerequisites. Embeds usually leave this to the host page. */
+  header?: boolean;
+  /** Show the clickable list of steps under the controls. */
+  steps?: boolean;
 }
 
-export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
+export function Walkthrough({ demo, baseUrl, header = true, steps = true }: WalkthroughProps) {
+  const titleId = useId();
   const { terminalRef, orchestrator, state } = useWalkthrough(demo, baseUrl);
   const rootRef = useRef<HTMLDivElement>(null);
   const playRef = useRef<HTMLButtonElement>(null);
@@ -49,21 +54,29 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
       className={`cs-walkthrough cs-layout-${demo.layout}`}
       data-status={state.status}
       style={themeStyle}
+      // The walkthrough is a named region, so screen readers announce what it
+      // is even when the header is hidden.
+      role="region"
+      {...(header ? { "aria-labelledby": titleId } : { "aria-label": `Interactive walkthrough: ${demo.title}` })}
     >
-      <div className="cs-header">
-        <h2 className="cs-title">{demo.title}</h2>
-        {demo.description && <p className="cs-description">{demo.description}</p>}
-        {demo.prerequisites && (
-          <div className="cs-prereqs">
-            <span className="cs-prereqs__label">Before you start:</span>
-            <ul>
-              {demo.prerequisites.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      {header && (
+        <div className="cs-header">
+          <h2 id={titleId} className="cs-title">
+            {demo.title}
+          </h2>
+          {demo.description && <p className="cs-description">{demo.description}</p>}
+          {demo.prerequisites && (
+            <div className="cs-prereqs">
+              <span className="cs-prereqs__label">Before you start:</span>
+              <ul>
+                {demo.prerequisites.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="cs-stage">
         <div className="cs-terminal-pane">
@@ -86,7 +99,7 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
       </div>
 
       <Controls demo={demo} state={state} playRef={playRef} orchestrator={orchestrator} />
-      <StepList demo={demo} state={state} onSelect={(i) => void orchestrator?.goToStep(i)} />
+      {steps && <StepList demo={demo} state={state} onSelect={(i) => void orchestrator?.goToStep(i)} />}
       <Announcer demo={demo} state={state} />
     </div>
   );

@@ -4,6 +4,7 @@
  *   import CLIscene from "cliscenes/docusaurus";
  *
  *   <CLIscene walkthrough="cli-signin" />
+ *   <CLIscene walkthrough="cli-signin" header steps />   (also show the title and step list)
  *
  * Looks for walkthroughs in static/walkthroughs/ (made with
  * `cliscenes build walkthroughs --out static/walkthroughs`) and applies the
@@ -20,11 +21,15 @@ export interface DocusaurusCLISceneProps {
   walkthrough?: string;
   /** Or a full path to a walkthrough folder, relative to the site root. */
   src?: string;
+  /** Also show the walkthrough's title, description, and prerequisites. Default: hidden, since the page usually has its own. */
+  header?: boolean;
+  /** Also show the clickable step list under the controls. Default: hidden. */
+  steps?: boolean;
 }
 
-export default function CLIscene({ walkthrough, src }: DocusaurusCLISceneProps) {
+export default function CLIscene({ walkthrough, src, header, steps }: DocusaurusCLISceneProps) {
   const path = src ?? (walkthrough ? `/walkthroughs/${walkthrough}/` : "");
   const url = useBaseUrl(path);
   if (!path) throw new Error('<CLIscene> needs a walkthrough="…" or src="…" prop.');
-  return <BaseCLIscene src={url} />;
+  return <BaseCLIscene src={url} header={header} steps={steps} />;
 }
