@@ -12,7 +12,7 @@ test("authentication prompt gates the rest of the walkthrough", async ({ page })
   await expect(page.getByRole("button", { name: "Play" })).toBeEnabled();
   await page.getByRole("button", { name: "Play" }).click();
 
-  await expect(terminal).toContainText("cli-scenes signin");
+  await expect(terminal).toContainText("your-cli signin");
   await expect(dialog).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("button", { name: "Waiting for your action" })).toBeVisible();
 
@@ -41,7 +41,7 @@ test("authentication prompt gates the rest of the walkthrough", async ({ page })
   await dialog.getByRole("button", { name: "Approve" }).click();
   await expect(dialog).toBeHidden();
   await expect(terminal).toContainText("Signed in as demo@example.com", { timeout: 10_000 });
-  await expect(terminal).toContainText("cli-scenes projects list", { timeout: 10_000 });
+  await expect(terminal).toContainText("your-cli projects list", { timeout: 10_000 });
   await expect(terminal).toContainText("Internal tools", { timeout: 10_000 });
 
   // The main path ends at the project list; the Deny branch does not play on.

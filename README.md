@@ -52,17 +52,17 @@ Open the URL that Vite prints (usually http://localhost:5173). The dev server ge
 
 ## Example
 
-`demos/cli-signin.yaml` (shortened). The `cli-scenes` CLI and its desktop app are fictional.
+`demos/cli-signin.yaml` (shortened). The `your-cli` CLI and its desktop app are fictional.
 
 ```yaml
 title: Sign in to a CLI with a desktop app
-layout: split
+layout: overlay            # the prompt pops up over the terminal
 
 steps:
   - id: signin
     title: Run a command
     terminal:
-      command: cli-scenes signin
+      command: your-cli signin
       output: Waiting for approval in YourApp...
 
   - id: approve
@@ -71,7 +71,7 @@ steps:
       type: auth-prompt
       app: YourApp
       title: Allow CLI sign-in?
-      message: The command-line tool "cli-scenes" on this computer wants to sign in to your account.
+      message: Terminal is running "your-cli signin" and wants to access your account.
       actions:
         - label: Approve
           next: success
@@ -88,7 +88,7 @@ steps:
   - id: list-projects
     title: Run an authenticated command
     terminal:
-      command: cli-scenes projects list
+      command: your-cli projects list
       output: |
         ID        NAME
         prj_001   Website

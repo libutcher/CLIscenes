@@ -225,17 +225,28 @@ body {
   }
 }
 
-/* Overlay view: external UI floats over the lower right of the terminal. On
-   small screens it stacks below instead, so it never hides terminal text. */
+/* Overlay view: external UI floats over the upper right of the terminal, the
+   way a desktop app's window pops up over the one you're working in.
+
+   The terminal and the floating window share one grid cell instead of using
+   absolute positioning, so a window taller than the terminal makes the stage
+   grow rather than being clipped. On small screens it stacks below instead,
+   so it never hides terminal text. */
 @media (min-width: 700px) {
+  .cs-layout-overlay .cs-terminal-pane,
   .cs-layout-overlay .cs-external {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-    width: min(380px, 55%);
-    max-height: calc(100% - 32px);
-    overflow: auto;
-    filter: drop-shadow(var(--cs-shadow));
+    grid-area: 1 / 1;
+  }
+  .cs-layout-overlay .cs-terminal-pane {
+    align-self: start;
+  }
+  .cs-layout-overlay .cs-external {
+    z-index: 1;
+    justify-self: end;
+    align-self: start;
+    width: min(400px, 55%);
+    margin: 36px 24px 0 0;
+    filter: drop-shadow(0 14px 32px rgb(0 0 0 / 0.35));
   }
 }
 

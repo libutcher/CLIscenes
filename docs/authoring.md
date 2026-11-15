@@ -11,7 +11,7 @@ Nothing in a source file is ever executed. All output is text you write.
 | `title` | Yes | | Shown above the walkthrough. |
 | `description` | No | `""` | One or two sentences under the title. |
 | `prerequisites` | No | | What readers need before they start. Shown as a "Before you start" list. |
-| `layout` | No | `split` | `split`: UI outside the terminal appears beside it (stacked on small screens). `overlay`: it floats over the lower right of the terminal. |
+| `layout` | No | `split` | `split`: UI outside the terminal appears beside it (stacked on small screens). `overlay`: it floats over the upper right of the terminal, like a desktop window popping up; a window taller than the terminal hangs past its bottom edge instead of being cut off. Both layouts stack on small screens. Use `overlay` for prompts that interrupt the terminal and `split` for apps readers look at alongside it. |
 | `theme` | No | | Brand colors for this walkthrough. See [Theme](#theme). |
 | `terminal.cols` | No | `80` | Terminal width in characters. |
 | `terminal.rows` | No | `16` | Terminal height in lines. |
