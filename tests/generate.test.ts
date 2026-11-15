@@ -2,7 +2,7 @@ import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { generateAll } from "../src/node/generate.ts";
+import { generateAll, listSources } from "../src/node/generate.ts";
 import { parseCast } from "../src/core/asciicast.ts";
 import type { CompiledDemo, DemoIndexEntry } from "../src/core/types.ts";
 
@@ -19,10 +19,16 @@ afterEach(async () => {
   await Promise.all(temps.splice(0).map((d) => rm(d, { recursive: true, force: true })));
 });
 
+/** Ids of every source file in demos/, so adding a walkthrough never breaks these tests. */
+async function repoDemoIds() {
+  return (await listSources(repoDemos)).map((file) => path.basename(file, path.extname(file)));
+}
+
 describe("generator", () => {
-  it("validates every example in demos/", async () => {
+  it("validates every walkthrough in demos/, including the built-in examples", async () => {
     const demos = await generateAll({ sourceDir: repoDemos, outDir: "unused", check: true });
-    expect(demos.map((d) => d.id)).toEqual(["cli-setup", "cli-signin"]);
+    expect(demos.map((d) => d.id)).toEqual(await repoDemoIds());
+    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["cli-setup", "cli-signin"]));
   });
 
   it("writes a cast, manifest, assets, and index for each demo", async () => {
@@ -30,7 +36,7 @@ describe("generator", () => {
     await generateAll({ sourceDir: repoDemos, outDir: out });
 
     const index: DemoIndexEntry[] = JSON.parse(await readFile(path.join(out, "demos/index.json"), "utf8"));
-    expect(index.map((d) => d.id)).toEqual(["cli-setup", "cli-signin"]);
+    expect(index.map((d) => d.id)).toEqual(await repoDemoIds());
 
     const dir = path.join(out, "demos/cli-signin");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));

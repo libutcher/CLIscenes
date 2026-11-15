@@ -170,8 +170,14 @@ steps:
     terminal: { output: Signed in. }
     finish: true            # stop here so the denied path doesn't play next
   - id: denied
-    terminal: { output: "Error: request denied." }
+    terminal: { clear: true, output: "Error: request denied." }   # start the branch from a clean screen
 ```
+
+### Jumps and the terminal
+
+A walkthrough is one continuous recording, and a jump (an action's `next`, or the step list) moves to a point in it. After a jump, the terminal shows everything recorded up to the target step, not what was on screen when the reader clicked.
+
+A branch placed after the main path would therefore show the main path's output above its own, so start each branch that's reached by a jump with `clear: true`. Then repeat anything the reader needs to see, such as the command they ran. A step with no `terminal` block leaves the terminal as it was.
 
 ## Theme
 

@@ -117,6 +117,14 @@ The full format is in [docs/authoring.md](docs/authoring.md).
 
 To add an overlay type, see [docs/architecture.md](docs/architecture.md#adding-an-overlay-type).
 
+## Writing walkthroughs with an AI assistant
+
+The repo includes an authoring guide written for AI coding assistants: [`.claude/skills/cliscenes-authoring/SKILL.md`](.claude/skills/cliscenes-authoring/SKILL.md). It explains how to plan a walkthrough, which overlay and layout to choose, how to fix validation errors, and the rules on secrets and branding.
+
+- **Claude Code** loads it automatically as a skill. Ask something like "create a walkthrough that shows signing in to our CLI".
+- **Other assistants** that read [`AGENTS.md`](AGENTS.md) are pointed to it.
+- **People** can read it as plain Markdown.
+
 ## Make it look like your product
 
 You can customize each walkthrough from its source file. You don't need to change code.
@@ -206,6 +214,7 @@ See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checkli
 - [docs/prior-art.md](docs/prior-art.md): related projects
 - [docs/embedding.md](docs/embedding.md): static output and embedding
 - [docs/manual-testing.md](docs/manual-testing.md): browser test checklist
+- [AGENTS.md](AGENTS.md) and [.claude/skills/cliscenes-authoring](.claude/skills/cliscenes-authoring/SKILL.md): guidance for AI coding assistants
 
 ## License and attribution
 
