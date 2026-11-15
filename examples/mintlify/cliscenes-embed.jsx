@@ -11,10 +11,11 @@
  *   />
  *
  * The walkthrough follows the site's light/dark toggle without reloading, and
- * the iframe resizes to fit its content. Mintlify provides React hooks to
- * snippets, so there are no imports.
+ * the iframe resizes to fit its content. It shows only the terminal and
+ * controls; add `header` or `steps` to also show the title or the step list.
+ * Mintlify provides React hooks to snippets, so there are no imports.
  */
-export const CLIscenesEmbed = ({ src, title, height = 560 }) => {
+export const CLIscenesEmbed = ({ src, title, height = 480, header = false, steps = false }) => {
   const frameRef = useRef(null);
   const [frameHeight, setFrameHeight] = useState(height);
 
@@ -42,7 +43,7 @@ export const CLIscenesEmbed = ({ src, title, height = 560 }) => {
     };
   }, []);
 
-  const url = src + (src.includes("?") ? "&" : "?") + "embed=1";
+  const url = src + (src.includes("?") ? "&" : "?") + "embed=1" + (header ? "&header=1" : "") + (steps ? "&steps=1" : "");
   return (
     <iframe
       ref={frameRef}

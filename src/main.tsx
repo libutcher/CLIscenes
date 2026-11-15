@@ -5,6 +5,7 @@
  *   index.html?demo=cli-signin          a specific demo
  *   index.html?demo=cli-signin&embed=1  walkthrough only, for iframes
  *   index.html?...&theme=dark           force light or dark (default: follow the system)
+ *   ...&embed=1&header=1&steps=1        also show the title and the step list in an embed
  */
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -15,6 +16,9 @@ import "./page.css";
 
 const params = new URLSearchParams(location.search);
 const embed = params.get("embed") === "1";
+// Embeds show only the terminal and controls unless the host asks for more.
+const showHeader = params.get("header") === "1";
+const showSteps = params.get("steps") === "1";
 initColorScheme(params.get("theme"));
 const demosUrl = new URL("demos/", document.baseURI);
 
@@ -51,7 +55,7 @@ function App() {
   if (result === null) return <p className="cs-loading">Loading walkthrough…</p>;
   if (result instanceof Error) return <p role="alert" className="cs-error">{result.message}</p>;
 
-  if (embed) return <Walkthrough demo={result.demo} baseUrl={result.baseUrl} />;
+  if (embed) return <Walkthrough demo={result.demo} baseUrl={result.baseUrl} header={showHeader} steps={showSteps} />;
 
   return (
     <main className="cs-page">

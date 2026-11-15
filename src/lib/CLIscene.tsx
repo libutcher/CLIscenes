@@ -6,6 +6,9 @@
  *
  *   <CLIscene src="/walkthroughs/cli-signin/" />
  *
+ * By default it shows only the terminal, the UI around it, and the playback
+ * controls. Add `header` or `steps` to show the title or the step list.
+ *
  * `src` is the URL of a walkthrough folder made by `cliscenes build` (or of
  * its demo.json). Safe to render on the server: the walkthrough loads in the
  * browser.
@@ -17,11 +20,15 @@ import { Walkthrough } from "../player/Walkthrough.tsx";
 export interface CLISceneProps {
   /** URL of a walkthrough folder, such as "/walkthroughs/cli-signin/", or of its demo.json. */
   src: string;
+  /** Also show the walkthrough's title, description, and prerequisites. Default: hidden, since the page usually has its own. */
+  header?: boolean;
+  /** Also show the clickable step list under the controls. Default: hidden. */
+  steps?: boolean;
 }
 
 type Loaded = { demo: CompiledDemo; baseUrl: string };
 
-export function CLIscene({ src }: CLISceneProps) {
+export function CLIscene({ src, header = false, steps = false }: CLISceneProps) {
   const [result, setResult] = useState<Loaded | Error | null>(null);
 
   useEffect(() => {
@@ -61,5 +68,5 @@ export function CLIscene({ src }: CLISceneProps) {
       </div>
     );
   }
-  return <Walkthrough demo={result.demo} baseUrl={result.baseUrl} />;
+  return <Walkthrough demo={result.demo} baseUrl={result.baseUrl} header={header} steps={steps} />;
 }

@@ -94,7 +94,8 @@ async function record(
   baseUrl: string,
   recording: Recording,
 ): Promise<{ frames: Buffer[]; delays: number[]; height: number }> {
-  await page.goto(`${baseUrl}?demo=${recording.demo}&embed=1&theme=${THEME}`);
+  // The README GIFs include the title and step list for context.
+  await page.goto(`${baseUrl}?demo=${recording.demo}&embed=1&header=1&steps=1&theme=${THEME}`);
   await page.getByRole("button", { name: "Play" }).waitFor();
   await page.mouse.move(40, 40);
   const walkthrough = page.locator(".cs-walkthrough");

@@ -28,7 +28,8 @@ Host `dist/` on any static file server. It doesn't need a backend or the origina
 ></iframe>
 ```
 
-- `demo` chooses the walkthrough. `embed=1` hides the page header and demo list.
+- `demo` chooses the walkthrough. `embed=1` shows only the walkthrough: the terminal, the UI around it, and the playback controls. The page around it supplies the title and introduction.
+- `header=1` also shows the walkthrough's title, description, and prerequisites. `steps=1` also shows the clickable step list.
 - `title` is required for accessibility. Describe the walkthrough, not "iframe".
 - `allow="clipboard-write"` lets **Copy command** work inside the iframe.
 - All asset URLs are relative, so `dist/` can live in any subfolder.
@@ -104,6 +105,8 @@ Docusaurus sites can use a native component, with no iframe and no separate play
    ```
 
    `walkthrough` is the source file's name. The component finds `static/walkthroughs/<name>/` and adds the site's `baseUrl` for you. To load a walkthrough from somewhere else, pass `src="/path/to/folder/"` instead.
+
+   The component shows only the terminal, the UI around it, and the playback controls, so the page's own heading and text introduce it. Add `header` to also show the walkthrough's title, description, and prerequisites, or `steps` to show the clickable step list: `<CLIscene walkthrough="cli-signin" header steps />`.
 
 The component loads its own styles, and they only affect the walkthrough. It follows the site's light/dark toggle automatically. On the server, it renders a placeholder, and the walkthrough loads in the browser.
 

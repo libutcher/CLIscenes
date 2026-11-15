@@ -11,12 +11,13 @@
  *   />
  *
  * The walkthrough follows the site's light/dark toggle without reloading, and
- * the iframe resizes to fit its content.
+ * the iframe resizes to fit its content. It shows only the terminal and controls;
+ * add `header` or `steps` to also show the title or the step list.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useColorMode } from "@docusaurus/theme-common";
 
-export default function CLIscenesEmbed({ src, title, height = 560 }) {
+export default function CLIscenesEmbed({ src, title, height = 480, header = false, steps = false }) {
   const { colorMode } = useColorMode();
   const frame = useRef(null);
   const [frameHeight, setFrameHeight] = useState(height);
@@ -38,7 +39,7 @@ export default function CLIscenesEmbed({ src, title, height = 560 }) {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  const url = `${src}${src.includes("?") ? "&" : "?"}embed=1`;
+  const url = `${src}${src.includes("?") ? "&" : "?"}embed=1${header ? "&header=1" : ""}${steps ? "&steps=1" : ""}`;
   return (
     <iframe
       ref={frame}
