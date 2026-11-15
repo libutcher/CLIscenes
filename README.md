@@ -161,7 +161,12 @@ Host `dist/` on any static server, then embed:
 ></iframe>
 ```
 
-`dist/embed-example.html` shows a working embed, including optional automatic iframe resizing. For notes on Mintlify and similar platforms, see [docs/embedding.md](docs/embedding.md).
+`dist/embed-example.html` shows a working embed, including optional automatic iframe resizing.
+
+- **Docusaurus and Mintlify:** copy-in components in [`examples/`](examples/) embed a walkthrough that follows the site's light/dark toggle live and sizes itself. Both were tested on real sites.
+- **Light or dark mode:** add `&theme=light` or `&theme=dark` to the URL, or send a `cliscenes:set-theme` message to switch it live.
+
+See [docs/embedding.md](docs/embedding.md) for details and other platforms.
 
 ## Accessibility
 
@@ -170,7 +175,8 @@ Host `dist/` on any static server, then embed:
 - When a gated dialog appears and the reader is using the walkthrough, focus moves to its primary action. If the reader is elsewhere on the page, focus stays where it is and the page doesn't scroll.
 - A live region announces each step change and what the walkthrough is waiting for.
 - Images require alt text (`alt: ""` marks a decorative image).
-- Animations are off when the reader prefers reduced motion. The player follows the system light or dark setting.
+- When the reader prefers reduced motion, commands appear whole instead of being typed, and overlays appear without animation. Timing and gates are unchanged.
+- Light or dark mode follows the reader's system, or the host docs site's theme toggle when embedded (see Embedding).
 - The player's single-key shortcuts are turned off, so they can't conflict with the host page or assistive technology.
 
 See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checklist.
@@ -180,17 +186,15 @@ See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checkli
 - All terminal output is authored text. CLIscenes never runs commands or records real sessions.
 - One terminal per walkthrough, played as a single linear recording. Branches are later steps that you reach through `next`, and `finish` keeps the main path from playing into them.
 - Overlays belong to one step. An overlay that stays across several steps has to be repeated.
-- Command typing still animates when reduced motion is on.
 - On narrow screens, wide terminals scale down. Keep `cols` near 64 for walkthroughs that will be read on phones.
 - Themes set colors only. Fonts and corner styles follow the player's design.
-- There are no platform integrations yet. Embedding uses an iframe.
+- Embedding uses an iframe. Tested copy-in components for Docusaurus and Mintlify wrap it; native, iframe-free components are planned.
 
 ## Roadmap
 
 - Import real output from asciinema or VHS recordings, so examples can be checked against the actual CLI.
 - Generate walkthrough sources from CLI help text, tested docs examples, SDK comments, or test runs.
 - Overlays that stay across a range of steps.
-- Let the host page choose light or dark mode, to match a docs site's theme toggle.
 - Native components for documentation frameworks (MDX, Docusaurus, Mintlify) as an alternative to iframes.
 - More overlay types, such as a browser window with a URL bar and simple form fields.
 

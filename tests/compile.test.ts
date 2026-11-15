@@ -31,6 +31,36 @@ describe("asciicast v3 output", () => {
   });
 });
 
+describe("reduced-motion recording", () => {
+  const { cast, castReducedMotion, manifest } = compileYaml(SIGNIN_YAML);
+  const full = parseCast(cast);
+  const reduced = parseCast(castReducedMotion);
+
+  it("is listed in the manifest", () => {
+    expect(manifest.castReducedMotion).toBe("demo.reduced-motion.cast");
+  });
+
+  it("has the same duration and markers, so one manifest fits both", () => {
+    expect(reduced.duration).toBeCloseTo(full.duration, 6);
+    const markers = (events: typeof full.events) => events.filter((e) => e.code === "m").map((e) => [e.time.toFixed(3), e.data]);
+    expect(markers(reduced.events)).toEqual(markers(full.events));
+  });
+
+  it("shows each command at once instead of typing it", () => {
+    const output = reduced.events.filter((e) => e.code === "o").map((e) => e.data);
+    expect(output).toContain("demo signin");
+    expect(output).not.toContain("d");
+    const at = (events: typeof full.events, data: string) => events.find((e) => e.data === data)!.time;
+    // The whole command appears when the first character would have.
+    expect(at(reduced.events, "demo signin")).toBeCloseTo(at(full.events, "d"), 6);
+  });
+
+  it("ends with the same screen content", () => {
+    const text = (events: typeof full.events) => events.filter((e) => e.code === "o").map((e) => e.data).join("");
+    expect(text(reduced.events)).toBe(text(full.events));
+  });
+});
+
 describe("asciicast validation", () => {
   it("round-trips serialized events", () => {
     const cast = serializeCast({ version: 3, term: { cols: 10, rows: 2 } }, [

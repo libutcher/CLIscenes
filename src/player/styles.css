@@ -26,8 +26,11 @@
   color-scheme: light;
 }
 
+/* Dark palette. It follows the reader's system setting unless the host page
+   picks a theme (?theme=light|dark, or a cliscenes:set-theme message), which
+   sets data-theme on <html>. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --cs-bg: #12151b;
     --cs-surface: #1b1f27;
     --cs-surface-muted: #242a34;
@@ -45,6 +48,25 @@
     --cs-shadow: 0 8px 28px rgb(0 0 0 / 0.45);
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --cs-bg: #12151b;
+  --cs-surface: #1b1f27;
+  --cs-surface-muted: #242a34;
+  --cs-text: #e7eaf0;
+  --cs-text-muted: #a3abb8;
+  --cs-border: #353c48;
+  --cs-accent: #6f9bff;
+  --cs-accent-text: #0b1530;
+  --cs-accent-soft: #1f2d4d;
+  --cs-warning-soft: #3d3216;
+  --cs-warning-text: #f5d58a;
+  --cs-success-soft: #193323;
+  --cs-success-text: #9fdcb0;
+  --cs-focus: #9ab9ff;
+  --cs-shadow: 0 8px 28px rgb(0 0 0 / 0.45);
+  color-scheme: dark;
 }
 
 * {

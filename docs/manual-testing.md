@@ -44,7 +44,8 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 - [ ] **Theme** (`cli-setup`): the teal accent applies to buttons, switches, and progress, in light and dark mode.
 - [ ] At 390px wide: both layouts stack vertically, with no horizontal page scrolling.
 - [ ] Dark mode (operating system setting): every surface, badge, and button is readable.
-- [ ] Reduced motion (operating system setting): overlays appear without animation.
+- [ ] Reduced motion (operating system setting): overlays appear without animation, and commands appear whole instead of being typed.
+- [ ] `?demo=cli-signin&theme=dark` shows dark mode with a light system setting, and `&theme=light` the reverse.
 
 ## Authoring loop
 

@@ -7,7 +7,7 @@ import { OverlayView } from "./overlays/registry.tsx";
 import { useWalkthrough } from "./useWalkthrough.ts";
 import { copyText } from "./clipboard.ts";
 import { themeVariables } from "../core/theme.ts";
-import { usePrefersDark } from "./usePrefersDark.ts";
+import { useColorScheme } from "./colorScheme.ts";
 
 interface WalkthroughProps {
   demo: CompiledDemo;
@@ -22,8 +22,8 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
   const step = demo.steps[state.stepIndex]!;
   const overlays = visibleOverlays(demo, state);
   const waiting = state.status === "awaiting-action";
-  const dark = usePrefersDark();
-  const themeStyle = useMemo(() => themeVariables(demo.theme, dark ? "dark" : "light") as React.CSSProperties, [demo.theme, dark]);
+  const scheme = useColorScheme();
+  const themeStyle = useMemo(() => themeVariables(demo.theme, scheme) as React.CSSProperties, [demo.theme, scheme]);
 
   // When a gated step's overlay appears, move focus to its primary action, but
   // only if the reader is already using the walkthrough. This avoids focus

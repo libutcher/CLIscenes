@@ -59,6 +59,8 @@ Each compiled step records `start`, `end`, and optionally `gate.time` or `finish
 
 The output is deterministic: the same source always produces byte-identical files.
 
+The compiler writes two recordings: `demo.cast` and `demo.reduced-motion.cast`. In the second, each command appears whole at the moment its first character would have been typed, and the time typing would take still passes. Every other event, marker, and step boundary is identical, so one manifest works with both. The player picks the reduced-motion recording when the reader's system asks for reduced motion.
+
 ## Orchestration
 
 The orchestrator is the single source of truth. The terminal is only a renderer it drives, and overlays have no timers of their own.

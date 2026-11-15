@@ -10,6 +10,7 @@ dist/
   demos/index.json
   demos/<id>/demo.json       manifest
   demos/<id>/demo.cast       asciicast v3 recording
+  demos/<id>/demo.reduced-motion.cast   the same recording without typing animation
   demos/<id>/assets/         images
 ```
 
@@ -55,19 +56,72 @@ Add this script to the host page to size iframes to fit their content:
 
 Without the script, set a fixed height. 520–600px suits most walkthroughs at desktop widths.
 
+### Light and dark mode
+
+By default, the player follows the reader's system setting. Docs sites usually have their own theme toggle, so the host page can choose instead:
+
+- **When the page loads:** add `&theme=light` or `&theme=dark` to the URL. `auto` (the default) follows the system.
+- **Live, when the reader toggles the site's theme:** send a message to the iframe. The walkthrough switches without reloading, so the reader keeps their place.
+
+```js
+iframe.contentWindow.postMessage({ type: "cliscenes:set-theme", theme: "dark" }, "*");
+```
+
+The Docusaurus and Mintlify examples below do this for you.
+
+### Reduced motion
+
+Readers whose system asks for reduced motion automatically get `demo.reduced-motion.cast`, a recording where commands appear whole instead of being typed. Its timing is identical, so gates and overlays behave the same. Overlay animations are also turned off. Host pages don't need to do anything.
+
 ## Opening files directly
 
 Opening `dist/index.html` from disk (`file://`) doesn't work, because browsers block `fetch` for local files. Use `npm run preview` or any static server.
 
-## Documentation platforms
+## Docusaurus
 
-Requirements for platforms like Mintlify, Docusaurus, MkDocs, or GitBook (platform integrations aren't built yet):
+Tested with Docusaurus 3.10, including a production build (`npm run build`), which renders pages on the server.
+
+1. Copy [`examples/docusaurus/CLIscenesEmbed.jsx`](../examples/docusaurus/CLIscenesEmbed.jsx) to `src/components/CLIscenesEmbed.jsx` in your site.
+2. Use it in any `.mdx` page:
+
+```mdx
+import CLIscenesEmbed from "@site/src/components/CLIscenesEmbed";
+
+<CLIscenesEmbed
+  src="https://docs.example.com/cliscenes/?demo=cli-signin"
+  title="Interactive walkthrough: sign in to the CLI"
+/>
+```
+
+The component follows the site's light/dark toggle live (through `useColorMode`) and resizes the iframe to fit.
+
+## Mintlify
+
+Tested with the Mintlify CLI 4.3 (`mint dev`).
+
+1. Copy [`examples/mintlify/cliscenes-embed.jsx`](../examples/mintlify/cliscenes-embed.jsx) to `snippets/cliscenes-embed.jsx` in your docs.
+2. Use it in any `.mdx` page:
+
+```mdx
+import { CLIscenesEmbed } from "/snippets/cliscenes-embed.jsx";
+
+<CLIscenesEmbed
+  src="https://docs.example.com/cliscenes/?demo=cli-signin"
+  title="Interactive walkthrough: sign in to the CLI"
+/>
+```
+
+The snippet follows Mintlify's theme menu live (Mintlify marks dark mode with a `dark` class on `<html>`) and resizes the iframe to fit.
+
+Mintlify's content column is narrow (about 520px), so walkthroughs use their stacked layout there: UI outside the terminal appears below it. Keep `terminal.cols` around 60–64 so terminal text stays readable.
+
+## Other documentation platforms
+
+Both examples above use an iframe; native, iframe-free components are tracked in the issues. For other platforms (MkDocs, GitBook, and so on):
 
 - **Hosting:** the platform must either serve `dist/` as static files or let you embed an iframe from another origin where `dist/` is hosted.
-- **iframes in MDX:** Mintlify and Docusaurus accept a raw `<iframe>` in MDX. In JSX, write attributes in camelCase and `style` as an object, for example `style={{ width: "100%", height: 560, border: 0 }}`.
+- **iframes in MDX:** write attributes in camelCase and `style` as an object, for example `style={{ width: "100%", height: 560, border: 0 }}`.
 - **Content Security Policy:** if the docs site sets `frame-src`, it must allow the origin hosting the player.
 - **Height:** if the platform doesn't let you add the resize script, use a fixed height.
 - **Clipboard:** include `allow="clipboard-write"`, or Copy command fails silently in some browsers.
-- **Dark mode:** the player follows the reader's operating-system color scheme, not the docs site's theme toggle. Passing the site theme in is on the roadmap.
-
-A native component (for example, a Mintlify or Docusaurus React component that renders the walkthrough without an iframe) is a possible future addition. The player is already a React component (`Walkthrough`) that takes a manifest and a base URL.
+- **Theme:** pass `&theme=` in the URL, or send `cliscenes:set-theme` messages if the platform lets you run a script.
