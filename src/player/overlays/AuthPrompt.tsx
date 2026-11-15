@@ -19,7 +19,8 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
   const titleId = useId();
   const messageId = useId();
   const requesterId = useId();
-  const describedBy = overlay.requester ? `${requesterId} ${messageId}` : messageId;
+  const simulatedId = useId();
+  const describedBy = [overlay.requester ? requesterId : undefined, messageId, simulatedId].filter(Boolean).join(" ");
   // Desktop convention: the secondary action on the left, the primary on the right.
   const actions = [...overlay.actions].sort((a, b) => Number(a.style === "primary") - Number(b.style === "primary"));
 
@@ -35,6 +36,9 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
               {overlay.requester} is asking {overlay.app} for access.
             </p>
           )}
+          <p id={simulatedId} className="cs-visually-hidden">
+            This is a simulation. Your choice here only moves the walkthrough along; nothing is approved or signed in.
+          </p>
           <div className="cs-auth__parties" aria-hidden="true">
             {overlay.requester && (
               <>
