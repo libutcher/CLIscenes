@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrast, darkModeAccent, MIN_TEXT_CONTRAST, readableTextOn, themeVariables } from "../src/core/theme.ts";
+import { contrast, darkModeAccent, lightModeAccent, MIN_TEXT_CONTRAST, readableTextOn, themeVariables } from "../src/core/theme.ts";
 import { demoSchema, formatIssues } from "../src/core/schema.ts";
 
 const step = { id: "a", title: "A", terminal: { output: "x" } };
@@ -26,6 +26,14 @@ describe("theme colors", () => {
     expect(dark).not.toBe(navy);
     expect(contrast(dark, "#1b1f27")).toBeGreaterThanOrEqual(3);
     expect(darkModeAccent("#6f9bff")).toBe("#6f9bff");
+  });
+
+  it("darkens pale accents for light mode so focus rings and switches stay visible", () => {
+    const yellow = "#ffe14d";
+    const light = themeVariables({ accent: yellow }, "light")["--cs-accent"]!;
+    expect(light).not.toBe(yellow);
+    expect(contrast(light, "#ffffff")).toBeGreaterThanOrEqual(3);
+    expect(lightModeAccent("#0f7b6c")).toBe("#0f7b6c");
   });
 
   it("produces no variables without a theme", () => {
@@ -62,8 +70,13 @@ describe("theme validation", () => {
   });
 
   it("rejects unreadable text on the accent, in either mode", () => {
-    expect(problems({ accent: "#ffcc00", accentText: "#ffffff" })[0]).toMatch(/^theme\.accentText: .*contrast of 1\.\d+:1/);
+    expect(problems({ accent: "#ffcc00", accentText: "#ffffff" })[0]).toMatch(/^theme\.accentText: .*contrast of \d\.\d+:1/);
     expect(problems({ accent: "#0f7b6c", dark: { accentText: "#5eead4" } })[0]).toMatch(/^theme\.dark\.accentText:/);
+  });
+
+  it("rejects a text color without an accent to go with it", () => {
+    expect(problems({ accentText: "#000000" })[0]).toMatch(/^theme\.accentText: accentText needs an accent/);
+    expect(problems({ dark: { accentText: "#ffffff" } })[0]).toMatch(/^theme\.dark\.accentText: /);
   });
 
   it("rejects unknown theme keys", () => {

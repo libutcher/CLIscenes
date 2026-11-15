@@ -82,7 +82,7 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 | --- | --- |
 | Playback reaches an unanswered gate | The player has already paused at the marker. Status becomes `awaiting-action`. Play does nothing until the reader acts. |
 | Reader clicks an overlay action | The gate is marked `completed`, and playback jumps to the action's `next` step (default: the following step) and plays. |
-| Reader clicks the action before the gate is reached | Same as above. When the marker is reached later, the orchestrator sees the gate is already completed and continues. |
+| Reader answers before the gate is reached | The gate is marked `completed` and the overlay closes. If the answer leads to the following step, the rest of this step plays out normally; when the marker is reached, the orchestrator sees the gate is completed and continues. If it leads somewhere else (such as a Deny branch), playback jumps there right away. |
 | Reader navigates to a step (Previous, Next, step list, Restart) | Playback starts from the beginning of that step. Every gate at or after the target is reset to `pending`, so a replayed gated step asks again. |
 | Reader navigates forward past an unanswered gate | That gate is marked `skipped`, and the step list shows "Skipped". Skipping is deliberate, so it's allowed. |
 | Something other than the orchestrator starts the player during a gate | The orchestrator pauses it and seeks back to the gate (safety net). |

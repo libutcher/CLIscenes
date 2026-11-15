@@ -182,7 +182,6 @@ See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checkli
 - Overlays belong to one step. An overlay that stays across several steps has to be repeated.
 - Command typing still animates when reduced motion is on.
 - On narrow screens, wide terminals scale down. Keep `cols` near 64 for walkthroughs that will be read on phones.
-- Images outside the source file's folder (`../logo.svg`) are copied under their file name only, so two such images with the same name collide. Keep images next to the source file, as in `demos/assets/`.
 - Themes set colors only. Fonts and corner styles follow the player's design.
 - There are no platform integrations yet. Embedding uses an iframe.
 

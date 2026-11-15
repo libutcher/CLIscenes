@@ -5,7 +5,7 @@
  * path ("steps[2].overlay.actions[0].next") before anything is generated.
  */
 import { z } from "zod";
-import { contrast, darkModeAccent, HEX_COLOR, MIN_TEXT_CONTRAST } from "./theme.ts";
+import { contrast, HEX_COLOR, MIN_TEXT_CONTRAST, resolvedAccent } from "./theme.ts";
 
 const text = z.string().trim().min(1);
 
@@ -38,9 +38,22 @@ export const themeSchema = themeColors
         });
       }
     };
-    check(theme.accent, theme.accentText, ["accentText"]);
-    const darkAccent = theme.dark?.accent ?? (valid(theme.accent) ? darkModeAccent(theme.accent) : undefined);
-    check(darkAccent, theme.dark?.accentText, ["dark", "accentText"]);
+    if (theme.accentText && !theme.accent) {
+      ctx.addIssue({ code: "custom", path: ["accentText"], message: "accentText needs an accent color to go with it." });
+    }
+    if (theme.dark?.accentText && !(theme.dark.accent ?? theme.accent)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dark", "accentText"],
+        message: "dark.accentText needs an accent color (dark.accent or accent) to go with it.",
+      });
+    }
+    // Check text against the accents the player will actually use, which may
+    // be adjusted to stay visible in each color scheme.
+    const colorsValid = [theme.accent, theme.dark?.accent].every((c) => c === undefined || valid(c));
+    if (!colorsValid) return;
+    check(resolvedAccent(theme, "light"), theme.accentText, ["accentText"]);
+    check(resolvedAccent(theme, "dark"), theme.dark?.accentText, ["dark", "accentText"]);
   });
 
 /** A button on an overlay. Clicking it moves the walkthrough to `next`. */

@@ -115,6 +115,58 @@ describe("guided playback", () => {
   });
 });
 
+describe("answering early", () => {
+  /** A gated step with its own terminal output before the gate. */
+  const YAML = `
+title: Early
+steps:
+  - id: setting
+    title: Turn it on
+    terminal:
+      output: |
+        Explaining the setting...
+        More explanation.
+    overlay:
+      type: auth-prompt
+      title: Allow?
+      message: M
+      actions: [{ label: OK }, { label: Skip, next: last }]
+    waitForAction: true
+  - id: after
+    title: After
+    terminal: { output: Next step. }
+  - id: last
+    title: Last
+    terminal: { output: The end. }
+`;
+
+  it("lets the rest of the step play when the answer continues to the following step", async () => {
+    const compiled = compileYaml(YAML);
+    demo = compiled.manifest;
+    terminal = new FakeTerminal(compiled.cast);
+    orchestrator = new Orchestrator(demo, terminal);
+    await orchestrator.play();
+    run(0.1); // still before the output
+    await orchestrator.completeAction("setting");
+    expect(state()).toMatchObject({ status: "playing", stepIndex: 0, gates: { setting: "completed" } });
+    expect(overlayTypes()).toEqual([]);
+    run(3);
+    expect(terminal.screen()).toContain("More explanation.");
+    expect(terminal.screen()).toContain("Next step.");
+  });
+
+  it("jumps right away when the answer goes somewhere else", async () => {
+    const compiled = compileYaml(YAML);
+    demo = compiled.manifest;
+    terminal = new FakeTerminal(compiled.cast);
+    orchestrator = new Orchestrator(demo, terminal);
+    await orchestrator.play();
+    run(0.1);
+    await orchestrator.completeAction("setting", "last");
+    expect(state().stepIndex).toBe(2);
+  });
+});
+
 describe("pause and resume", () => {
   it("pauses mid-step and resumes from the same point", async () => {
     await orchestrator.play();
@@ -191,6 +243,13 @@ describe("navigation and gates", () => {
     await orchestrator.previous();
     expect(state().stepIndex).toBe(0);
     expect(terminal.time).toBe(0);
+  });
+
+  it("counts every navigation, even to the same step, so the UI can reset overlays", async () => {
+    expect(state().visit).toBe(0);
+    await orchestrator.goToStep(0);
+    await orchestrator.restart();
+    expect(state()).toMatchObject({ stepIndex: 0, visit: 2 });
   });
 
   it("restart resets every gate", async () => {

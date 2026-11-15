@@ -76,6 +76,40 @@ describe("generator", () => {
     expect(await readFile(path.join(dir, "assets/b/logo.svg"), "utf8")).toBe("<svg>b</svg>");
   });
 
+  it("keeps same-named images apart, inside and outside the source folder", async () => {
+    const root = await tempDir();
+    const src = path.join(root, "demos");
+    const out = await tempDir();
+    for (const dir of ["demos/assets", "brand-a", "brand-b"]) await mkdir(path.join(root, dir), { recursive: true });
+    await writeFile(path.join(src, "logo.svg"), "<svg>next to source</svg>");
+    await writeFile(path.join(src, "assets/logo.svg"), "<svg>in assets</svg>");
+    await writeFile(path.join(root, "brand-a/logo.svg"), "<svg>a</svg>");
+    await writeFile(path.join(root, "brand-b/logo.svg"), "<svg>b</svg>");
+    const prompt = (icon: string, requesterIcon: string) =>
+      `{ type: auth-prompt, title: T, message: M, icon: ${icon}, requesterIcon: ${requesterIcon}, actions: [{ label: OK }] }`;
+    await writeFile(
+      path.join(src, "logos.yaml"),
+      [
+        "title: Logos",
+        "steps:",
+        "  - id: a",
+        "    title: A",
+        `    overlay: ${prompt("logo.svg", "assets/logo.svg")}`,
+        "  - id: b",
+        "    title: B",
+        `    overlay: ${prompt("../brand-a/logo.svg", "../brand-b/logo.svg")}`,
+      ].join("\n"),
+    );
+
+    await generateAll({ sourceDir: src, outDir: out });
+    const dir = path.join(out, "demos/logos");
+    const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
+    const srcs = manifest.steps.flatMap((s) => s.overlays).flatMap((o) => (o.type === "auth-prompt" ? [o.icon!, o.requesterIcon!] : []));
+    expect(new Set(srcs).size).toBe(4);
+    const contents = await Promise.all(srcs.map((s) => readFile(path.join(dir, s), "utf8")));
+    expect(contents).toEqual(["<svg>next to source</svg>", "<svg>in assets</svg>", "<svg>a</svg>", "<svg>b</svg>"]);
+  });
+
   it("reports a missing icon", async () => {
     const src = await tempDir();
     await writeFile(

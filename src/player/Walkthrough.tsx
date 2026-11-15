@@ -56,8 +56,8 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
           <div className="cs-prereqs">
             <span className="cs-prereqs__label">Before you start:</span>
             <ul>
-              {demo.prerequisites.map((item) => (
-                <li key={item}>{item}</li>
+              {demo.prerequisites.map((item, i) => (
+                <li key={i}>{item}</li>
               ))}
             </ul>
           </div>
@@ -118,7 +118,7 @@ function ExternalPane({
         </p>
       ) : (
         overlays.map((overlay, i) => (
-          <OverlayView key={`${state.stepIndex}-${i}`} overlay={overlay} baseUrl={baseUrl} waiting={waiting} onAction={onAction} />
+          <OverlayView key={`${state.visit}-${state.stepIndex}-${i}`} overlay={overlay} baseUrl={baseUrl} waiting={waiting} onAction={onAction} />
         ))
       )}
     </div>

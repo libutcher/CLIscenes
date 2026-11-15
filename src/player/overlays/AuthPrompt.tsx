@@ -1,5 +1,6 @@
 import { useId } from "react";
 import type { OverlayProps } from "./types.ts";
+import { WindowChrome } from "./WindowChrome.tsx";
 import type { Overlay } from "../../core/schema.ts";
 import { Actions } from "./Actions.tsx";
 
@@ -17,21 +18,23 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
   const imageUrl = (src?: string) => (src ? new URL(src, baseUrl).href : undefined);
   const titleId = useId();
   const messageId = useId();
+  const requesterId = useId();
+  const describedBy = overlay.requester ? `${requesterId} ${messageId}` : messageId;
   // Desktop convention: the secondary action on the left, the primary on the right.
   const actions = [...overlay.actions].sort((a, b) => Number(a.style === "primary") - Number(b.style === "primary"));
 
   return (
-    <div className="cs-auth" role="dialog" aria-modal="false" aria-labelledby={titleId} aria-describedby={messageId}>
-        <header className="cs-window__chrome">
-          <span className="cs-window__dots" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </span>
-          <span className="cs-window__title">{overlay.app}</span>
-        </header>
+    <div className="cs-auth" role="dialog" aria-modal="false" aria-labelledby={titleId} aria-describedby={describedBy}>
+        <WindowChrome title={overlay.app} />
 
         <div className="cs-auth__body">
+          {/* The icon row is visual; this sentence gives screen reader users
+              the same cue: which program is asking for access. */}
+          {overlay.requester && (
+            <p id={requesterId} className="cs-visually-hidden">
+              {overlay.requester} is asking {overlay.app} for access.
+            </p>
+          )}
           <div className="cs-auth__parties" aria-hidden="true">
             {overlay.requester && (
               <>
@@ -72,8 +75,8 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
 
           {overlay.details && overlay.details.length > 0 && (
             <ul className="cs-auth__details">
-              {overlay.details.map((detail) => (
-                <li key={detail}>
+              {overlay.details.map((detail, i) => (
+                <li key={i}>
                   <CheckIcon />
                   {detail}
                 </li>
@@ -90,8 +93,9 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
           {overlay.verification === "password" && (
             <div className="cs-auth__password">
               <span className="cs-auth__password-label">Password</span>
-              <span className="cs-auth__password-field" aria-label="Password (simulated, already filled in)">
-                ••••••••••••
+              <span className="cs-auth__password-field">
+                <span aria-hidden="true">••••••••••••</span>
+                <span className="cs-visually-hidden">Simulated, already filled in</span>
               </span>
             </div>
           )}

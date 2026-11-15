@@ -77,6 +77,27 @@ export function darkModeAccent(accent: string): string {
   return color;
 }
 
+/**
+ * Darken an accent until it stands out on the light surface (3:1), so a pale
+ * brand color (such as a light yellow) still gives a visible focus ring,
+ * switch, and highlight.
+ */
+export function lightModeAccent(accent: string): string {
+  let color = accent;
+  for (let i = 0; i < 12 && contrast(color, SURFACE.light) < 3; i++) color = mix("#000000", color, 0.15);
+  return color;
+}
+
+/**
+ * The accent actually used in a color scheme: the author's color, adjusted
+ * only as far as needed to stay visible on that scheme's surface.
+ */
+export function resolvedAccent(theme: Theme, scheme: "light" | "dark"): string | undefined {
+  if (scheme === "light") return theme.accent ? lightModeAccent(theme.accent) : undefined;
+  const base = theme.dark?.accent ?? theme.accent;
+  return base ? darkModeAccent(base) : undefined;
+}
+
 export type CssVariables = Record<`--cs-${string}`, string>;
 
 /** CSS variables for one color scheme. Empty when the theme sets nothing. */
@@ -85,9 +106,8 @@ export function themeVariables(theme: Theme | undefined, scheme: "light" | "dark
   const override = scheme === "dark" ? theme.dark : undefined;
   const vars: CssVariables = {};
 
-  const baseAccent = override?.accent ?? theme.accent;
-  if (baseAccent) {
-    const accent = scheme === "dark" && !override?.accent ? darkModeAccent(baseAccent) : baseAccent;
+  const accent = resolvedAccent(theme, scheme);
+  if (accent) {
     const surface = SURFACE[scheme];
     vars["--cs-accent"] = accent;
     vars["--cs-accent-text"] = override?.accentText ?? (scheme === "light" ? theme.accentText : undefined) ?? readableTextOn(accent);

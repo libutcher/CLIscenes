@@ -189,7 +189,8 @@ Colors are hex values (`#rgb` or `#rrggbb`). The player keeps text readable:
 
 - Without `accentText`, button text is white or near-black, whichever contrasts better with the accent.
 - If you set `accentText` and it contrasts less than 4.5:1 with the accent (the WCAG AA minimum for text), validation fails and names both colors.
-- Without `dark.accent`, a dark accent is lightened automatically in dark mode, so it still stands out on dark backgrounds.
+- Accents are adjusted only as far as needed to stay visible: a pale accent is darkened slightly in light mode, and a dark one is lightened in dark mode (3:1 against the background, the WCAG minimum for controls and focus rings). Set `dark.accent` to choose a different dark-mode color; it gets the same safeguard.
+- `accentText` and `dark.accentText` need an accent to go with them.
 
 Everything else (surfaces, text, borders) follows the reader's light or dark setting.
 

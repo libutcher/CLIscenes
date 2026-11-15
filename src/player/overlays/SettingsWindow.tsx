@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { OverlayProps } from "./types.ts";
+import { WindowChrome } from "./WindowChrome.tsx";
 import type { Overlay } from "../../core/schema.ts";
 
 type SettingsWindowOverlay = Extract<Overlay, { type: "settings-window" }>;
@@ -37,21 +38,12 @@ export function SettingsWindow({ overlay, onAction }: OverlayProps<SettingsWindo
 
   return (
     <section className="cs-settings" aria-labelledby={titleId}>
-      <header className="cs-window__chrome">
-        <span className="cs-window__dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span id={titleId} className="cs-window__title">
-          {overlay.title}
-        </span>
-      </header>
+      <WindowChrome title={overlay.title} titleId={titleId} />
 
       <div className="cs-settings__layout">
         <ul className="cs-settings__nav" aria-label="Settings sections">
-          {overlay.nav.map((item) => (
-            <li key={item} aria-current={item === overlay.section ? "true" : undefined}>
+          {overlay.nav.map((item, i) => (
+            <li key={i} aria-current={item === overlay.section ? "true" : undefined}>
               {item}
             </li>
           ))}
@@ -62,7 +54,7 @@ export function SettingsWindow({ overlay, onAction }: OverlayProps<SettingsWindo
           <ul className="cs-settings__list">
             {overlay.settings.map((setting, i) => (
               <Setting
-                key={setting.label}
+                key={i}
                 setting={setting}
                 on={on[i] ?? false}
                 primary={i === firstPending}
