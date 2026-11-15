@@ -96,7 +96,9 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 4. **Styles:** add `cs-`-prefixed styles to `src/player/styles.css`.
 5. **Tests and docs:** add a case to `tests/schema.test.ts` and document the fields in `docs/authoring.md`.
 
-If the overlay references files (like `image`), extend `rewriteOverlay` in `compile.ts` and the asset handling in `generate.ts`.
+If the overlay references files (like `image`, or the icons on `auth-prompt`), extend `rewriteOverlay` in `compile.ts`. The generator copies anything passed to `rewriteAsset`.
+
+If readers can answer a gate with the new overlay, update `overlayCanAnswerGate` in `schema.ts`, and call `onAction` from the component when they do (see `SettingsWindow.tsx`).
 
 ## Replacing the terminal player
 

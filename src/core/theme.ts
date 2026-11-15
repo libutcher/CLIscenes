@@ -11,8 +11,6 @@ export interface ThemeColors {
   accent?: string;
   /** Text on accent-colored buttons. Chosen automatically when omitted. */
   accentText?: string;
-  /** Base color of the desktop backdrop behind app windows. */
-  backdrop?: string;
 }
 
 export interface Theme extends ThemeColors {
@@ -30,7 +28,6 @@ const NEAR_BLACK = "#0b1220";
 
 /** Default surfaces the accent is blended with (match styles.css). */
 const SURFACE = { light: "#ffffff", dark: "#1b1f27" };
-const BACKDROP = { light: "#e9edf4", dark: "#161a21" };
 
 type Rgb = [number, number, number];
 
@@ -96,15 +93,6 @@ export function themeVariables(theme: Theme | undefined, scheme: "light" | "dark
     vars["--cs-accent-text"] = override?.accentText ?? (scheme === "light" ? theme.accentText : undefined) ?? readableTextOn(accent);
     vars["--cs-accent-soft"] = mix(accent, surface, scheme === "light" ? 0.12 : 0.22);
     vars["--cs-focus"] = accent;
-    vars["--cs-app-deep"] = mix(accent, "#000000", 0.7);
-  }
-
-  const backdrop = override?.backdrop ?? (scheme === "light" ? theme.backdrop : undefined);
-  const base = backdrop ?? BACKDROP[scheme];
-  if (backdrop) vars["--cs-desktop-base"] = backdrop;
-  if (baseAccent || backdrop) {
-    vars["--cs-desktop-a"] = mix(vars["--cs-accent"] ?? base, base, 0.18);
-    vars["--cs-desktop-b"] = mix(scheme === "light" ? WHITE : "#000000", base, 0.3);
   }
   return vars;
 }

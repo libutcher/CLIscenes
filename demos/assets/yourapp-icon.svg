@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Placeholder icon for the fictional "YourApp". Replace with your app's icon. -->
+  <rect width="64" height="64" rx="14" fill="#3b4250"/>
+  <rect x="3" y="3" width="58" height="58" rx="11" fill="none" stroke="#ffffff" stroke-opacity="0.15" stroke-width="2"/>
+  <text x="32" y="41" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="700" fill="#ffffff">YA</text>
+</svg>

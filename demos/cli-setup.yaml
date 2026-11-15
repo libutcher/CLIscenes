@@ -1,11 +1,14 @@
 # A fictional setup flow: install a CLI, turn on the desktop app settings it
-# needs, and check the result. `cli-scenes` and CLIscenes Desktop are made up
+# needs, and check the result. `cli-scenes` and YourApp are made up
 # for this example, and nothing in this file is ever executed.
 title: Install the CLI and connect it to the desktop app
 description: >-
   Install the CLI, turn on the two desktop app settings that give the best
   setup, and check that everything is connected.
-layout: overlay
+prerequisites:
+  - YourApp 2.0 or later, installed and signed in
+  - Homebrew, or another way to install command-line tools
+layout: split
 
 # Brand colors for this walkthrough only. Text on the accent and the
 # dark-mode accent are worked out automatically.
@@ -13,22 +16,10 @@ theme:
   accent: "#0f7b6c"
 
 terminal:
-  cols: 80
-  rows: 14
+  cols: 64
+  rows: 12
 
 steps:
-  - id: download
-    title: Get the desktop app
-    overlay:
-      type: image
-      src: assets/browser-download.svg
-      alt: >-
-        A browser showing the CLIscenes download page, with a Download
-        CLIscenes Desktop button and, below it, an Install the CLI section
-        showing the command brew install cli-scenes.
-      caption: Install the desktop app first. The CLI uses it to sign you in.
-    pause: 3.5
-
   - id: install
     title: Install the CLI
     terminal:
@@ -49,41 +40,37 @@ steps:
   - id: unlock-setting
     title: Turn on fingerprint unlock
     overlay:
-      type: app-window
-      title: CLIscenes Desktop — Settings
-      heading: Security
-      body: >-
-        Fingerprint unlock lets you approve CLI requests with a touch instead
-        of typing your password every time.
-      fields:
+      type: settings-window
+      title: YourApp — Settings
+      nav: [General, Security, Developer, Advanced]
+      section: Security
+      settings:
         - label: Unlock with fingerprint
-          value: "On"
+          description: Approve CLI requests with a touch instead of your password.
+          toggle: false
+          turnOn: true
         - label: Lock after the computer is idle for
           value: 30 minutes
-      actions:
-        - label: Next
-      annotations:
-        - Turn on Unlock with fingerprint, then select Next.
+        - label: Require your password after restarting
+          toggle: true
     waitForAction: true
 
   - id: cli-setting
     title: Connect the desktop app to the CLI
     overlay:
-      type: app-window
-      title: CLIscenes Desktop — Settings
-      heading: Developer
-      body: >-
-        Integration lets the CLI sign in through the desktop app, so you never
-        store a password or token in your terminal.
-      fields:
+      type: settings-window
+      title: YourApp — Settings
+      nav: [General, Security, Developer, Advanced]
+      section: Developer
+      settings:
         - label: Integrate with the CLI
-          value: "On"
+          description: Sign in to the CLI through the desktop app, so no password or token is stored in your terminal.
+          toggle: false
+          turnOn: true
         - label: Ask before each new terminal session
-          value: "On"
-      actions:
-        - label: Done
-      annotations:
-        - Turn on Integrate with the CLI, then select Done.
+          toggle: true
+        - label: Show CLI activity in the app
+          toggle: false
     waitForAction: true
 
   - id: check
@@ -93,17 +80,20 @@ steps:
       command: cli-scenes whoami
       output: |
         Account:   Demo Account (demo@example.com)
-        Sign-in:   through CLIscenes Desktop
+        Sign-in:   through YourApp
         Unlock:    fingerprint
         Session:   active, ends after 30 minutes idle
     pause: 2.5
     overlay:
-      type: app-window
-      title: CLIscenes Desktop — Settings
-      heading: Developer
-      fields:
+      type: settings-window
+      title: YourApp — Settings
+      nav: [General, Security, Developer, Advanced]
+      section: Developer
+      settings:
         - label: Integrate with the CLI
-          value: "On"
+          toggle: true
+        - label: Ask before each new terminal session
+          toggle: true
         - label: Connected tools
           value: Terminal · cli-scenes 2.4.0
       annotations:

@@ -38,10 +38,13 @@ describe("generator", () => {
     expect(manifest.cast).toBe("demo.cast");
     expect(cast.duration).toBeCloseTo(manifest.duration, 2);
 
+    const prompt = manifest.steps.flatMap((s) => s.overlays).find((o) => o.type === "auth-prompt");
+    expect(prompt).toMatchObject({ icon: "assets/yourapp-icon.svg" });
+    await expect(readFile(path.join(dir, "assets/yourapp-icon.svg"))).resolves.toBeTruthy();
+
     const setup: CompiledDemo = JSON.parse(await readFile(path.join(out, "demos/cli-setup/demo.json"), "utf8"));
-    const image = setup.steps.flatMap((s) => s.overlays).find((o) => o.type === "image");
-    expect(image).toMatchObject({ src: "assets/browser-download.svg" });
-    await expect(readFile(path.join(out, "demos/cli-setup/assets/browser-download.svg"))).resolves.toBeTruthy();
+    expect(setup.prerequisites?.length).toBeGreaterThan(0);
+    expect(setup.steps.filter((s) => s.gate).map((s) => s.overlays[0]?.type)).toEqual(["settings-window", "settings-window"]);
   });
 
   it("copies auth-prompt icons and keeps same-named images in different folders apart", async () => {

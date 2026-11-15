@@ -37,7 +37,7 @@ describe("theme colors", () => {
     expect(light["--cs-accent"]).toBe("#0f7b6c");
     expect(light["--cs-accent-text"]).toBe("#ffffff");
     expect(Object.keys(light)).toEqual(
-      expect.arrayContaining(["--cs-accent-soft", "--cs-focus", "--cs-app-deep", "--cs-desktop-a", "--cs-desktop-b"]),
+      expect.arrayContaining(["--cs-accent-soft", "--cs-focus"]),
     );
   });
 
@@ -48,15 +48,13 @@ describe("theme colors", () => {
     expect(themeVariables(theme, "dark")["--cs-accent-text"]).toBe("#0b1220");
   });
 
-  it("sets the desktop backdrop", () => {
-    expect(themeVariables({ backdrop: "#f3efe6" }, "light")["--cs-desktop-base"]).toBe("#f3efe6");
-  });
 });
 
 describe("theme validation", () => {
   it("accepts valid themes", () => {
     expect(problems({ accent: "#0f7b6c" })).toEqual([]);
-    expect(problems({ accent: "#fc0", accentText: "#000", dark: { accent: "#5eead4" }, backdrop: "#eee" })).toEqual([]);
+    expect(problems({ accent: "#fc0", accentText: "#000", dark: { accent: "#5eead4" } })).toEqual([]);
+    expect(problems({ accent: "#0f7b6c", backdrop: "#eeeeee" })[0]).toMatch(/Unrecognized key/);
   });
 
   it("rejects colors that aren't hex", () => {

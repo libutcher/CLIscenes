@@ -16,7 +16,7 @@ steps:
     title: Run a command
     terminal:
       command: cli-scenes signin
-      output: Waiting for approval in the CLIscenes desktop app...
+      output: Waiting for approval in YourApp...
     overlay:
       type: annotation
       text: The CLI asks the desktop app to confirm it's you, then waits.
@@ -25,8 +25,8 @@ steps:
     title: Approve the sign-in request
     overlay:
       type: auth-prompt
-      app: CLIscenes Desktop
-      icon: assets/cliscenes-app-icon.svg
+      app: YourApp
+      icon: assets/yourapp-icon.svg
       requester: Terminal
       title: Allow CLI sign-in?
       message: Terminal is running "cli-scenes signin" and wants to access your account.
@@ -75,7 +75,7 @@ steps:
       clear: true
       command: cli-scenes signin
       output: |
-        Waiting for approval in the CLIscenes desktop app...
+        Waiting for approval in YourApp...
         Error: sign-in request was denied in the desktop app.
         No session was created. Run `cli-scenes signin` to try again.
     overlay:

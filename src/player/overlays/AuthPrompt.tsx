@@ -6,9 +6,9 @@ import { Actions } from "./Actions.tsx";
 type AuthPromptOverlay = Extract<Overlay, { type: "auth-prompt" }>;
 
 /**
- * A desktop authentication request, drawn as an app window: the requesting
- * program and the app side by side, the account, what approving grants, and
- * how the reader confirms.
+ * A desktop authentication request, drawn as a plain wireframe window (the
+ * same style as the settings window): the requesting program and the app side
+ * by side, the account, what approving grants, and how the reader confirms.
  *
  * It's a non-modal dialog, so the terminal stays visible and selectable while
  * it's open. The design is generic and isn't a copy of any real product's prompt.
@@ -21,16 +21,15 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
   const actions = [...overlay.actions].sort((a, b) => Number(a.style === "primary") - Number(b.style === "primary"));
 
   return (
-    <div className="cs-desktop">
-      <div className="cs-auth" role="dialog" aria-modal="false" aria-labelledby={titleId} aria-describedby={messageId}>
-        <div className="cs-auth__chrome">
-          <span className="cs-auth__lights" aria-hidden="true">
+    <div className="cs-auth" role="dialog" aria-modal="false" aria-labelledby={titleId} aria-describedby={messageId}>
+        <header className="cs-window__chrome">
+          <span className="cs-window__dots" aria-hidden="true">
             <span />
             <span />
             <span />
           </span>
-          <span className="cs-auth__app">{overlay.app}</span>
-        </div>
+          <span className="cs-window__title">{overlay.app}</span>
+        </header>
 
         <div className="cs-auth__body">
           <div className="cs-auth__parties" aria-hidden="true">
@@ -102,7 +101,6 @@ export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps
             <Actions actions={actions} onAction={onAction} />
           </div>
         </div>
-      </div>
     </div>
   );
 }

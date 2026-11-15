@@ -63,13 +63,13 @@ steps:
     title: Run a command
     terminal:
       command: cli-scenes signin
-      output: Waiting for approval in the CLIscenes desktop app...
+      output: Waiting for approval in YourApp...
 
   - id: approve
     title: Approve the sign-in request
     overlay:
       type: auth-prompt
-      app: CLIscenes Desktop
+      app: YourApp
       title: Allow CLI sign-in?
       message: The command-line tool "cli-scenes" on this computer wants to sign in to your account.
       actions:
@@ -111,6 +111,7 @@ The full format is in [docs/authoring.md](docs/authoring.md).
 | --- | --- | --- |
 | `auth-prompt` | A desktop app's approval window: requesting app, account, what approving allows, and a fingerprint or password cue | Yes |
 | `app-window` | A mock app window with a title bar, text, read-only settings, and buttons | Yes |
+| `settings-window` | A text-only wireframe of an app's settings, with left-hand nav and toggle switches readers turn on themselves | Yes |
 | `image` | A local screenshot or illustration, with required alt text and an optional caption | No |
 | `annotation` | A short callout explaining what's happening | No |
 
@@ -121,7 +122,7 @@ To add an overlay type, see [docs/architecture.md](docs/architecture.md#adding-a
 You can customize each walkthrough from its source file. You don't need to change code.
 
 - **Your app's icon** in authentication prompts: `icon: assets/your-app.svg`, plus `requesterIcon` for the program asking for access.
-- **Your brand colors:** a `theme` block with an `accent` color, and optionally a backdrop color and dark-mode overrides. Text on the accent stays readable: CLIscenes picks the text color automatically, or rejects a combination with too little contrast.
+- **Your brand colors:** a `theme` block with an `accent` color, plus optional text color and dark-mode overrides. Text on the accent stays readable: CLIscenes picks the text color automatically, or rejects a combination with too little contrast.
 - **All of the prompt's text:** the app name, title, message, account, the list of what approving allows, and the button labels.
 
 ```yaml

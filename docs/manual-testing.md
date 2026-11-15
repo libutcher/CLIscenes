@@ -35,12 +35,12 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 - [ ] Pressing Space, arrow keys, `[` or `]` while the terminal text has focus does not start or skip playback.
 - [ ] With VoiceOver or NVDA: step changes are announced, and the waiting announcement names the available actions.
 - [ ] The dialog is announced as a dialog with its title and message.
-- [ ] The image in `cli-setup` step 1 has meaningful alt text.
 
 ## Layout and display
 
 - [ ] **Split** (`cli-signin`) at 1280px wide: the dialog sits beside the terminal.
-- [ ] **Overlay** (`cli-setup`) at 1280px wide: the settings window floats over the lower right without covering typed commands, and the teal theme applies in light and dark mode.
+- [ ] **Settings practice** (`cli-setup`): playback waits at steps 3 and 4 until you turn on the highlighted switch, with a mouse click, or with Space or Enter on the focused switch. Then it shows "All set" and continues. Going back to step 3 turns the switch off again.
+- [ ] **Theme** (`cli-setup`): the teal accent applies to buttons, switches, and progress, in light and dark mode.
 - [ ] At 390px wide: both layouts stack vertically, with no horizontal page scrolling.
 - [ ] Dark mode (operating system setting): every surface, badge, and button is readable.
 - [ ] Reduced motion (operating system setting): overlays appear without animation.
