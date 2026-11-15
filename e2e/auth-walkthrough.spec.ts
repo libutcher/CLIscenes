@@ -140,3 +140,24 @@ test("player styles are applied to controls and the step list", async ({ page })
   expect(await list.evaluate((el) => getComputedStyle(el).display)).toBe("flex");
   expect(await list.evaluate((el) => getComputedStyle(el).listStyleType)).toBe("none");
 });
+
+
+test("static screenshot keeps terminal gated until the reader continues", async ({ page }) => {
+  await page.goto("?demo=cli-signin-screenshot");
+  const terminal = page.getByRole("region", { name: /Terminal/ });
+  await page.getByRole("button", { name: "Play" }).click();
+
+  const screenshot = page.getByRole("img", { name: /Example YourApp approval prompt/ });
+  await expect(screenshot).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("button", { name: "Show expected result" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Waiting for your action" })).toBeVisible();
+
+  // The screenshot is static; no live auth or fake dialog interaction.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.waitForTimeout(1_500);
+  await expect(terminal).not.toContainText("Signed in as demo@example.com");
+
+  await page.getByRole("button", { name: "Show expected result" }).click();
+  await expect(terminal).toContainText("Signed in as demo@example.com", { timeout: 10_000 });
+  await expect(page.getByRole("button", { name: "Replay" })).toBeVisible({ timeout: 10_000 });
+});

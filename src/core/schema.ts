@@ -121,6 +121,8 @@ export const imageSchema = z.strictObject({
   src: localPath,
   alt: z.string(),
   caption: text.optional(),
+  /** Player-level continue control; the screenshot itself is not clickable. */
+  continueLabel: text.optional(),
 });
 
 export const annotationSchema = z.strictObject({
@@ -137,6 +139,7 @@ export const overlaySchema = z.discriminatedUnion("type", [
 
 /** True when the reader can do something in this overlay to answer a gate. */
 export function overlayCanAnswerGate(overlay: z.infer<typeof overlaySchema>): boolean {
+  if (overlay.type === "image") return Boolean(overlay.continueLabel);
   return "actions" in overlay && (overlay.actions?.length ?? 0) > 0;
 }
 
@@ -242,7 +245,7 @@ export const demoSchema = z
             code: "custom",
             path: ["steps", i, "waitForAction"],
             message:
-              "waitForAction needs an overlay with at least one action, or readers would be stuck.",
+              "waitForAction needs an overlay with actions or an image with continueLabel, or readers would be stuck.",
           });
         }
       }

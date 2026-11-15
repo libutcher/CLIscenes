@@ -1,0 +1,38 @@
+# Comparison with cli-signin.yaml: same fictional flow, using a static screenshot.
+# No commands run or authorizations occur.
+title: Sign in to a CLI — screenshot version
+description: Recognize the approval prompt without clicking a simulated app.
+terminal:
+  cols: 80
+  rows: 20
+steps:
+  - id: signin
+    title: Run a command
+    terminal:
+      command: your-cli signin
+      output: Waiting for approval in YourApp...
+  - id: approve
+    title: See the authentication prompt
+    overlay:
+      type: image
+      src: assets/yourapp-approval-example.png
+      alt: Example YourApp approval prompt showing the requesting terminal, account, and Approve and Deny buttons
+      caption: Illustrative screenshot of a fictional app. In a real session, approve the request in YourApp.
+      continueLabel: Show expected result
+    waitForAction: true
+  - id: success
+    title: See the expected result
+    terminal:
+      output: |
+        Approved in the desktop app.
+        Signed in as demo@example.com (session expires in 30 minutes)
+    pause: 1.5
+  - id: list-projects
+    title: Run an authenticated command
+    terminal:
+      command: your-cli projects list
+      output: |
+        ID        NAME
+        prj_001   Website
+        prj_002   Mobile app
+    finish: true

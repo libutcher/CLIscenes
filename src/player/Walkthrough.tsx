@@ -145,6 +145,13 @@ function Controls({
   const step = demo.steps[state.stepIndex]!;
   const waiting = state.status === "awaiting-action";
   const playing = state.status === "playing";
+  // A screenshot cannot be clicked; its separate player button releases the gate.
+  const screenshotContinueLabel = waiting
+    ? step.overlays.reduce<string | undefined>(
+        (label, overlay) => label ?? (overlay.type === "image" ? overlay.continueLabel : undefined),
+        undefined,
+      )
+    : undefined;
 
   useEffect(() => {
     if (!copied) return;
@@ -213,6 +220,17 @@ function Controls({
           {waiting && <span className="cs-badge cs-badge--action">Action required</span>}
         </p>
 
+        {screenshotContinueLabel && (
+          <button
+            type="button"
+            className="cs-button cs-button--primary"
+            onClick={() => void orchestrator?.completeAction(step.id)}
+            disabled={!orchestrator}
+          >
+            {screenshotContinueLabel}
+          </button>
+        )}
+
         <button
           type="button"
           className="cs-button cs-button--secondary cs-copy"
@@ -266,6 +284,10 @@ function Announcer({ demo, state }: { demo: CompiledDemo; state: OrchestratorSta
     const step = demo.steps[state.stepIndex]!;
     const base = `Step ${state.stepIndex + 1} of ${demo.steps.length}: ${step.title}.`;
     if (state.status === "awaiting-action") {
+      const imageContinue = step.overlays.find((o) => o.type === "image" && o.continueLabel);
+      if (imageContinue?.type === "image" && imageContinue.continueLabel) {
+        return `${base} Example screenshot. Select ${imageContinue.continueLabel} to see the expected result.`;
+      }
       const labels = step.overlays.flatMap((o) => ("actions" in o ? (o.actions ?? []).map((a) => a.label) : []));
       return `${base} Playback is waiting. Choose ${labels.join(" or ")} to continue.`;
     }

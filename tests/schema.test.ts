@@ -29,6 +29,13 @@ describe("source schema", () => {
     expect(problems(minimal(steps))).toEqual([]);
   });
 
+  it("allows a static image to gate playback only with a separate Continue control", () => {
+    const image = { type: "image", src: "assets/auth.png", alt: "Example prompt", continueLabel: "Show expected result" };
+    expect(problems(minimal([{ id: "a", title: "A", overlay: image, waitForAction: true }]))).toEqual([]);
+    const noControl = { type: "image", src: "assets/auth.png", alt: "Example prompt" };
+    expect(problems(minimal([{ id: "a", title: "A", overlay: noControl, waitForAction: true }]))[0]).toMatch(/stuck/);
+  });
+
   it("accepts the optional auth-prompt details and defaults verification to none", () => {
     const prompt = {
       type: "auth-prompt",
