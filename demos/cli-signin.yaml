@@ -5,7 +5,6 @@ title: Sign in to a CLI with a desktop app
 description: >-
   Run a CLI command, approve the request in the desktop app, and continue in
   the terminal.
-layout: overlay
 
 # Brand colors for this walkthrough only. Text on the accent and the
 # dark-mode accent are worked out automatically.

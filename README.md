@@ -6,13 +6,9 @@ The terminal shows commands and output as real text that readers can select and 
 
 > **Status:** early release (v0). The format and APIs may change.
 
-**Overlay layout:** the app's prompt appears over the terminal. This can be used to simulate situations like auth prompts. The walkthrough waits to continue until the reader selects **Approve**, and shows an alternative path if they choose deny.
+The app's prompt appears over the terminal, as an auth prompt would. The walkthrough waits to continue until the reader selects **Approve**, and shows an alternative path if they choose **Deny**.
 
 ![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
-
-**Side-by-side layout:** the app sits next to the terminal. This can be used to simulate situations where a CLI tool requires actions to be taken in an accompanying app, like approving a sensitive command. The reader confirms with a password to continue.
-
-![A terminal runs "your-cli deploy --env production" and waits for approval. Beside it, a YourApp window asks "Approve production deploy?" with a password field. A cursor selects Approve, and the terminal shows the deploy finish.](docs/media/side-by-side.gif)
 
 ## The problem
 
@@ -76,7 +72,6 @@ This example is a shortened version of `demos/cli-signin.yaml`. The `your-cli` c
 
 ```yaml
 title: Sign in to a CLI with a desktop app
-layout: overlay            # the prompt appears over the terminal
 
 steps:
   - id: signin

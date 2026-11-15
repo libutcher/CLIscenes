@@ -186,45 +186,22 @@
   min-width: 0;
 }
 
-.cs-placeholder {
-  margin: 0;
-  padding: 20px;
-  border: 1px dashed var(--cs-border);
-  border-radius: var(--cs-radius);
-  color: var(--cs-text-muted);
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-/* Split view: terminal beside the external UI on wide screens. */
-@media (min-width: 860px) {
-  .cs-layout-split .cs-stage {
-    grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
-    align-items: start;
-  }
-  .cs-layout-split .cs-placeholder {
-    min-height: 160px;
-    display: grid;
-    place-items: center;
-  }
-}
-
-/* Overlay view: external UI floats over the upper right of the terminal, the
-   way a desktop app's window pops up over the one you're working in.
+/* UI outside the terminal floats over its upper right, the way a desktop
+   app's prompt pops up over the window you're working in.
 
    The terminal and the floating window share one grid cell instead of using
    absolute positioning, so a window taller than the terminal makes the stage
    grow rather than being clipped. On small screens it stacks below instead,
    so it never hides terminal text. */
 @media (min-width: 700px) {
-  .cs-layout-overlay .cs-terminal-pane,
-  .cs-layout-overlay .cs-external {
+  .cs-terminal-pane,
+  .cs-external {
     grid-area: 1 / 1;
   }
-  .cs-layout-overlay .cs-terminal-pane {
+  .cs-terminal-pane {
     align-self: start;
   }
-  .cs-layout-overlay .cs-external {
+  .cs-external {
     z-index: 1;
     justify-self: end;
     align-self: start;
@@ -243,10 +220,6 @@
   background: var(--cs-surface);
 }
 
-.cs-layout-split .cs-window {
-  box-shadow: var(--cs-shadow);
-}
-
 /* Auth prompt: a plain wireframe window, matching the app window.
    Only the primary button uses the accent color. */
 
@@ -256,10 +229,6 @@
   border-radius: var(--cs-radius);
   background: var(--cs-surface);
   text-align: center;
-}
-
-.cs-layout-split .cs-auth {
-  box-shadow: var(--cs-shadow);
 }
 
 .cs-auth .cs-window__chrome {

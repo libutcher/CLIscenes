@@ -194,8 +194,6 @@ export const demoSchema = z
     description: z.string().default(""),
     /** What readers need before they start. Shown as "Before you start". */
     prerequisites: z.array(text).optional(),
-    /** `split`: terminal beside the external UI. `overlay`: UI floats over the terminal. */
-    layout: z.enum(["split", "overlay"]).default("split"),
     /** Brand colors for this walkthrough. */
     theme: themeSchema.optional(),
     terminal: z

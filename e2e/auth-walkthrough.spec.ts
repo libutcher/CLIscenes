@@ -68,25 +68,6 @@ test("choosing Deny jumps to the denied path", async ({ page }) => {
   await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
 });
 
-test("deploy walkthrough waits for approval beside the terminal", async ({ page }) => {
-  await page.goto("?demo=cli-approve-deploy");
-  const terminal = page.getByRole("region", { name: /Terminal/ });
-  await expect(page.getByText("Before you start:")).toBeVisible();
-
-  await page.getByRole("button", { name: "Play" }).click();
-  const dialog = page.getByRole("dialog", { name: "Approve production deploy?" });
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
-  await expect(dialog.getByText("Simulated", { exact: true })).toBeVisible();
-
-  // Nothing deploys until the reader approves.
-  await page.waitForTimeout(2_000);
-  await expect(terminal).not.toContainText("Deploying to production");
-
-  await dialog.getByRole("button", { name: "Approve" }).click();
-  await expect(terminal).toContainText("is running release 2026.11.15-3", { timeout: 10_000 });
-  await expect(terminal).not.toContainText("was denied");
-});
-
 test.describe("host-controlled theme", () => {
   const surface = (page: import("@playwright/test").Page) =>
     page.locator(".cs-walkthrough").evaluate((el) => getComputedStyle(el).backgroundColor);
