@@ -1,0 +1,74 @@
+# A fictional CLI sign-in flow. `cli-scenes` here is a made-up CLI used only
+# for this example: the command, dialog, and output are invented, and nothing
+# in this file is ever executed.
+title: Sign in to a CLI with a desktop app
+description: >-
+  Run a CLI command, approve the request in the desktop app, and continue in
+  the terminal.
+layout: split
+
+terminal:
+  cols: 64
+  rows: 12
+
+steps:
+  - id: signin
+    title: Run a command
+    terminal:
+      command: cli-scenes signin
+      output: Waiting for approval in the CLIscenes desktop app...
+    overlay:
+      type: annotation
+      text: The CLI asks the desktop app to confirm it's you, then waits.
+
+  - id: approve
+    title: Approve the sign-in request
+    overlay:
+      type: auth-prompt
+      app: CLIscenes Desktop
+      title: Allow CLI sign-in?
+      message: The command-line tool "cli-scenes" on this computer wants to sign in to your account.
+      actions:
+        - label: Approve
+          next: success
+        - label: Deny
+          style: secondary
+          next: denied
+    waitForAction: true
+
+  - id: success
+    title: Sign-in succeeds
+    terminal:
+      output: |
+        Approved in the desktop app.
+        Signed in as demo@example.com (session expires in 30 minutes)
+    pause: 1.5
+    overlay:
+      type: annotation
+      text: Return to the terminal. The CLI continues as soon as you approve.
+
+  - id: list-projects
+    title: Run an authenticated command
+    terminal:
+      command: cli-scenes projects list
+      output: |
+        ID        NAME             UPDATED
+        prj_001   Website          2 hours ago
+        prj_002   Mobile app       yesterday
+        prj_003   Internal tools   3 days ago
+    pause: 2
+    # The main path ends here. The next step is reached only by choosing Deny.
+    finish: true
+
+  - id: denied
+    title: If you deny the request
+    terminal:
+      clear: true
+      command: cli-scenes signin
+      output: |
+        Waiting for approval in the CLIscenes desktop app...
+        Error: sign-in request was denied in the desktop app.
+        No session was created. Run `cli-scenes signin` to try again.
+    overlay:
+      type: annotation
+      text: If you deny the request, the CLI stops and nothing is unlocked. Go back to try again.

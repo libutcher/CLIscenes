@@ -1,0 +1,69 @@
+import { expect, test } from "@playwright/test";
+
+/**
+ * Smoke test for the sign-in example: the success message must not appear
+ * before the reader approves, and must appear after.
+ */
+test("authentication prompt gates the rest of the walkthrough", async ({ page }) => {
+  await page.goto("?demo=cli-signin");
+  const terminal = page.getByRole("region", { name: /Terminal/ });
+  const dialog = page.getByRole("dialog", { name: "Allow CLI sign-in?" });
+
+  await expect(page.getByRole("button", { name: "Play" })).toBeEnabled();
+  await page.getByRole("button", { name: "Play" }).click();
+
+  await expect(terminal).toContainText("cli-scenes signin");
+  await expect(dialog).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("button", { name: "Waiting for your action" })).toBeVisible();
+
+  // Give playback every chance to run ahead. It must stay stopped at the gate.
+  await page.waitForTimeout(2_500);
+  await expect(terminal).not.toContainText("Signed in as demo@example.com");
+  await expect(dialog).toBeVisible();
+
+  // The player's own keyboard shortcuts must not be able to skip the gate.
+  await terminal.locator("pre").focus();
+  for (const key of [" ", "]", "ArrowRight", "."]) await page.keyboard.press(key);
+  await page.waitForTimeout(1_000);
+  await expect(terminal).not.toContainText("Signed in as demo@example.com");
+
+  // Terminal text is real, selectable text.
+  const selected = await terminal.evaluate((el) => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return selection.toString();
+  });
+  expect(selected).toContain("Waiting for approval in the CLIscenes desktop app");
+
+  await dialog.getByRole("button", { name: "Approve" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(terminal).toContainText("Signed in as demo@example.com", { timeout: 10_000 });
+  await expect(terminal).toContainText("cli-scenes projects list", { timeout: 10_000 });
+  await expect(terminal).toContainText("Internal tools", { timeout: 10_000 });
+
+  // The main path ends at the project list; the Deny branch does not play on.
+  await expect(page.getByRole("button", { name: "Replay" })).toBeVisible({ timeout: 10_000 });
+  await expect(terminal).not.toContainText("sign-in request was denied");
+
+  // Going back to the gated step asks for approval again.
+  await page.getByRole("navigation", { name: "Walkthrough steps" }).getByRole("button", { name: /Approve the sign-in request/ }).click();
+  await expect(dialog).toBeVisible({ timeout: 10_000 });
+  await expect(terminal).not.toContainText("Signed in as demo@example.com");
+});
+
+test("choosing Deny jumps to the denied path", async ({ page }) => {
+  await page.goto("?demo=cli-signin");
+  const terminal = page.getByRole("region", { name: /Terminal/ });
+  const dialog = page.getByRole("dialog", { name: "Allow CLI sign-in?" });
+
+  await page.getByRole("button", { name: "Play" }).click();
+  await dialog.getByRole("button", { name: "Deny" }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(terminal).toContainText("sign-in request was denied", { timeout: 10_000 });
+  await expect(terminal).not.toContainText("Signed in as");
+  await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
+});

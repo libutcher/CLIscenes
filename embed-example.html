@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Embedding example – CLIscenes</title>
+    <style>
+      body {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+        font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: #1d2330;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.9em;
+      }
+      pre {
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #f1f3f6;
+        overflow-x: auto;
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        height: 560px;
+        border: 1px solid #d6dae0;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <p><a href="./">← Back to the player</a></p>
+    <h1>Sign in to a CLI</h1>
+    <p>
+      This page stands in for a documentation page. The walkthrough below is the static player loaded in an
+      <code>iframe</code>. Run <code>cli-scenes signin</code>, then approve the request in the desktop app.
+    </p>
+
+    <iframe
+      src="./?demo=cli-signin&amp;embed=1"
+      title="Interactive walkthrough: sign in to a CLI with a desktop app"
+      loading="lazy"
+      allow="clipboard-write"
+    ></iframe>
+
+    <h2>Embed code</h2>
+    <pre><code>&lt;iframe
+  src="https://docs.example.com/cliscenes/?demo=cli-signin&amp;embed=1"
+  title="Interactive walkthrough: sign in to a CLI with a desktop app"
+  loading="lazy"
+  allow="clipboard-write"
+  style="width: 100%; height: 560px; border: 0;"&gt;&lt;/iframe&gt;</code></pre>
+    <p>
+      The walkthrough keeps working without the iframe's surrounding page. It only needs the files from
+      <code>dist/</code> served over HTTP.
+    </p>
+    <p>
+      Optional: the embedded player posts its height as a <code>cliscenes:height</code> message. This page uses
+      the script below to resize the iframe so it never shows a scrollbar or empty space.
+    </p>
+    <pre><code>&lt;script&gt;
+  window.addEventListener("message", (event) =&gt; {
+    if (event.data?.type !== "cliscenes:height") return;
+    for (const frame of document.querySelectorAll("iframe")) {
+      if (frame.contentWindow === event.source) frame.style.height = event.data.height + "px";
+    }
+  });
+&lt;/script&gt;</code></pre>
+
+    <script>
+      window.addEventListener("message", (event) => {
+        if (event.data?.type !== "cliscenes:height") return;
+        for (const frame of document.querySelectorAll("iframe")) {
+          if (frame.contentWindow === event.source) frame.style.height = event.data.height + "px";
+        }
+      });
+    </script>
+  </body>
+</html>
