@@ -22,6 +22,8 @@ const outDir = path.join(root, "docs/media");
 const FRAME_MS = 100;
 /** Color scheme for the GIFs. */
 const THEME: "light" | "dark" = "dark";
+/** Pixel density. 2 keeps text sharp on high-resolution screens; GitHub scales the GIF to fit. */
+const SCALE = 2;
 
 interface Recording {
   file: string;
@@ -137,14 +139,25 @@ async function record(
 function encode(frames: Buffer[], delays: number[], height: number): Uint8Array {
   const images = frames.map((f) => {
     const png = PNG.sync.read(f);
-    return { width: png.width, data: png.data.subarray(0, png.width * height * 4) };
+    return { width: png.width, data: png.data.subarray(0, png.width * height * SCALE * 4) };
   });
   const { width } = images[0]!;
+  const pixelHeight = height * SCALE;
 
   // One palette for the whole GIF, from a sample of frames, avoids flicker.
   // The last palette entry is reserved for "unchanged" pixels.
-  const sample = [0, Math.floor(images.length / 3), Math.floor((2 * images.length) / 3), images.length - 1].map((i) => images[i]!.data);
-  const colors = quantize(Buffer.concat(sample), 255);
+  // Sample every 4th pixel of about 16 frames spread across the recording,
+  // so short-lived colors (highlights, badges) get palette entries too.
+  const step = Math.max(1, Math.floor(images.length / 16));
+  const chunks: Uint8Array[] = [];
+  for (let i = 0; i < images.length; i += step) {
+    const data = images[i]!.data;
+    const chunk = new Uint8Array(Math.ceil(data.length / 16) * 4);
+    let o = 0;
+    for (let p = 0; p < data.length; p += 16) chunk.set(data.subarray(p, p + 4), (o++) * 4);
+    chunks.push(chunk.subarray(0, o * 4));
+  }
+  const colors = quantize(Buffer.concat(chunks), 255);
   const transparentIndex = colors.length;
   const palette = [...colors, [255, 0, 255]];
 
@@ -153,7 +166,7 @@ function encode(frames: Buffer[], delays: number[], height: number): Uint8Array 
   let pending: { index: Uint8Array; delay: number; first: boolean } | undefined;
   const flush = () => {
     if (!pending) return;
-    gif.writeFrame(pending.index, width, height, {
+    gif.writeFrame(pending.index, width, pixelHeight, {
       palette,
       delay: pending.delay,
       // Keep the previous frame, and let unchanged pixels show through it.
@@ -192,7 +205,7 @@ const browser = await chromium.launch();
 try {
   await mkdir(outDir, { recursive: true });
   for (const recording of recordings) {
-    const page = await browser.newPage({ viewport: { width: 1000, height: 900 }, colorScheme: THEME });
+    const page = await browser.newPage({ viewport: { width: 1000, height: 900 }, deviceScaleFactor: SCALE, colorScheme: THEME });
     await page.addInitScript(CURSOR_SCRIPT);
     const { frames, delays, height } = await record(page, baseUrl, recording);
     const bytes = encode(frames, delays, height);
