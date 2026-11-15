@@ -14,7 +14,6 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 1. **Understand the flow before writing YAML.** List the moments in order and where each one happens: the terminal, a desktop app prompt, app settings, or a browser. Note every point where the real CLI waits for the person to do something outside the terminal. Those become gates.
 2. **Start from the closest example.**
    - `demos/cli-signin.yaml`: a command that triggers an approval prompt, with Approve and Deny branches. Uses the `overlay` layout.
-   - `demos/cli-approve-deploy.yaml`: a sensitive command that needs approval with a password, with a Deny branch. Uses the `split` layout.
 3. **Create `demos/<id>.yaml`.** The file name is the walkthrough's id and appears in URLs: lowercase letters, numbers, and hyphens.
 4. **Validate:** run `npm run validate`. It checks every file and prints errors with the file and field path, for example `steps[1].overlay.actions[0].next: Unknown step "sucess"`. Fix each error at that path and run it again until it passes.
    - On success, it prints one line per walkthrough, such as `valid  my-demo  (5 steps, 2 gated, 10.9s)`.
@@ -36,12 +35,6 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 | See a simple app window with text and buttons | `app-window` | Yes, through `actions` |
 | See a screenshot or illustration | `image` (local file, with required `alt` text) | No |
 | Read a short explanation | `annotation` | No |
-
-**Layout** (set once per walkthrough):
-
-- `overlay`: UI floats over the terminal. Use it when the UI interrupts the terminal, as a prompt does.
-- `split`: UI sits beside the terminal. Use it when the person should read the terminal and the prompt side by side.
-- If a walkthrough has both, choose the layout for the moment that matters most. Every overlay type works in either layout.
 
 **Flow control:**
 

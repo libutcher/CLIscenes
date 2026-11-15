@@ -4,7 +4,7 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 
 ## Guided playback (`cli-signin`)
 
-- [ ] Before you select Play, nothing appears outside the terminal except the placeholder text.
+- [ ] Before you select Play, nothing appears outside the terminal.
 - [ ] Select **Play**. The command types, then "Waiting for approval…" appears.
 - [ ] The **Allow CLI sign-in?** dialog appears, and the play button changes to "Waiting for your action".
 - [ ] Wait at least 5 seconds. "Signed in as…" does **not** appear.
@@ -39,9 +39,8 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 ## Layout and display
 
 - [ ] **Overlay** (`cli-signin`) at 1280px wide: the approval window floats over the upper right of the terminal without covering the typed command, and is never cut off.
-- [ ] **Split** (`cli-approve-deploy`) at 1280px wide: the approval window sits beside the terminal.
-- [ ] **Theme** (`cli-approve-deploy`): the teal accent applies to buttons and progress, in light and dark mode.
-- [ ] At 390px wide: both layouts stack vertically, with no horizontal page scrolling.
+- [ ] **Theme** (`cli-signin`): the teal accent applies to buttons and progress, in light and dark mode.
+- [ ] At 390px wide: the approval window stacks below the terminal, with no horizontal page scrolling.
 - [ ] Dark mode (operating system setting): every surface, badge, and button is readable.
 - [ ] Reduced motion (operating system setting): overlays appear without animation, and commands appear whole instead of being typed.
 - [ ] `?demo=cli-signin&theme=dark` shows dark mode with a light system setting, and `&theme=light` the reverse.

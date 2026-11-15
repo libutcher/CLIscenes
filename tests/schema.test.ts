@@ -14,7 +14,6 @@ function problems(input: unknown): string[] {
 describe("source schema", () => {
   it("accepts a valid walkthrough and fills defaults", () => {
     const demo = demoSchema.parse(parse(SIGNIN_YAML));
-    expect(demo.layout).toBe("split");
     expect(demo.terminal).toEqual({ cols: 80, rows: 16, prompt: "$ ", typingSpeed: 0.05 });
     expect(demo.steps[0]!.terminal?.typing).toBe(true);
     expect(demo.steps[1]!.overlay).toMatchObject({ type: "auth-prompt", app: "Desktop app" });

@@ -72,7 +72,6 @@ This example is a shortened version of `demos/cli-signin.yaml`. The `your-cli` c
 
 ```yaml
 title: Sign in to a CLI with a desktop app
-layout: overlay            # the prompt appears over the terminal
 
 steps:
   - id: signin

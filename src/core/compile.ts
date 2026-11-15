@@ -160,7 +160,6 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
       title: source.title,
       description: source.description,
       ...(source.prerequisites?.length ? { prerequisites: source.prerequisites } : {}),
-      layout: source.layout,
       ...(source.theme ? { theme: source.theme } : {}),
       cast: "demo.cast",
       castReducedMotion: "demo.reduced-motion.cast",

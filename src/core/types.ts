@@ -30,7 +30,6 @@ export interface CompiledDemo {
   title: string;
   description: string;
   prerequisites?: string[];
-  layout: "split" | "overlay";
   /** Brand colors, as authored. The player turns them into CSS variables. */
   theme?: Theme;
   /** Cast file, relative to the manifest. */

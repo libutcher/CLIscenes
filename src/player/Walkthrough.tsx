@@ -51,7 +51,7 @@ export function Walkthrough({ demo, baseUrl, header = true, steps = true }: Walk
   return (
     <div
       ref={rootRef}
-      className={`cs-walkthrough cs-layout-${demo.layout}`}
+      className="cs-walkthrough"
       data-status={state.status}
       style={themeStyle}
       // The walkthrough is a named region, so screen readers announce what it
@@ -89,7 +89,6 @@ export function Walkthrough({ demo, baseUrl, header = true, steps = true }: Walk
           />
         </div>
         <ExternalPane
-          demo={demo}
           state={state}
           overlays={overlays}
           baseUrl={baseUrl}
@@ -106,35 +105,25 @@ export function Walkthrough({ demo, baseUrl, header = true, steps = true }: Walk
 }
 
 function ExternalPane({
-  demo,
   state,
   overlays,
   baseUrl,
   waiting,
   onAction,
 }: {
-  demo: CompiledDemo;
   state: OrchestratorState;
   overlays: ReturnType<typeof visibleOverlays>;
   baseUrl: string;
   waiting: boolean;
   onAction: (action: OverlayAction) => void;
 }) {
-  // In overlay layout, the pane only exists while there is something to show.
-  if (demo.layout === "overlay" && overlays.length === 0) return null;
+  // The pane only exists while there is something to show.
+  if (overlays.length === 0) return null;
   return (
     <div className="cs-external" role="region" aria-label="Outside the terminal">
-      {overlays.length === 0 ? (
-        <p className="cs-placeholder">
-          {state.status === "idle"
-            ? "Select Play to start. Apps, dialogs, and browser windows appear here."
-            : "Nothing is happening outside the terminal in this step."}
-        </p>
-      ) : (
-        overlays.map((overlay, i) => (
-          <OverlayView key={`${state.visit}-${state.stepIndex}-${i}`} overlay={overlay} baseUrl={baseUrl} waiting={waiting} onAction={onAction} />
-        ))
-      )}
+      {overlays.map((overlay, i) => (
+        <OverlayView key={`${state.visit}-${state.stepIndex}-${i}`} overlay={overlay} baseUrl={baseUrl} waiting={waiting} onAction={onAction} />
+      ))}
     </div>
   );
 }
