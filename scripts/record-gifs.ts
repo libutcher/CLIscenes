@@ -46,19 +46,6 @@ const recordings: Recording[] = [
       await page.waitForTimeout(1500);
     },
   },
-  {
-    file: "side-by-side.gif",
-    demo: "cli-approve-deploy",
-    script: async (page, click) => {
-      await click(page.getByRole("button", { name: "Play" }));
-      const dialog = page.getByRole("dialog");
-      await dialog.waitFor({ timeout: 20_000 });
-      await page.waitForTimeout(1500);
-      await click(dialog.getByRole("button", { name: "Approve" }));
-      await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
-      await page.waitForTimeout(1500);
-    },
-  },
 ];
 
 /** A visible cursor that follows Playwright's mouse, since headless browsers draw none. */
