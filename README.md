@@ -6,6 +6,14 @@ The terminal shows commands and output as real text that readers can select and 
 
 > **Status:** early release (v0). The format and APIs may change.
 
+**Overlay layout:** the app's prompt appears over the terminal. The walkthrough waits until the reader selects **Approve**.
+
+![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
+
+**Side-by-side layout:** the app sits next to the terminal. The reader turns on each setting to continue.
+
+![A terminal installs your-cli and checks its version. Beside it, a YourApp settings window highlights a setting. A cursor turns on "Unlock with fingerprint", then "Integrate with the CLI", and the terminal runs "your-cli whoami" to show the connected account.](docs/media/side-by-side.gif)
+
 ## The problem
 
 Many developer workflows don't stay in the terminal:
@@ -49,6 +57,7 @@ Open the URL that the command prints, usually http://localhost:5173. The page up
 | `npm run test:e2e` | Runs the browser tests (first run `npx playwright install chromium`) |
 | `npm run typecheck` | Checks the TypeScript code |
 | `npm run check` | Runs the type check, unit tests, and build |
+| `npm run gifs` | Records the demo GIFs in `docs/media/` |
 
 ## Example
 
