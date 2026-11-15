@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# Generated walkthrough assets. Rebuild them with `npm run generate`.
+generated/
+test-results/
+playwright-report/
+.DS_Store

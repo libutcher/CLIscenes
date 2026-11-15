@@ -1,0 +1,603 @@
+/*
+ * CLIscenes player styles. Restrained by design: neutral surfaces, one accent
+ * colour, visible focus, and no motion when the reader prefers reduced motion.
+ * Every class is prefixed with "cs-" to avoid clashing with host pages.
+ */
+
+:root {
+  --cs-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cs-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --cs-bg: #f6f7f9;
+  --cs-surface: #ffffff;
+  --cs-surface-muted: #eef0f3;
+  --cs-text: #1d2330;
+  --cs-text-muted: #5b6370;
+  --cs-border: #d6dae0;
+  --cs-accent: #2457c5;
+  --cs-accent-text: #ffffff;
+  --cs-accent-soft: #e6edfb;
+  --cs-warning-soft: #fff4d6;
+  --cs-warning-text: #6b4b00;
+  --cs-success-soft: #e3f4e8;
+  --cs-success-text: #1d5c30;
+  --cs-focus: #1a4fd0;
+  --cs-radius: 10px;
+  --cs-shadow: 0 8px 28px rgb(20 28 45 / 0.16);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cs-bg: #12151b;
+    --cs-surface: #1b1f27;
+    --cs-surface-muted: #242a34;
+    --cs-text: #e7eaf0;
+    --cs-text-muted: #a3abb8;
+    --cs-border: #353c48;
+    --cs-accent: #6f9bff;
+    --cs-accent-text: #0b1530;
+    --cs-accent-soft: #1f2d4d;
+    --cs-warning-soft: #3d3216;
+    --cs-warning-text: #f5d58a;
+    --cs-success-soft: #193323;
+    --cs-success-text: #9fdcb0;
+    --cs-focus: #9ab9ff;
+    --cs-shadow: 0 8px 28px rgb(0 0 0 / 0.45);
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font: 16px/1.5 var(--cs-font);
+}
+
+.cs-embedded body {
+  background: var(--cs-surface);
+}
+
+:where(.cs-walkthrough, .cs-page) :focus-visible {
+  outline: 3px solid var(--cs-focus);
+  outline-offset: 2px;
+}
+
+.cs-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Page (not part of embeds) --------------------------------------------- */
+
+.cs-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.cs-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: 20px;
+}
+
+.cs-page__brand {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cs-page__demos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.cs-page__demos a {
+  color: var(--cs-accent);
+}
+
+.cs-page__demos a[aria-current="page"] {
+  color: var(--cs-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cs-loading,
+.cs-error {
+  padding: 24px 16px;
+}
+
+.cs-error {
+  color: #b42318;
+}
+
+/* Walkthrough ------------------------------------------------------------ */
+
+.cs-walkthrough {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--cs-border);
+  border-radius: calc(var(--cs-radius) + 4px);
+  background: var(--cs-surface);
+}
+
+.cs-embedded .cs-walkthrough {
+  border: 0;
+  border-radius: 0;
+  padding: 12px;
+}
+
+.cs-title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.cs-description {
+  margin: 4px 0 0;
+  color: var(--cs-text-muted);
+  font-size: 0.95rem;
+}
+
+.cs-stage {
+  position: relative;
+  display: grid;
+  gap: 14px;
+}
+
+.cs-terminal-pane {
+  min-width: 0;
+  border-radius: var(--cs-radius);
+  overflow: hidden;
+  background: #121314;
+}
+
+/* The orchestrator owns playback, so the player's own start button is hidden. */
+.cs-terminal .ap-overlay-start {
+  display: none;
+}
+
+.cs-terminal .ap-player {
+  border-radius: 0;
+}
+
+.cs-external {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cs-placeholder {
+  margin: 0;
+  padding: 20px;
+  border: 1px dashed var(--cs-border);
+  border-radius: var(--cs-radius);
+  color: var(--cs-text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Split view: terminal beside the external UI on wide screens. */
+@media (min-width: 860px) {
+  .cs-layout-split .cs-stage {
+    grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+    align-items: start;
+  }
+  .cs-layout-split .cs-placeholder {
+    min-height: 160px;
+    display: grid;
+    place-items: center;
+  }
+}
+
+/* Overlay view: external UI floats over the lower right of the terminal. On
+   small screens it stacks below instead, so it never hides terminal text. */
+@media (min-width: 700px) {
+  .cs-layout-overlay .cs-external {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    width: min(380px, 55%);
+    max-height: calc(100% - 32px);
+    overflow: auto;
+    filter: drop-shadow(var(--cs-shadow));
+  }
+}
+
+/* Overlays --------------------------------------------------------------- */
+
+.cs-auth,
+.cs-window,
+.cs-image {
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius);
+  background: var(--cs-surface);
+}
+
+.cs-layout-split .cs-auth,
+.cs-layout-split .cs-window {
+  box-shadow: var(--cs-shadow);
+}
+
+.cs-auth {
+  padding: 18px;
+  border-top: 4px solid var(--cs-accent);
+}
+
+.cs-auth__app {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cs-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cs-auth__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--cs-accent-soft);
+  color: var(--cs-accent);
+}
+
+.cs-auth__title {
+  margin: 12px 0 4px;
+  font-size: 1.05rem;
+}
+
+.cs-auth__message {
+  margin: 0;
+}
+
+.cs-auth__waiting {
+  margin: 10px 0 0;
+  color: var(--cs-text-muted);
+  font-size: 0.85rem;
+}
+
+.cs-window {
+  overflow: hidden;
+}
+
+.cs-window__chrome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--cs-border);
+  background: var(--cs-surface-muted);
+  font-size: 0.85rem;
+}
+
+.cs-window__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.cs-window__dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cs-border);
+}
+
+.cs-window__title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-window__body {
+  padding: 14px 16px 16px;
+  font-size: 0.92rem;
+}
+
+.cs-window__body > p {
+  margin: 0 0 10px;
+}
+
+.cs-window__heading {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.cs-window__fields {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.cs-window__field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--cs-surface-muted);
+}
+
+.cs-window__field dt {
+  font-weight: 500;
+}
+
+.cs-window__field dd {
+  margin: 0;
+  color: var(--cs-text-muted);
+}
+
+.cs-note {
+  color: var(--cs-text-muted);
+  font-size: 0.85rem;
+}
+
+.cs-image {
+  margin: 0;
+  padding: 8px;
+}
+
+.cs-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.cs-image figcaption {
+  padding: 8px 4px 2px;
+  color: var(--cs-text-muted);
+  font-size: 0.85rem;
+}
+
+.cs-annotation {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--cs-radius);
+  background: var(--cs-accent-soft);
+  font-size: 0.9rem;
+}
+
+.cs-annotation p {
+  margin: 0;
+}
+
+.cs-annotation__mark {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--cs-accent);
+  color: var(--cs-accent-text);
+  font: italic 700 0.75rem/1 Georgia, serif;
+}
+
+/* Buttons ---------------------------------------------------------------- */
+
+.cs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.cs-button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cs-button--primary {
+  background: var(--cs-accent);
+  color: var(--cs-accent-text);
+}
+
+.cs-button--secondary {
+  border-color: var(--cs-border);
+  background: var(--cs-surface);
+  color: var(--cs-text);
+}
+
+.cs-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Controls --------------------------------------------------------------- */
+
+.cs-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.cs-progress {
+  display: flex;
+  gap: 4px;
+}
+
+.cs-progress__segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--cs-surface-muted);
+  overflow: hidden;
+}
+
+.cs-progress__fill {
+  display: block;
+  height: 100%;
+  background: var(--cs-accent);
+  transform-origin: left;
+}
+
+.cs-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.cs-controls__buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.cs-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  background: var(--cs-surface);
+  color: var(--cs-text);
+  cursor: pointer;
+}
+
+.cs-icon-button--primary {
+  border-color: var(--cs-accent);
+  background: var(--cs-accent);
+  color: var(--cs-accent-text);
+}
+
+.cs-icon-button:disabled,
+.cs-icon-button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cs-step-label {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.cs-step-count {
+  color: var(--cs-text-muted);
+  margin-right: 4px;
+}
+
+.cs-step-title {
+  font-weight: 600;
+}
+
+.cs-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+.cs-badge--action,
+.cs-badge--gate {
+  background: var(--cs-warning-soft);
+  color: var(--cs-warning-text);
+}
+
+.cs-badge--completed {
+  background: var(--cs-success-soft);
+  color: var(--cs-success-text);
+}
+
+.cs-badge--skipped {
+  background: var(--cs-surface-muted);
+  color: var(--cs-text-muted);
+}
+
+/* Step list -------------------------------------------------------------- */
+
+.cs-steps ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cs-steps button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  background: var(--cs-surface);
+  color: var(--cs-text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cs-steps button[aria-current="step"] {
+  border-color: var(--cs-accent);
+  background: var(--cs-accent-soft);
+}
+
+.cs-steps__number {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--cs-surface-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.cs-steps .cs-badge {
+  margin-left: 0;
+}
+
+/* Motion: only animate for readers who have not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .cs-auth,
+  .cs-window,
+  .cs-image,
+  .cs-annotation {
+    animation: cs-appear 160ms ease-out;
+  }
+  @keyframes cs-appear {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+}
