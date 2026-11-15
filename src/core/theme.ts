@@ -26,7 +26,7 @@ export const MIN_TEXT_CONTRAST = 4.5;
 const WHITE = "#ffffff";
 const NEAR_BLACK = "#0b1220";
 
-/** Default surfaces the accent is blended with (match styles.css). */
+/** Default surfaces the accent is blended with (match player.css). */
 const SURFACE = { light: "#ffffff", dark: "#1b1f27" };
 
 type Rgb = [number, number, number];

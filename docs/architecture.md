@@ -32,13 +32,29 @@ src/node/                 Node-only code
   licenses-plugin.ts      Writes dist/THIRD_PARTY_LICENSES.txt at build time
 src/player/               Browser player (React)
   Walkthrough.tsx         Layout, controls, step list, announcements
-  useWalkthrough.ts       Connects React to the orchestrator
+  useWalkthrough.ts       Connects React to the orchestrator; loads the terminal in the browser only
+  player.css              Player styles, scoped to .cs-walkthrough
   terminal/               Terminal adapter (the only asciinema import)
   overlays/               One component per overlay type, plus the registry
+src/lib/                  Library entry points (cliscenes/react, cliscenes/docusaurus)
+src/cli/cliscenes.ts      The `cliscenes build` / `cliscenes validate` command
+src/main.tsx, page.css    The standalone app around the player
 scripts/generate.ts       `npm run generate` / `npm run validate`
+scripts/record-gifs.ts    `npm run gifs`
 tests/                    Unit tests (Vitest)
 e2e/                      Browser smoke tests (Playwright)
 ```
+
+## Two builds
+
+- **The app** (`npm run build`, `vite.config.ts`): the standalone player page and embed example in `dist/`, with the demos from `demos/`.
+- **The library** (`npm run build:lib`, `vite.lib.config.ts` and `vite.cli.config.ts`): `dist-lib/` with the React and Docusaurus components, `style.css`, and the `cliscenes` command. React and asciinema-player stay external, so the host site's bundler provides them. `npm install` runs this build automatically (the `prepare` script), which is what makes installing from GitHub work.
+
+Library styles never touch the host page:
+
+- Color tokens and base styles apply to `.cs-walkthrough`.
+- Dark mode follows `data-theme="dark"` on `<html>` (the attribute Docusaurus uses), or the system setting.
+- Page-level styles live in `src/page.css`, which only the app loads. The app marks its root element with `cs-app`, so the same tokens apply to the page.
 
 ## Compilation
 
@@ -95,7 +111,7 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 1. **Schema:** in `src/core/schema.ts`, add a `z.strictObject({ type: z.literal("my-type"), ... })` and add it to `overlaySchema`.
 2. **Component:** create `src/player/overlays/MyType.tsx`. It receives `OverlayProps` (`overlay`, `waiting`, `baseUrl`, `onAction`). Use the shared `Actions` component for buttons.
 3. **Register it:** add it to `overlayComponents` in `src/player/overlays/registry.tsx`. TypeScript reports an error until you do.
-4. **Styles:** add `cs-`-prefixed styles to `src/player/styles.css`.
+4. **Styles:** add `cs-`-prefixed styles to `src/player/player.css`. Scope every rule to `.cs-walkthrough` or a `cs-` class, so the library never styles the host page.
 5. **Tests and docs:** add a case to `tests/schema.test.ts` and document the fields in `docs/authoring.md`.
 
 If the overlay references files (like `image`, or the icons on `auth-prompt`), extend `rewriteOverlay` in `compile.ts`. The generator copies anything passed to `rewriteAsset`.

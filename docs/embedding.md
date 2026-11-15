@@ -79,10 +79,46 @@ Opening `dist/index.html` from disk (`file://`) doesn't work, because browsers b
 
 ## Docusaurus
 
-Tested with Docusaurus 3.10, including a production build (`npm run build`), which renders pages on the server.
+Docusaurus sites can use a native component, with no iframe and no separate player to host. Tested with Docusaurus 3.10 and a production build, which renders pages on the server.
 
-1. Copy [`examples/docusaurus/CLIscenesEmbed.jsx`](../examples/docusaurus/CLIscenesEmbed.jsx) to `src/components/CLIscenesEmbed.jsx` in your site.
-2. Use it in any `.mdx` page:
+1. **Install CLIscenes** in the site. Until it's on npm, install it from GitHub:
+
+   ```sh
+   npm install github:libutcher/CLIscenes
+   ```
+
+2. **Add walkthrough files** to a folder in the site, such as `walkthroughs/`. Each `.yaml` file is one walkthrough, written as described in [authoring.md](authoring.md).
+3. **Build them into `static/`** so Docusaurus serves them:
+
+   ```sh
+   npx cliscenes build walkthroughs --out static/walkthroughs
+   ```
+
+   To rebuild them with the site, add this command to the `prestart` and `prebuild` scripts in the site's `package.json`. The command replaces the output folder each time, so give it a folder of its own. It refuses to replace a folder that has other files in it.
+4. **Use the component** in any `.mdx` page:
+
+   ```mdx
+   import CLIscene from "cliscenes/docusaurus";
+
+   <CLIscene walkthrough="cli-signin" />
+   ```
+
+   `walkthrough` is the source file's name. The component finds `static/walkthroughs/<name>/` and adds the site's `baseUrl` for you. To load a walkthrough from somewhere else, pass `src="/path/to/folder/"` instead.
+
+The component loads its own styles, and they only affect the walkthrough. It follows the site's light/dark toggle automatically. On the server, it renders a placeholder, and the walkthrough loads in the browser.
+
+**Other React sites** can use the same component without the Docusaurus parts:
+
+```jsx
+import { CLIscene } from "cliscenes/react";
+import "cliscenes/style.css";
+
+<CLIscene src="/walkthroughs/cli-signin/" />;
+```
+
+### Docusaurus with an iframe
+
+If the player is hosted elsewhere, copy [`examples/docusaurus/CLIscenesEmbed.jsx`](../examples/docusaurus/CLIscenesEmbed.jsx) to `src/components/` in the site instead. It embeds the hosted player in an iframe, follows the site's theme toggle, and sizes the iframe to fit.
 
 ```mdx
 import CLIscenesEmbed from "@site/src/components/CLIscenesEmbed";
@@ -92,8 +128,6 @@ import CLIscenesEmbed from "@site/src/components/CLIscenesEmbed";
   title="Interactive walkthrough: sign in to the CLI"
 />
 ```
-
-The component follows the site's light/dark toggle live (through `useColorMode`) and resizes the iframe to fit.
 
 ## Mintlify
 
@@ -117,7 +151,7 @@ Mintlify's content column is narrow (about 520px), so walkthroughs use their sta
 
 ## Other documentation platforms
 
-Both examples above use an iframe; native, iframe-free components are tracked in the issues. For other platforms (MkDocs, GitBook, and so on):
+The Mintlify snippet and the Docusaurus iframe option use an iframe. For other platforms (MkDocs, GitBook, and so on):
 
 - **Hosting:** the platform must either serve `dist/` as static files or let you embed an iframe from another origin where `dist/` is hosted.
 - **iframes in MDX:** write attributes in camelCase and `style` as an object, for example `style={{ width: "100%", height: 560, border: 0 }}`.

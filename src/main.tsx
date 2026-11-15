@@ -11,7 +11,7 @@ import { createRoot } from "react-dom/client";
 import { MANIFEST_VERSION, type CompiledDemo, type DemoIndexEntry } from "./core/types.ts";
 import { Walkthrough } from "./player/Walkthrough.tsx";
 import { initColorScheme } from "./player/colorScheme.ts";
-import "./player/styles.css";
+import "./page.css";
 
 const params = new URLSearchParams(location.search);
 const embed = params.get("embed") === "1";
@@ -76,6 +76,9 @@ function App() {
     </main>
   );
 }
+
+// Page-level styles (src/page.css) and the color tokens apply under .cs-app.
+document.documentElement.classList.add("cs-app");
 
 if (embed) {
   document.documentElement.classList.add("cs-embedded");

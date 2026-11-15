@@ -2,7 +2,7 @@ import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { generateAll, listSources } from "../src/node/generate.ts";
+import { generateAll, listSources, OUTPUT_MARKER } from "../src/node/generate.ts";
 import { parseCast } from "../src/core/asciicast.ts";
 import type { CompiledDemo, DemoIndexEntry } from "../src/core/types.ts";
 
@@ -114,6 +114,41 @@ describe("generator", () => {
     expect(new Set(srcs).size).toBe(4);
     const contents = await Promise.all(srcs.map((s) => readFile(path.join(dir, s), "utf8")));
     expect(contents).toEqual(["<svg>next to source</svg>", "<svg>in assets</svg>", "<svg>a</svg>", "<svg>b</svg>"]);
+  });
+
+  describe("flat output (cliscenes build)", () => {
+    const source = "title: X\nsteps:\n  - id: a\n    title: A\n    terminal: { output: hi }\n";
+
+    it("writes walkthroughs straight into the folder and marks it", async () => {
+      const src = await tempDir();
+      const out = path.join(await tempDir(), "walkthroughs");
+      await writeFile(path.join(src, "demo-a.yaml"), source);
+      await generateAll({ sourceDir: src, outDir: out, flat: true });
+      await expect(readFile(path.join(out, "demo-a/demo.json"), "utf8")).resolves.toContain('"id": "demo-a"');
+      await expect(readFile(path.join(out, "index.json"), "utf8")).resolves.toContain("demo-a");
+      await expect(readFile(path.join(out, OUTPUT_MARKER), "utf8")).resolves.toBeTruthy();
+    });
+
+    it("replaces a folder it made before, removing walkthroughs that no longer exist", async () => {
+      const src = await tempDir();
+      const out = await tempDir();
+      await writeFile(path.join(src, "old.yaml"), source);
+      await generateAll({ sourceDir: src, outDir: out, flat: true });
+      await rm(path.join(src, "old.yaml"));
+      await writeFile(path.join(src, "new.yaml"), source);
+      await generateAll({ sourceDir: src, outDir: out, flat: true });
+      await expect(readFile(path.join(out, "new/demo.json"))).resolves.toBeTruthy();
+      await expect(readFile(path.join(out, "old/demo.json"))).rejects.toThrow();
+    });
+
+    it("refuses to replace a folder with other files in it", async () => {
+      const src = await tempDir();
+      const out = await tempDir();
+      await writeFile(path.join(src, "a.yaml"), source);
+      await writeFile(path.join(out, "favicon.ico"), "keep me");
+      await expect(generateAll({ sourceDir: src, outDir: out, flat: true })).rejects.toThrow(/isn't empty/);
+      await expect(readFile(path.join(out, "favicon.ico"), "utf8")).resolves.toBe("keep me");
+    });
   });
 
   it("reports a missing icon", async () => {
