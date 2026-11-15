@@ -66,7 +66,13 @@ export function Walkthrough({ demo, baseUrl }: WalkthroughProps) {
 
       <div className="cs-stage">
         <div className="cs-terminal-pane">
-          <div ref={terminalRef} className="cs-terminal" role="region" aria-label="Terminal (text can be selected and copied)" />
+          <div
+            ref={terminalRef}
+            className="cs-terminal"
+            role="region"
+            aria-label="Terminal (text can be selected and copied)"
+            style={{ "--cs-terminal-cols": demo.terminal.cols } as React.CSSProperties}
+          />
         </div>
         <ExternalPane
           demo={demo}

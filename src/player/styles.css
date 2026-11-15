@@ -186,6 +186,15 @@ body {
   background: #121314;
 }
 
+/* The player scales its font to fill the terminal's width. Capping the width
+   per column keeps text the same size (about 16.5px) in every layout; on wide
+   panes the rest is plain terminal background. On narrow screens the text
+   still shrinks to fit. */
+.cs-terminal {
+  --cs-terminal-cell: 10.3px;
+  max-width: calc(var(--cs-terminal-cols, 80) * var(--cs-terminal-cell));
+}
+
 /* The orchestrator owns playback, so the player's own start button is hidden. */
 .cs-terminal .ap-overlay-start {
   display: none;

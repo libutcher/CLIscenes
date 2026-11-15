@@ -14,7 +14,7 @@ theme:
 
 terminal:
   cols: 80
-  rows: 14
+  rows: 20
 
 steps:
   - id: signin
