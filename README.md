@@ -1,33 +1,34 @@
 # CLIscenes
 
-CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows. A walkthrough shows the terminal and the apps around it together.
+CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows that involve a terminal interacting with another app.
 
-The terminal shows commands and output as real text that readers can select and copy. Prompts, settings windows, and screenshots appear at the right moment. When a step needs the reader to act, the walkthrough waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. Prompts, settings windows, and screenshots appear at the right moment in the flow, with supporting documentation. When a step needs the reader to act, the walkthrough waits until they do.
 
 > **Status:** early release (v0). The format and APIs may change.
 
-**Overlay layout:** the app's prompt appears over the terminal. The walkthrough waits until the reader selects **Approve**.
+**Overlay layout:** the app's prompt appears over the terminal. This can be used to simulate situations like auth prompts. The walkthrough waits to continue until the reader selects **Approve**, and shows an alternative path if they choose deny.
 
 ![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
 
-**Side-by-side layout:** the app sits next to the terminal. The reader turns on each setting to continue.
+**Side-by-side layout:** the app sits next to the terminal. This can be used to simulate situations where a CLI tool requires actions to be taken in an accompanying app, like enabling settings. The reader turns on each setting to continue.
 
 ![A terminal installs your-cli and checks its version. Beside it, a YourApp settings window highlights a setting. A cursor turns on "Unlock with fingerprint", then "Integrate with the CLI", and the terminal runs "your-cli whoami" to show the connected account.](docs/media/side-by-side.gif)
 
 ## The problem
 
-Many developer workflows don't stay in the terminal:
+Some CLI workflows don't stay in the terminal, and as a result are difficult to visualize in end-to-end demos without requiring screen recordings. For example:
 
 1. You run a CLI command.
 2. A desktop app asks you to approve the request.
 3. You approve it, and the CLI continues.
-4. You change a setting in an app.
+
+Being able to visualize screens like auth prompts and settings interfaces helps the reader to understand how the tool works, and avoid getting confused during setup.
 
 Docs usually show this flow with code blocks, screenshots, videos, and prose. Readers struggle to follow these as one flow. Writers struggle to keep them up to date. A terminal replay can't show the dialog the reader clicks. A video shows everything, but readers can't copy its text. Each product change also means a new video.
 
 ## Features
 
-- **One timeline.** The terminal and the apps around it stay in step.
+- **Timeline.** The terminal and the apps around it stay aligned, and the user can see which step happens when.
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
@@ -35,9 +36,15 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
 
-## Quick start
+## Quick start 🚀
 
-You need Node.js 20.19 or later.
+### Requirements
+
+- Node.js 20.19 or later.
+
+### Install CLIscenes
+
+To install the tool, open your project in the terminal and run:
 
 ```sh
 npm install
@@ -59,6 +66,8 @@ Open the URL that the command prints, usually http://localhost:5173. The page up
 | `npm run check` | Runs the type check, unit tests, and build |
 | `npm run gifs` | Records the demo GIFs in `docs/media/` |
 | `npm run build:lib` | Builds the React and Docusaurus components and the `cliscenes` command into `dist-lib/` |
+
+Currently, you need to edit a YAML file to use the code and app visualization you need. You can use the bundled skill to do this quickly with your AI agent.
 
 ## Example
 
