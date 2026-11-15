@@ -33,7 +33,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
-CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal. [docs/prior-art.md](docs/prior-art.md) compares CLIscenes with related tools.
+CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
 
 ## Quick start
 
@@ -219,7 +219,6 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - [docs/embedding.md](docs/embedding.md): static output and embeds
 - [docs/architecture.md](docs/architecture.md): the design and gate rules
 - [docs/adr/0001-terminal-player.md](docs/adr/0001-terminal-player.md): the choice of terminal player
-- [docs/prior-art.md](docs/prior-art.md): related tools
 - [docs/manual-testing.md](docs/manual-testing.md): the manual test checklist
 - [AGENTS.md](AGENTS.md): notes for AI assistants
 

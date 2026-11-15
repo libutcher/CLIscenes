@@ -15,7 +15,7 @@ CLIscenes needs a terminal renderer that:
 6. is maintained;
 7. has a license compatible with an MIT project.
 
-Candidates: asciinema-player, terminal-demo, Termynal, and building our own. VHS, demorec, and TermScene output video, so they fail requirement 3. See [prior-art.md](../prior-art.md).
+Candidates: asciinema-player, terminal-demo, Termynal, and building our own. VHS, demorec, and TermScene output video, so they fail requirement 3.
 
 ## Decision
 
