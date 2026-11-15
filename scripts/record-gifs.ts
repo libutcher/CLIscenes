@@ -48,17 +48,13 @@ const recordings: Recording[] = [
   },
   {
     file: "side-by-side.gif",
-    demo: "cli-setup",
+    demo: "cli-approve-deploy",
     script: async (page, click) => {
       await click(page.getByRole("button", { name: "Play" }));
-      const fingerprint = page.getByRole("switch", { name: "Unlock with fingerprint" });
-      await fingerprint.waitFor({ timeout: 20_000 });
-      await page.waitForTimeout(1200);
-      await click(fingerprint);
-      const integrate = page.getByRole("switch", { name: "Integrate with the CLI" });
-      await integrate.waitFor({ timeout: 10_000 });
-      await page.waitForTimeout(1200);
-      await click(integrate);
+      const dialog = page.getByRole("dialog");
+      await dialog.waitFor({ timeout: 20_000 });
+      await page.waitForTimeout(1500);
+      await click(dialog.getByRole("button", { name: "Approve" }));
       await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(1500);
     },

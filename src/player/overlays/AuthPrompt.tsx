@@ -8,7 +8,7 @@ type AuthPromptOverlay = Extract<Overlay, { type: "auth-prompt" }>;
 
 /**
  * A desktop authentication request, drawn as a plain wireframe window (the
- * same style as the settings window): the requesting program and the app side
+ * same style as the app window): the requesting program and the app side
  * by side, the account, what approving grants, and how the reader confirms.
  *
  * It's a non-modal dialog, so the terminal stays visible and selectable while

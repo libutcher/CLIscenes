@@ -80,7 +80,7 @@ export function darkModeAccent(accent: string): string {
 /**
  * Darken an accent until it stands out on the light surface (3:1), so a pale
  * brand color (such as a light yellow) still gives a visible focus ring,
- * switch, and highlight.
+ * highlight, and selected step.
  */
 export function lightModeAccent(accent: string): string {
   let color = accent;

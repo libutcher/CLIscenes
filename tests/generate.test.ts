@@ -28,7 +28,7 @@ describe("generator", () => {
   it("validates every walkthrough in demos/, including the built-in examples", async () => {
     const demos = await generateAll({ sourceDir: repoDemos, outDir: "unused", check: true });
     expect(demos.map((d) => d.id)).toEqual(await repoDemoIds());
-    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["cli-setup", "cli-signin"]));
+    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["cli-approve-deploy", "cli-signin"]));
   });
 
   it("writes a cast, manifest, assets, and index for each demo", async () => {
@@ -48,9 +48,9 @@ describe("generator", () => {
     expect(prompt).toMatchObject({ icon: "assets/yourapp-icon.svg" });
     await expect(readFile(path.join(dir, "assets/yourapp-icon.svg"))).resolves.toBeTruthy();
 
-    const setup: CompiledDemo = JSON.parse(await readFile(path.join(out, "demos/cli-setup/demo.json"), "utf8"));
-    expect(setup.prerequisites?.length).toBeGreaterThan(0);
-    expect(setup.steps.filter((s) => s.gate).map((s) => s.overlays[0]?.type)).toEqual(["settings-window", "settings-window"]);
+    const deploy: CompiledDemo = JSON.parse(await readFile(path.join(out, "demos/cli-approve-deploy/demo.json"), "utf8"));
+    expect(deploy.prerequisites?.length).toBeGreaterThan(0);
+    expect(deploy.steps.filter((s) => s.gate).map((s) => s.overlays[0])).toMatchObject([{ type: "auth-prompt", verification: "password" }]);
   });
 
   it("copies auth-prompt icons and keeps same-named images in different folders apart", async () => {

@@ -1,8 +1,8 @@
 # CLIscenes
 
-CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows. A walkthrough shows the terminal and the apps around it together.
+CLIscenes turns plain YAML files into interactive walkthroughs of CLI sign-in and approval flows: the moments when a command stops and waits for you to approve it in another app.
 
-The terminal shows commands and output as real text that readers can select and copy. Prompts, settings windows, and screenshots appear at the right moment. When a step needs the reader to act, the walkthrough waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. When the CLI asks a desktop app for approval, the app's prompt appears, and the walkthrough waits until the reader approves or denies it.
 
 > **Status:** early release (v0). The format and APIs may change.
 
@@ -10,18 +10,18 @@ The terminal shows commands and output as real text that readers can select and 
 
 ![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
 
-**Side-by-side layout:** the app sits next to the terminal. The reader turns on each setting to continue.
+**Side-by-side layout:** the app sits next to the terminal. The reader confirms a sensitive command with a password.
 
-![A terminal installs your-cli and checks its version. Beside it, a YourApp settings window highlights a setting. A cursor turns on "Unlock with fingerprint", then "Integrate with the CLI", and the terminal runs "your-cli whoami" to show the connected account.](docs/media/side-by-side.gif)
+![A terminal runs "your-cli deploy --env production" and waits for approval. Beside it, a YourApp window asks "Approve production deploy?" with a password field. A cursor selects Approve, and the terminal shows the deploy finish.](docs/media/side-by-side.gif)
 
 ## The problem
 
-Many developer workflows don't stay in the terminal:
+Many CLIs hand off to another app to sign you in or approve a sensitive action:
 
 1. You run a CLI command.
 2. A desktop app asks you to approve the request.
-3. You approve it, and the CLI continues.
-4. You change a setting in an app.
+3. You approve or deny it.
+4. The CLI continues, or stops.
 
 Docs usually show this flow with code blocks, screenshots, videos, and prose. Readers struggle to follow these as one flow. Writers struggle to keep them up to date. A terminal replay can't show the dialog the reader clicks. A video shows everything, but readers can't copy its text. Each product change also means a new video.
 
@@ -31,7 +31,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
-- **Clearly practice.** Each app window carries a "Simulated" label. Nothing in a walkthrough runs commands, approves requests, or changes real settings.
+- **Clearly practice.** Each app window carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
@@ -123,7 +123,6 @@ An overlay shows an app or note outside the terminal.
 | Type | Shows | Can wait for the reader |
 | --- | --- | --- |
 | `auth-prompt` | An app's request for approval | Yes |
-| `settings-window` | An app's settings, with switches the reader turns on | Yes |
 | `app-window` | A simple app window with text and buttons | Yes |
 | `image` | A screenshot or illustration | No |
 | `annotation` | A short note | No |

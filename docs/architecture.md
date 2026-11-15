@@ -116,7 +116,7 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 
 If the overlay references files (like `image`, or the icons on `auth-prompt`), extend `rewriteOverlay` in `compile.ts`. The generator copies anything passed to `rewriteAsset`.
 
-If readers can answer a gate with the new overlay, update `overlayCanAnswerGate` in `schema.ts`, and call `onAction` from the component when they do (see `SettingsWindow.tsx`).
+If readers can answer a gate with the new overlay, update `overlayCanAnswerGate` in `schema.ts`, and call `onAction` from the component when they do (see `AuthPrompt.tsx`).
 
 ## Replacing the terminal player
 

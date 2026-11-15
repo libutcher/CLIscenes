@@ -1,6 +1,6 @@
 ---
 name: cliscenes-authoring
-description: Write or edit a CLIscenes walkthrough (a YAML file in demos/) that pairs terminal commands with UI outside the terminal, such as approval prompts, app settings, screenshots, and callouts. Use when someone asks to create, change, fix, or review a walkthrough, demo, or scene in this repository, or asks why one fails validation.
+description: Write or edit a CLIscenes walkthrough (a YAML file in demos/) of a CLI sign-in or approval flow, pairing terminal commands with the desktop app prompt the CLI waits on, plus screenshots and callouts. Use when someone asks to create, change, fix, or review a walkthrough, demo, or scene in this repository, or asks why one fails validation.
 ---
 
 # Authoring CLIscenes walkthroughs
@@ -14,7 +14,7 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 1. **Understand the flow before writing YAML.** List the moments in order and where each one happens: the terminal, a desktop app prompt, app settings, or a browser. Note every point where the real CLI waits for the person to do something outside the terminal. Those become gates.
 2. **Start from the closest example.**
    - `demos/cli-signin.yaml`: a command that triggers an approval prompt, with Approve and Deny branches. Uses the `overlay` layout.
-   - `demos/cli-setup.yaml`: installing a CLI and turning on app settings the reader practices toggling. Uses the `split` layout.
+   - `demos/cli-approve-deploy.yaml`: a sensitive command that needs approval with a password, with a Deny branch. Uses the `split` layout.
 3. **Create `demos/<id>.yaml`.** The file name is the walkthrough's id and appears in URLs: lowercase letters, numbers, and hyphens.
 4. **Validate:** run `npm run validate`. It checks every file and prints errors with the file and field path, for example `steps[1].overlay.actions[0].next: Unknown step "sucess"`. Fix each error at that path and run it again until it passes.
    - On success, it prints one line per walkthrough, such as `valid  my-demo  (5 steps, 2 gated, 10.9s)`.
@@ -33,7 +33,6 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 | The person needs to… | Use | Can wait for them |
 | --- | --- | --- |
 | Approve or deny a request in a desktop app | `auth-prompt` | Yes, through `actions` |
-| Turn on settings in an app | `settings-window` with `turnOn: true` on each setting to change | Yes, once every `turnOn` setting is on |
 | See a simple app window with text and buttons | `app-window` | Yes, through `actions` |
 | See a screenshot or illustration | `image` (local file, with required `alt` text) | No |
 | Read a short explanation | `annotation` | No |
@@ -41,12 +40,12 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 **Layout** (set once per walkthrough):
 
 - `overlay`: UI floats over the terminal. Use it when the UI interrupts the terminal, as a prompt does.
-- `split`: UI sits beside the terminal. Use it for apps the person looks at alongside the terminal, such as settings.
+- `split`: UI sits beside the terminal. Use it when the person should read the terminal and the prompt side by side.
 - If a walkthrough has both, choose the layout for the moment that matters most. Every overlay type works in either layout.
 
 **Flow control:**
 
-- `waitForAction: true` stops playback at the end of a step until the person responds. The step needs an overlay they can respond to (an action, or a `turnOn` setting). Otherwise validation fails, because they would be stuck.
+- `waitForAction: true` stops playback at the end of a step until the person clicks an action. The step needs an overlay with `actions`. Otherwise validation fails, because they would be stuck.
 - Each action's `next` jumps to another step. Without `next`, the walkthrough continues to the following step.
 - For a branch such as "Deny", put the branch steps after the main path, and set `finish: true` on the last main-path step so playback doesn't run into them.
 - `pause` sets how many seconds a step holds after its content. Timing is otherwise automatic; never calculate timestamps.
@@ -75,10 +74,8 @@ Validation can't tell a missing `finish: true` from a deliberate skip ahead, so 
 | Error mentions | Fix |
 | --- | --- |
 | `Unknown step "…"` | A `next` value doesn't match any step `id`. Check the spelling. |
-| `waitForAction needs an overlay the reader can answer` | Add `actions` to the overlay, or `turnOn: true` on a setting that starts with `toggle: false`. |
+| `waitForAction needs an overlay with at least one action` | Add `actions` to the overlay, such as Approve and Deny. |
 | `Use either overlay or overlays` | A step has both keys. Use `overlays:` (a list) for more than one. |
-| `section must be one of the nav items` | In a `settings-window`, `section` must exactly match an entry in `nav`. |
-| `A setting needs either toggle … or value` | Each setting has exactly one of `toggle: true/false` or `value: "…"`. |
 | `Image not found` | Paths are relative to the YAML file. Put images in `demos/assets/`. |
 | `can't use ".."`, `outside the walkthrough's folder`, or `Not an image file` | Images must be image files inside the walkthrough's folder. Copy the image into `demos/assets/` and point to it there. |
 | `Unrecognized key` | A misspelled field. Compare it against `docs/authoring.md`. |
