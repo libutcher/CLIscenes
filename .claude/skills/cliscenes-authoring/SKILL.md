@@ -80,6 +80,7 @@ Validation can't tell a missing `finish: true` from a deliberate skip ahead, so 
 | `section must be one of the nav items` | In a `settings-window`, `section` must exactly match an entry in `nav`. |
 | `A setting needs either toggle … or value` | Each setting has exactly one of `toggle: true/false` or `value: "…"`. |
 | `Image not found` | Paths are relative to the YAML file. Put images in `demos/assets/`. |
+| `can't use ".."`, `outside the walkthrough's folder`, or `Not an image file` | Images must be image files inside the walkthrough's folder. Copy the image into `demos/assets/` and point to it there. |
 | `Unrecognized key` | A misspelled field. Compare it against `docs/authoring.md`. |
 
 ## Embedding (when asked)

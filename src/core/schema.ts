@@ -9,10 +9,18 @@ import { contrast, HEX_COLOR, MIN_TEXT_CONTRAST, resolvedAccent } from "./theme.
 
 const text = z.string().trim().min(1);
 
-/** A path to a local file, relative to the source file. */
-const localPath = text.refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/"), {
-  message: "Use a relative path to a local image file (remote URLs are not supported).",
-});
+/**
+ * A path to a local image, relative to the source file. It must stay inside
+ * the source file's folder; the generator also checks the real location
+ * (following symlinks) before copying anything.
+ */
+const localPath = text
+  .refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/") && !value.startsWith("\\"), {
+    message: "Use a relative path to a local image file (remote URLs and absolute paths are not supported).",
+  })
+  .refine((value) => !value.split(/[\\/]/).includes(".."), {
+    message: 'Images must be inside the walkthrough\'s folder, so paths can\'t use "..". Move the image into demos/assets/.',
+  });
 
 const color = z.string().regex(HEX_COLOR, 'Use a hex color such as "#2457c5".');
 
