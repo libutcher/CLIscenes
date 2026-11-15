@@ -1,0 +1,110 @@
+# A fictional setup flow: install a CLI, turn on the desktop app settings it
+# needs, and check the result. `cli-scenes` and CLIscenes Desktop are made up
+# for this example, and nothing in this file is ever executed.
+title: Install the CLI and connect it to the desktop app
+description: >-
+  Install the CLI, turn on the two desktop app settings that give the best
+  setup, and check that everything is connected.
+layout: overlay
+
+# Brand colors for this walkthrough only. Text on the accent and the
+# dark-mode accent are worked out automatically.
+theme:
+  accent: "#0f7b6c"
+
+terminal:
+  cols: 80
+  rows: 14
+
+steps:
+  - id: download
+    title: Get the desktop app
+    overlay:
+      type: image
+      src: assets/browser-download.svg
+      alt: >-
+        A browser showing the CLIscenes download page, with a Download
+        CLIscenes Desktop button and, below it, an Install the CLI section
+        showing the command brew install cli-scenes.
+      caption: Install the desktop app first. The CLI uses it to sign you in.
+    pause: 3.5
+
+  - id: install
+    title: Install the CLI
+    terminal:
+      command: brew install cli-scenes
+      output: |
+        ==> Downloading cli-scenes 2.4.0
+        ==> Installing cli-scenes
+        cli-scenes 2.4.0 is installed.
+    pause: 1
+
+  - id: verify
+    title: Check the installed version
+    terminal:
+      command: cli-scenes --version
+      output: cli-scenes 2.4.0
+    pause: 1
+
+  - id: unlock-setting
+    title: Turn on fingerprint unlock
+    overlay:
+      type: app-window
+      title: CLIscenes Desktop — Settings
+      heading: Security
+      body: >-
+        Fingerprint unlock lets you approve CLI requests with a touch instead
+        of typing your password every time.
+      fields:
+        - label: Unlock with fingerprint
+          value: "On"
+        - label: Lock after the computer is idle for
+          value: 30 minutes
+      actions:
+        - label: Next
+      annotations:
+        - Turn on Unlock with fingerprint, then select Next.
+    waitForAction: true
+
+  - id: cli-setting
+    title: Connect the desktop app to the CLI
+    overlay:
+      type: app-window
+      title: CLIscenes Desktop — Settings
+      heading: Developer
+      body: >-
+        Integration lets the CLI sign in through the desktop app, so you never
+        store a password or token in your terminal.
+      fields:
+        - label: Integrate with the CLI
+          value: "On"
+        - label: Ask before each new terminal session
+          value: "On"
+      actions:
+        - label: Done
+      annotations:
+        - Turn on Integrate with the CLI, then select Done.
+    waitForAction: true
+
+  - id: check
+    title: Check your setup
+    terminal:
+      clear: true
+      command: cli-scenes whoami
+      output: |
+        Account:   Demo Account (demo@example.com)
+        Sign-in:   through CLIscenes Desktop
+        Unlock:    fingerprint
+        Session:   active, ends after 30 minutes idle
+    pause: 2.5
+    overlay:
+      type: app-window
+      title: CLIscenes Desktop — Settings
+      heading: Developer
+      fields:
+        - label: Integrate with the CLI
+          value: "On"
+        - label: Connected tools
+          value: Terminal · cli-scenes 2.4.0
+      annotations:
+        - Setup is complete. The first command in each new terminal asks you to approve it, as in the sign-in walkthrough.

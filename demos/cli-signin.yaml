@@ -26,6 +26,7 @@ steps:
     overlay:
       type: auth-prompt
       app: CLIscenes Desktop
+      icon: assets/cliscenes-app-icon.svg
       requester: Terminal
       title: Allow CLI sign-in?
       message: Terminal is running "cli-scenes signin" and wants to access your account.

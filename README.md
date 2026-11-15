@@ -116,6 +116,21 @@ The full format is in [docs/authoring.md](docs/authoring.md).
 
 To add an overlay type, see [docs/architecture.md](docs/architecture.md#adding-an-overlay-type).
 
+## Make it look like your product
+
+You can customize each walkthrough from its source file. You don't need to change code.
+
+- **Your app's icon** in authentication prompts: `icon: assets/your-app.svg`, plus `requesterIcon` for the program asking for access.
+- **Your brand colors:** a `theme` block with an `accent` color, and optionally a backdrop color and dark-mode overrides. Text on the accent stays readable: CLIscenes picks the text color automatically, or rejects a combination with too little contrast.
+- **All of the prompt's text:** the app name, title, message, account, the list of what approving allows, and the button labels.
+
+```yaml
+theme:
+  accent: "#0f7b6c"
+```
+
+Use your own product's branding. To show how another app behaves, describe its structure and wording, not its logo or colors. See [docs/authoring.md](docs/authoring.md#theme).
+
 ## Playback and navigation
 
 The controls are Restart, Previous step, Play/Pause, and Next step, plus a step list. The progress bar has one segment per step.
@@ -166,7 +181,8 @@ See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checkli
 - Overlays belong to one step. An overlay that stays across several steps has to be repeated.
 - Command typing still animates when reduced motion is on.
 - On narrow screens, wide terminals scale down. Keep `cols` near 64 for walkthroughs that will be read on phones.
-- Images with the same file name in different folders overwrite each other in the output.
+- Images outside the source file's folder (`../logo.svg`) are copied under their file name only, so two such images with the same name collide. Keep images next to the source file, as in `demos/assets/`.
+- Themes set colors only. Fonts and corner styles follow the player's design.
 - There are no platform integrations yet. Embedding uses an iframe.
 
 ## Roadmap
@@ -174,7 +190,7 @@ See [docs/manual-testing.md](docs/manual-testing.md) for the manual test checkli
 - Import real output from asciinema or VHS recordings, so examples can be checked against the actual CLI.
 - Generate walkthrough sources from CLI help text, tested docs examples, SDK comments, or test runs.
 - Overlays that stay across a range of steps.
-- A theme setting passed in by the host page (light, dark, or brand colors).
+- Let the host page choose light or dark mode, to match a docs site's theme toggle.
 - Native components for documentation frameworks (MDX, Docusaurus, Mintlify) as an alternative to iframes.
 - More overlay types, such as a browser window with a URL bar and simple form fields.
 

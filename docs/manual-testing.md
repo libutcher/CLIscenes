@@ -35,12 +35,12 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 - [ ] Pressing Space, arrow keys, `[` or `]` while the terminal text has focus does not start or skip playback.
 - [ ] With VoiceOver or NVDA: step changes are announced, and the waiting announcement names the available actions.
 - [ ] The dialog is announced as a dialog with its title and message.
-- [ ] The image in `ssh-key-setup` step 2 has meaningful alt text.
+- [ ] The image in `cli-setup` step 1 has meaningful alt text.
 
 ## Layout and display
 
 - [ ] **Split** (`cli-signin`) at 1280px wide: the dialog sits beside the terminal.
-- [ ] **Overlay** (`ssh-key-setup`) at 1280px wide: the window floats over the lower right without covering typed commands.
+- [ ] **Overlay** (`cli-setup`) at 1280px wide: the settings window floats over the lower right without covering typed commands, and the teal theme applies in light and dark mode.
 - [ ] At 390px wide: both layouts stack vertically, with no horizontal page scrolling.
 - [ ] Dark mode (operating system setting): every surface, badge, and button is readable.
 - [ ] Reduced motion (operating system setting): overlays appear without animation.

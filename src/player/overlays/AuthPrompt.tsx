@@ -13,7 +13,8 @@ type AuthPromptOverlay = Extract<Overlay, { type: "auth-prompt" }>;
  * It's a non-modal dialog, so the terminal stays visible and selectable while
  * it's open. The design is generic and isn't a copy of any real product's prompt.
  */
-export function AuthPrompt({ overlay, waiting, onAction }: OverlayProps<AuthPromptOverlay>) {
+export function AuthPrompt({ overlay, waiting, baseUrl, onAction }: OverlayProps<AuthPromptOverlay>) {
+  const imageUrl = (src?: string) => (src ? new URL(src, baseUrl).href : undefined);
   const titleId = useId();
   const messageId = useId();
   // Desktop convention: the secondary action on the left, the primary on the right.
@@ -35,7 +36,12 @@ export function AuthPrompt({ overlay, waiting, onAction }: OverlayProps<AuthProm
           <div className="cs-auth__parties" aria-hidden="true">
             {overlay.requester && (
               <>
-                <Party label={overlay.requester} icon={<TerminalIcon />} tone="requester" />
+                <Party
+                  label={overlay.requester}
+                  icon={<TerminalIcon />}
+                  image={imageUrl(overlay.requesterIcon)}
+                  tone="requester"
+                />
                 <span className="cs-auth__link">
                   <span />
                   <span />
@@ -43,7 +49,7 @@ export function AuthPrompt({ overlay, waiting, onAction }: OverlayProps<AuthProm
                 </span>
               </>
             )}
-            <Party label={overlay.app} icon={<AppIcon />} tone="app" />
+            <Party label={overlay.app} icon={<AppIcon />} image={imageUrl(overlay.icon)} tone="app" />
           </div>
 
           <h3 id={titleId} className="cs-auth__title">
@@ -101,10 +107,26 @@ export function AuthPrompt({ overlay, waiting, onAction }: OverlayProps<AuthProm
   );
 }
 
-function Party({ label, icon, tone }: { label: string; icon: React.ReactNode; tone: "requester" | "app" }) {
+function Party({
+  label,
+  icon,
+  image,
+  tone,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  /** Author-supplied icon. Replaces the generic one. */
+  image?: string;
+  tone: "requester" | "app";
+}) {
   return (
     <span className="cs-auth__party">
-      <span className={`cs-auth__party-icon cs-auth__party-icon--${tone}`}>{icon}</span>
+      {image ? (
+        // Decorative: the name is shown right below it.
+        <img className="cs-auth__party-icon cs-auth__party-icon--custom" src={image} alt="" />
+      ) : (
+        <span className={`cs-auth__party-icon cs-auth__party-icon--${tone}`}>{icon}</span>
+      )}
       <span className="cs-auth__party-label">{label}</span>
     </span>
   );

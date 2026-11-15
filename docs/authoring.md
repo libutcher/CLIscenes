@@ -11,6 +11,7 @@ Nothing in a source file is ever executed. All output is text you write.
 | `title` | Yes | | Shown above the walkthrough. |
 | `description` | No | `""` | One or two sentences under the title. |
 | `layout` | No | `split` | `split`: UI outside the terminal appears beside it (stacked on small screens). `overlay`: it floats over the lower right of the terminal. |
+| `theme` | No | | Brand colors for this walkthrough. See [Theme](#theme). |
 | `terminal.cols` | No | `80` | Terminal width in characters. |
 | `terminal.rows` | No | `16` | Terminal height in lines. |
 | `terminal.prompt` | No | `"$ "` | Text printed before each command. |
@@ -51,7 +52,9 @@ A desktop authentication request, drawn as an app window. In split layout it sit
 overlay:
   type: auth-prompt
   app: Example Desktop       # optional, default "Desktop app"; shown in the title bar
+  icon: assets/app-icon.svg  # optional; your app's icon (default: a generic icon)
   requester: Terminal        # optional; shown as an icon beside the app
+  requesterIcon: assets/terminal.png  # optional (default: a terminal icon)
   title: Allow CLI sign-in?
   message: Terminal is running "example signin" and wants to access your account.
   account:                   # optional
@@ -70,7 +73,9 @@ overlay:
 
 Buttons are laid out the way desktop dialogs usually are: secondary actions on the left, the primary action on the right. `verification: biometric` shows a fingerprint cue, and `password` shows a filled-in, read-only password field. Neither asks the reader for anything real.
 
-The prompt is a generic design. When you model it on a real product's prompt, copy its structure and wording, not its logo or brand colors.
+Icons are local image files, relative to the source file, like `image` overlays. Square images work best. They're shown at 52 × 52 pixels with rounded corners, so SVG or a PNG of at least 104 × 104 pixels stays sharp.
+
+The prompt is a generic design. Use your own product's icon and colors (see [Theme](#theme)). When you model it on another product's prompt, copy its structure and wording, not its logo or brand colors.
 
 ### `app-window`
 
@@ -136,6 +141,27 @@ steps:
   - id: denied
     terminal: { output: "Error: request denied." }
 ```
+
+## Theme
+
+Give a walkthrough your brand colors. Each walkthrough has its own theme, so different demos on the same site can look different.
+
+```yaml
+theme:
+  accent: "#0f7b6c"        # buttons, highlights, progress, the default app icon
+  accentText: "#ffffff"    # optional: text on accent buttons (chosen automatically if omitted)
+  backdrop: "#eef3f1"      # optional: the "desktop" behind app windows in split layout
+  dark:                    # optional: overrides for readers in dark mode
+    accent: "#5eead4"
+```
+
+Colors are hex values (`#rgb` or `#rrggbb`). The player keeps text readable:
+
+- Without `accentText`, button text is white or near-black, whichever contrasts better with the accent.
+- If you set `accentText` and it contrasts less than 4.5:1 with the accent (the WCAG AA minimum for text), validation fails and names both colors.
+- Without `dark.accent`, a dark accent is lightened automatically in dark mode, so it still stands out on dark backgrounds.
+
+Everything else (surfaces, text, borders) follows the reader's light or dark setting.
 
 ## Validation
 

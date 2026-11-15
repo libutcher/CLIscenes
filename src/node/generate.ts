@@ -67,8 +67,11 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
     rewriteAsset: (src) => {
       const from = path.resolve(path.dirname(sourceFile), src);
       if (!existsSync(from)) missing.push(`Image not found: ${src}`);
-      const to = `assets/${path.basename(src)}`;
-      assets.push({ from, to });
+      // Keep the path relative to the source file, so files with the same
+      // name in different folders don't overwrite each other.
+      const relative = path.relative(path.dirname(sourceFile), from).split(path.sep).join("/");
+      const to = relative.startsWith("../") ? `assets/external/${path.basename(src)}` : `assets/${relative.replace(/^assets\//, "")}`;
+      if (!assets.some((a) => a.to === to)) assets.push({ from, to });
       return to;
     },
   });
@@ -127,7 +130,11 @@ export async function generateAll({ sourceDir, outDir, check = false }: Generate
     await mkdir(path.join(dir, "assets"), { recursive: true });
     await writeFile(path.join(dir, "demo.cast"), demo.cast);
     await writeFile(path.join(dir, "demo.json"), JSON.stringify(demo.manifest, null, 2) + "\n");
-    for (const asset of demo.assets) await copyFile(asset.from, path.join(dir, asset.to));
+    for (const asset of demo.assets) {
+      const target = path.join(dir, asset.to);
+      await mkdir(path.dirname(target), { recursive: true });
+      await copyFile(asset.from, target);
+    }
   }
   const index: DemoIndexEntry[] = demos.map((d) => ({
     id: d.id,

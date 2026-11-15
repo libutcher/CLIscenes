@@ -3,6 +3,7 @@
  * Authors never edit this by hand.
  */
 import type { Overlay } from "./schema.ts";
+import type { Theme } from "./theme.ts";
 
 export const MANIFEST_VERSION = 1;
 
@@ -29,6 +30,8 @@ export interface CompiledDemo {
   title: string;
   description: string;
   layout: "split" | "overlay";
+  /** Brand colors, as authored. The player turns them into CSS variables. */
+  theme?: Theme;
   /** Cast file, relative to the manifest. */
   cast: string;
   duration: number;

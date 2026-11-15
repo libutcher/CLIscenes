@@ -339,7 +339,12 @@ body {
 
 .cs-auth__party-icon--app {
   background: linear-gradient(160deg, var(--cs-accent), var(--cs-app-deep));
-  color: #fff;
+  color: var(--cs-accent-text);
+}
+
+.cs-auth__party-icon--custom {
+  display: block;
+  object-fit: contain;
 }
 
 .cs-auth__party-label {

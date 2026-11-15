@@ -20,6 +20,7 @@ CLIscenes has three layers. Only the middle one is original. The other two are t
 demos/                    Source files (YAML or JSON) and their images
 src/core/                 Framework-free logic, also used by Node
   schema.ts               Authoring format and validation (zod)
+  theme.ts                Brand colors → CSS variables, with contrast checks
   compile.ts              Source → timeline, asciicast, manifest
   asciicast.ts            asciicast v3 writer and validator
   timeline.ts             Time ↔ step helpers

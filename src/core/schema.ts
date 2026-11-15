@@ -5,8 +5,44 @@
  * path ("steps[2].overlay.actions[0].next") before anything is generated.
  */
 import { z } from "zod";
+import { contrast, darkModeAccent, HEX_COLOR, MIN_TEXT_CONTRAST } from "./theme.ts";
 
 const text = z.string().trim().min(1);
+
+/** A path to a local file, relative to the source file. */
+const localPath = text.refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/"), {
+  message: "Use a relative path to a local image file (remote URLs are not supported).",
+});
+
+const color = z.string().regex(HEX_COLOR, 'Use a hex color such as "#2457c5".');
+
+const themeColors = z.strictObject({
+  accent: color.optional(),
+  accentText: color.optional(),
+  backdrop: color.optional(),
+});
+
+/** Brand colors for one walkthrough. Text on the accent must stay readable. */
+export const themeSchema = themeColors
+  .extend({ dark: themeColors.optional() })
+  .superRefine((theme, ctx) => {
+    const valid = (value?: string): value is string => value !== undefined && HEX_COLOR.test(value);
+    const check = (accent: string | undefined, text: string | undefined, path: (string | number)[]) => {
+      // Invalid colors are already reported by the field rules.
+      if (!valid(accent) || !valid(text)) return;
+      const ratio = contrast(accent, text);
+      if (ratio < MIN_TEXT_CONTRAST) {
+        ctx.addIssue({
+          code: "custom",
+          path,
+          message: `Text color ${text} on ${accent} has a contrast of ${ratio.toFixed(2)}:1; it needs at least ${MIN_TEXT_CONTRAST}:1. Remove accentText to choose one automatically.`,
+        });
+      }
+    };
+    check(theme.accent, theme.accentText, ["accentText"]);
+    const darkAccent = theme.dark?.accent ?? (valid(theme.accent) ? darkModeAccent(theme.accent) : undefined);
+    check(darkAccent, theme.dark?.accentText, ["dark", "accentText"]);
+  });
 
 /** A button on an overlay. Clicking it moves the walkthrough to `next`. */
 export const actionSchema = z.strictObject({
@@ -26,8 +62,12 @@ export const authPromptSchema = z.strictObject({
   type: z.literal("auth-prompt"),
   /** Name of the (fictional) desktop application showing the prompt. */
   app: text.default("Desktop app"),
+  /** Local image for the app's icon. Defaults to a generic icon. */
+  icon: localPath.optional(),
   /** The program asking for access, such as "Terminal". Shown beside the app. */
   requester: text.optional(),
+  /** Local image for the requester's icon. Defaults to a terminal icon. */
+  requesterIcon: localPath.optional(),
   title: text,
   message: text,
   /** The account the request is for. */
@@ -58,9 +98,7 @@ export const appWindowSchema = z.strictObject({
 export const imageSchema = z.strictObject({
   type: z.literal("image"),
   /** Path to a local image, relative to the source file. */
-  src: text.refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/"), {
-    message: "Use a relative path to a local image file (remote URLs are not supported).",
-  }),
+  src: localPath,
   alt: z.string(),
   caption: text.optional(),
 });
@@ -131,6 +169,8 @@ export const demoSchema = z
     description: z.string().default(""),
     /** `split`: terminal beside the external UI. `overlay`: UI floats over the terminal. */
     layout: z.enum(["split", "overlay"]).default("split"),
+    /** Brand colors for this walkthrough. */
+    theme: themeSchema.optional(),
     terminal: z
       .strictObject({
         cols: z.number().int().min(20).max(240).default(80),
