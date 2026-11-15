@@ -277,10 +277,6 @@ function Announcer({ demo, state }: { demo: CompiledDemo; state: OrchestratorSta
     const step = demo.steps[state.stepIndex]!;
     const base = `Step ${state.stepIndex + 1} of ${demo.steps.length}: ${step.title}.`;
     if (state.status === "awaiting-action") {
-      const toggles = step.overlays.flatMap((o) =>
-        o.type === "settings-window" ? o.settings.filter((s) => s.turnOn).map((s) => s.label) : [],
-      );
-      if (toggles.length) return `${base} Playback is waiting. Turn on ${toggles.join(" and ")} to continue.`;
       const labels = step.overlays.flatMap((o) => ("actions" in o ? (o.actions ?? []).map((a) => a.label) : []));
       return `${base} Playback is waiting. Choose ${labels.join(" or ")} to continue.`;
     }

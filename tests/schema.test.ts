@@ -49,47 +49,6 @@ describe("source schema", () => {
     );
   });
 
-  describe("settings-window", () => {
-    const window = (settings: unknown[], extra: Record<string, unknown> = {}) => ({
-      type: "settings-window",
-      title: "App — Settings",
-      nav: ["General", "Security"],
-      section: "Security",
-      settings,
-      ...extra,
-    });
-    const practice = { label: "Unlock with fingerprint", toggle: false, turnOn: true };
-
-    it("accepts toggles, values, and a practice toggle that answers a gate", () => {
-      const step = { id: "a", title: "A", overlay: window([practice, { label: "Idle lock", value: "30 minutes" }]), waitForAction: true };
-      expect(problems(minimal([step]))).toEqual([]);
-    });
-
-    it("needs a practice toggle to answer a gate", () => {
-      const step = { id: "a", title: "A", overlay: window([{ label: "X", toggle: true }]), waitForAction: true };
-      expect(problems(minimal([step]))[0]).toMatch(/waitForAction: .*setting with turnOn/);
-    });
-
-    it("rejects a section that isn't in the nav", () => {
-      expect(problems(minimal([{ id: "a", title: "A", overlay: window([practice], { section: "Privacy" }) }]))[0]).toMatch(
-        /^steps\[0\]\.overlay\.section: section must be one of the nav items/,
-      );
-    });
-
-    it("rejects settings with both or neither of toggle and value, and turnOn on a toggle that's already on", () => {
-      const issues = (setting: unknown) => problems(minimal([{ id: "a", title: "A", overlay: window([setting]) }]))[0];
-      expect(issues({ label: "X" })).toMatch(/either `toggle`/);
-      expect(issues({ label: "X", toggle: true, value: "On" })).toMatch(/either `toggle`/);
-      expect(issues({ label: "X", toggle: true, turnOn: true })).toMatch(/starts off/);
-    });
-
-    it("checks the next target", () => {
-      expect(problems(minimal([{ id: "a", title: "A", overlay: window([practice], { next: "nope" }) }]))[0]).toMatch(
-        /^steps\[0\]\.overlay\.next: Unknown step "nope"/,
-      );
-    });
-  });
-
   it("accepts prerequisites", () => {
     const demo = demoSchema.parse({ ...minimal([{ id: "a", title: "A", terminal: { output: "x" } }]), prerequisites: ["An app"] });
     expect(demo.prerequisites).toEqual(["An app"]);

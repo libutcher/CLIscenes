@@ -68,29 +68,23 @@ test("choosing Deny jumps to the denied path", async ({ page }) => {
   await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
 });
 
-test("setup walkthrough waits until the reader turns each setting on", async ({ page }) => {
-  await page.goto("?demo=cli-setup");
+test("deploy walkthrough waits for approval beside the terminal", async ({ page }) => {
+  await page.goto("?demo=cli-approve-deploy");
   const terminal = page.getByRole("region", { name: /Terminal/ });
   await expect(page.getByText("Before you start:")).toBeVisible();
 
   await page.getByRole("button", { name: "Play" }).click();
-  const fingerprint = page.getByRole("switch", { name: "Unlock with fingerprint" });
-  await expect(fingerprint).toBeVisible({ timeout: 15_000 });
-  await expect(fingerprint).toHaveAttribute("aria-checked", "false");
+  const dialog = page.getByRole("dialog", { name: "Approve production deploy?" });
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  await expect(dialog.getByText("Simulated", { exact: true })).toBeVisible();
 
-  // Nothing moves on until the reader flips the highlighted switch.
+  // Nothing deploys until the reader approves.
   await page.waitForTimeout(2_000);
-  await expect(page.getByText("Step 3 of 5", { exact: true })).toBeVisible();
+  await expect(terminal).not.toContainText("Deploying to production");
 
-  await fingerprint.click();
-  await expect(fingerprint).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText("All set. Continuing…")).toBeVisible();
-
-  const integrate = page.getByRole("switch", { name: "Integrate with the CLI" });
-  await expect(integrate).toBeVisible({ timeout: 5_000 });
-  await integrate.press("Space");
-  await expect(terminal).toContainText("Session:", { timeout: 15_000 });
-  await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Approve" }).click();
+  await expect(terminal).toContainText("is running release 2026.11.15-3", { timeout: 10_000 });
+  await expect(terminal).not.toContainText("was denied");
 });
 
 test.describe("host-controlled theme", () => {
@@ -153,4 +147,15 @@ test.describe("embed options", () => {
     await expect(page.getByRole("navigation", { name: "Walkthrough steps" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Sign in to a CLI with a desktop app" })).toBeVisible();
   });
+});
+
+test("player styles are applied to controls and the step list", async ({ page }) => {
+  // Functional tests pass even with missing CSS, so check a few key styles.
+  await page.goto("?demo=cli-signin");
+  const play = page.getByRole("button", { name: "Play" });
+  await expect(play).toBeVisible();
+  expect(await play.evaluate((el) => getComputedStyle(el).borderRadius)).toBe("8px");
+  const list = page.getByRole("navigation", { name: "Walkthrough steps" }).locator("ol");
+  expect(await list.evaluate((el) => getComputedStyle(el).display)).toBe("flex");
+  expect(await list.evaluate((el) => getComputedStyle(el).listStyleType)).toBe("none");
 });

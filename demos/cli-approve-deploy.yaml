@@ -1,0 +1,80 @@
+# A fictional approval flow: a sensitive CLI command asks the desktop app for
+# approval before it runs. `your-cli` and YourApp are made up for this
+# example, and nothing in this file is ever executed.
+title: Approve a production deploy
+description: >-
+  Start a deploy from the terminal, confirm it in the desktop app, and watch
+  it finish.
+prerequisites:
+  - YourApp, installed and signed in
+  - your-cli, signed in through YourApp
+layout: split
+
+# Brand colors for this walkthrough only. Text on the accent and the
+# dark-mode accent are worked out automatically.
+theme:
+  accent: "#0f7b6c"
+
+terminal:
+  cols: 64
+  rows: 12
+
+steps:
+  - id: deploy
+    title: Start a production deploy
+    terminal:
+      command: your-cli deploy --env production
+      output: |
+        Building release 2026.11.15-3... done
+        Production deploys need approval. Waiting for YourApp...
+    overlay:
+      type: annotation
+      text: Sensitive commands ask the desktop app for approval every time, even when the CLI is signed in.
+
+  - id: approve
+    title: Confirm with your password
+    overlay:
+      type: auth-prompt
+      app: YourApp
+      icon: assets/yourapp-icon.svg
+      requester: Terminal
+      title: Approve production deploy?
+      message: Terminal is running "your-cli deploy --env production".
+      account:
+        name: Demo Account
+        email: demo@example.com
+      details:
+        - Deploy release 2026.11.15-3 to production
+      verification: password
+      actions:
+        - label: Approve
+          next: deployed
+        - label: Deny
+          style: secondary
+          next: denied
+    waitForAction: true
+
+  - id: deployed
+    title: The deploy finishes
+    terminal:
+      output: |
+        Approved in YourApp.
+        Deploying to production... done
+        https://app.example.com is running release 2026.11.15-3
+    pause: 2.5
+    # The main path ends here. The next step is reached only by choosing Deny.
+    finish: true
+
+  - id: denied
+    title: If you deny the request
+    terminal:
+      clear: true
+      command: your-cli deploy --env production
+      typing: false
+      output: |
+        Building release 2026.11.15-3... done
+        Production deploys need approval. Waiting for YourApp...
+        Error: the deploy was denied in YourApp. Nothing was changed.
+    overlay:
+      type: annotation
+      text: If you deny the request, the command stops and production stays as it was.

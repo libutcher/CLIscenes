@@ -2,7 +2,7 @@
 
 CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows that involve a terminal interacting with another app.
 
-The terminal shows commands and output as real text that readers can select and copy. Prompts, settings windows, and screenshots appear at the right moment in the flow, with supporting documentation. When a step needs the reader to act, the walkthrough waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. Approval prompts and screenshots appear at the right moment in the flow, with supporting documentation. When a step needs the reader to act, the walkthrough waits until they do.
 
 > **Status:** early release (v0). The format and APIs may change.
 
@@ -10,9 +10,9 @@ The terminal shows commands and output as real text that readers can select and 
 
 ![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
 
-**Side-by-side layout:** the app sits next to the terminal. This can be used to simulate situations where a CLI tool requires actions to be taken in an accompanying app, like enabling settings. The reader turns on each setting to continue.
+**Side-by-side layout:** the app sits next to the terminal. This can be used to simulate situations where a CLI tool requires actions to be taken in an accompanying app, like approving a sensitive command. The reader confirms with a password to continue.
 
-![A terminal installs your-cli and checks its version. Beside it, a YourApp settings window highlights a setting. A cursor turns on "Unlock with fingerprint", then "Integrate with the CLI", and the terminal runs "your-cli whoami" to show the connected account.](docs/media/side-by-side.gif)
+![A terminal runs "your-cli deploy --env production" and waits for approval. Beside it, a YourApp window asks "Approve production deploy?" with a password field. A cursor selects Approve, and the terminal shows the deploy finish.](docs/media/side-by-side.gif)
 
 ## The problem
 
@@ -22,7 +22,7 @@ Some CLI workflows don't stay in the terminal, and as a result are difficult to 
 2. A desktop app asks you to approve the request.
 3. You approve it, and the CLI continues.
 
-Being able to visualize screens like auth prompts and settings interfaces helps the reader to understand how the tool works, and avoid getting confused during setup.
+Being able to visualize screens like auth prompts helps the reader to understand how the tool works, and avoid getting confused during setup.
 
 Docs usually show this flow with code blocks, screenshots, videos, and prose. Readers struggle to follow these as one flow. Writers struggle to keep them up to date. A terminal replay can't show the dialog the reader clicks. A video shows everything, but readers can't copy its text. Each product change also means a new video.
 
@@ -32,7 +32,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
-- **Clearly practice.** Each app window carries a "Simulated" label. Nothing in a walkthrough runs commands, approves requests, or changes real settings.
+- **Clearly practice.** Each app window carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
@@ -132,7 +132,6 @@ An overlay shows an app or note outside the terminal.
 | Type | Shows | Can wait for the reader |
 | --- | --- | --- |
 | `auth-prompt` | An app's request for approval | Yes |
-| `settings-window` | An app's settings, with switches the reader turns on | Yes |
 | `app-window` | A simple app window with text and buttons | Yes |
 | `image` | A screenshot or illustration | No |
 | `annotation` | A short note | No |

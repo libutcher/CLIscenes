@@ -28,7 +28,7 @@ Nothing in a source file is ever executed. All output is text you write.
 | `terminal` | One of `terminal` or an overlay | | What happens in the terminal. |
 | `overlay` | | | One UI element outside the terminal. |
 | `overlays` | | | A list of UI elements outside the terminal. Use either `overlay` or `overlays`. |
-| `waitForAction` | No | `false` | Stop at the end of this step until the reader responds: clicks an action, or turns on every `turnOn` setting in a `settings-window`. Needs an overlay the reader can respond to. |
+| `waitForAction` | No | `false` | Stop at the end of this step until the reader clicks an action. Needs an overlay with `actions`. |
 | `finish` | No | `false` | End guided playback after this step. Later steps are reachable only through an action's `next` or navigation. Use it to end the main path before an alternative path. |
 | `pause` | No | `1.2` | Seconds to hold after the step's content. |
 
@@ -47,7 +47,7 @@ A terminal block needs at least one of `command`, `output`, or `clear: true`.
 
 ### `auth-prompt`
 
-A desktop authentication request, drawn as a plain wireframe app window in the same style as `settings-window`. Only `title`, `message`, and `actions` are required. The other fields add detail so the prompt looks like what the real app shows.
+A desktop authentication request, drawn as a plain wireframe app window. Only `title`, `message`, and `actions` are required. The other fields add detail so the prompt looks like what the real app shows.
 
 ```yaml
 overlay:
@@ -97,36 +97,6 @@ overlay:
   annotations:                     # optional notes inside the window
     - Select Done to return to the walkthrough.
 ```
-
-### `settings-window`
-
-A text-only wireframe of an app's settings: left-hand navigation and a list of settings with toggle switches. Readers practice turning settings on themselves instead of clicking Next.
-
-```yaml
-overlay:
-  type: settings-window
-  title: YourApp — Settings              # title bar text
-  nav: [General, Security, Developer]    # left-hand navigation
-  section: Security                      # highlighted section; must be in nav
-  settings:
-    - label: Unlock with fingerprint
-      description: Approve CLI requests with a touch.   # optional
-      toggle: false                       # a switch, starting off
-      turnOn: true                        # the reader must turn this on
-    - label: Lock after the computer is idle for
-      value: 30 minutes                   # a plain value instead of a switch
-    - label: Require your password after restarting
-      toggle: true                        # shown on; readers can't change it
-  next: some-step                         # optional; default: the following step
-  annotations:                            # optional notes under the settings
-    - Turn on fingerprint unlock to continue.
-waitForAction: true
-```
-
-- Each setting has either `toggle` (`true` or `false`) or `value`.
-- Settings with `turnOn: true` start off, are highlighted, and are the only switches the reader can operate. Once they're all on, the window shows "All set" and the walkthrough continues by itself, so there's no button to click.
-- With `waitForAction: true`, playback waits until the reader turns them on. Going back to the step resets them, so readers can practice again.
-- Other switches only show their state.
 
 ### `image`
 

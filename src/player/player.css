@@ -247,7 +247,7 @@
   box-shadow: var(--cs-shadow);
 }
 
-/* Auth prompt: a plain wireframe window, matching the settings window.
+/* Auth prompt: a plain wireframe window, matching the app window.
    Only the primary button uses the accent color. */
 
 .cs-auth {
@@ -540,186 +540,6 @@
   color: var(--cs-text-muted);
 }
 
-/* Settings window: a deliberately plain, text-only wireframe. Only the
-   switches and the setting to turn on use the accent color. */
-
-.cs-settings {
-  overflow: hidden;
-  border: 1px solid var(--cs-border);
-  border-radius: var(--cs-radius);
-  background: var(--cs-surface);
-  font-size: 0.88rem;
-}
-
-.cs-layout-split .cs-settings {
-  box-shadow: var(--cs-shadow);
-}
-
-.cs-settings__layout {
-  display: grid;
-  grid-template-columns: minmax(96px, 30%) 1fr;
-}
-
-.cs-settings__nav {
-  margin: 0;
-  padding: 10px 8px;
-  border-right: 1px solid var(--cs-border);
-  background: var(--cs-surface-muted);
-  list-style: none;
-  color: var(--cs-text-muted);
-}
-
-.cs-settings__nav li {
-  padding: 5px 8px;
-  border-radius: 6px;
-}
-
-.cs-settings__nav li[aria-current] {
-  background: var(--cs-surface);
-  color: var(--cs-text);
-  font-weight: 600;
-  box-shadow: 0 0 0 1px var(--cs-border);
-}
-
-.cs-settings__content {
-  min-width: 0;
-  padding: 12px 14px 14px;
-}
-
-.cs-settings__heading {
-  margin: 0 0 8px;
-  font-size: 0.95rem;
-}
-
-.cs-settings__list {
-  display: grid;
-  margin: 0 0 10px;
-  padding: 0;
-  list-style: none;
-}
-
-.cs-setting {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 2px;
-  border-top: 1px solid var(--cs-border);
-}
-
-.cs-setting:first-child {
-  border-top: 0;
-}
-
-.cs-setting--practice {
-  margin: 4px -6px;
-  padding: 9px 8px;
-  border: 1px dashed var(--cs-accent);
-  border-radius: 8px;
-  background: var(--cs-accent-soft);
-}
-
-.cs-setting--practice + .cs-setting {
-  border-top: 0;
-}
-
-.cs-setting--done {
-  border-style: solid;
-}
-
-.cs-setting__text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.cs-setting__label {
-  font-weight: 500;
-}
-
-.cs-setting__label .cs-badge {
-  margin-left: 6px;
-}
-
-.cs-setting__description {
-  color: var(--cs-text-muted);
-  font-size: 0.8rem;
-}
-
-.cs-setting__value {
-  flex: none;
-  color: var(--cs-text-muted);
-}
-
-.cs-switch {
-  position: relative;
-  flex: none;
-  width: 40px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: var(--cs-border);
-}
-
-button.cs-switch {
-  cursor: pointer;
-}
-
-.cs-switch[aria-checked="true"],
-.cs-switch[data-on] {
-  background: var(--cs-accent);
-}
-
-.cs-switch__knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
-}
-
-.cs-switch[aria-checked="true"] .cs-switch__knob,
-.cs-switch[data-on] .cs-switch__knob {
-  transform: translateX(16px);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .cs-switch,
-  .cs-switch__knob {
-    transition:
-      background-color 120ms ease,
-      transform 120ms ease;
-  }
-}
-
-.cs-settings__status {
-  margin: 0;
-  color: var(--cs-text-muted);
-  font-size: 0.8rem;
-}
-
-.cs-settings__status--done {
-  color: var(--cs-success-text);
-  font-weight: 600;
-}
-
-@media (max-width: 420px) {
-  .cs-settings__layout {
-    grid-template-columns: 1fr;
-  }
-  .cs-settings__nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    border-right: 0;
-    border-bottom: 1px solid var(--cs-border);
-  }
-}
-
 .cs-note {
   color: var(--cs-text-muted);
   font-size: 0.85rem;
@@ -963,7 +783,6 @@ button.cs-switch {
 @media (prefers-reduced-motion: no-preference) {
   .cs-auth,
   .cs-window,
-  .cs-settings,
   .cs-image,
   .cs-annotation {
     animation: cs-appear 160ms ease-out;

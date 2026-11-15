@@ -28,7 +28,7 @@ describe("theme colors", () => {
     expect(darkModeAccent("#6f9bff")).toBe("#6f9bff");
   });
 
-  it("darkens pale accents for light mode so focus rings and switches stay visible", () => {
+  it("darkens pale accents for light mode so focus rings and highlights stay visible", () => {
     const yellow = "#ffe14d";
     const light = themeVariables({ accent: yellow }, "light")["--cs-accent"]!;
     expect(light).not.toBe(yellow);

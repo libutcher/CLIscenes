@@ -39,9 +39,8 @@ Run `npm run dev` and open the printed URL. Repeat the key items in Chrome, Fire
 ## Layout and display
 
 - [ ] **Overlay** (`cli-signin`) at 1280px wide: the approval window floats over the upper right of the terminal without covering the typed command, and is never cut off.
-- [ ] **Split** (`cli-setup`) at 1280px wide: the settings window sits beside the terminal.
-- [ ] **Settings practice** (`cli-setup`): playback waits at steps 3 and 4 until you turn on the highlighted switch, with a mouse click, or with Space or Enter on the focused switch. Then it shows "All set" and continues. Going back to step 3 turns the switch off again.
-- [ ] **Theme** (`cli-setup`): the teal accent applies to buttons, switches, and progress, in light and dark mode.
+- [ ] **Split** (`cli-approve-deploy`) at 1280px wide: the approval window sits beside the terminal.
+- [ ] **Theme** (`cli-approve-deploy`): the teal accent applies to buttons and progress, in light and dark mode.
 - [ ] At 390px wide: both layouts stack vertically, with no horizontal page scrolling.
 - [ ] Dark mode (operating system setting): every surface, badge, and button is readable.
 - [ ] Reduced motion (operating system setting): overlays appear without animation, and commands appear whole instead of being typed.
