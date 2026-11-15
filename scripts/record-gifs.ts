@@ -20,6 +20,8 @@ const { applyPalette, GIFEncoder, quantize } = gifenc;
 const root = path.resolve(import.meta.dirname, "..");
 const outDir = path.join(root, "docs/media");
 const FRAME_MS = 100;
+/** Color scheme for the GIFs. */
+const THEME: "light" | "dark" = "dark";
 
 interface Recording {
   file: string;
@@ -90,7 +92,7 @@ async function record(
   baseUrl: string,
   recording: Recording,
 ): Promise<{ frames: Buffer[]; delays: number[]; height: number }> {
-  await page.goto(`${baseUrl}?demo=${recording.demo}&embed=1&theme=light`);
+  await page.goto(`${baseUrl}?demo=${recording.demo}&embed=1&theme=${THEME}`);
   await page.getByRole("button", { name: "Play" }).waitFor();
   await page.mouse.move(40, 40);
   const walkthrough = page.locator(".cs-walkthrough");
@@ -190,7 +192,7 @@ const browser = await chromium.launch();
 try {
   await mkdir(outDir, { recursive: true });
   for (const recording of recordings) {
-    const page = await browser.newPage({ viewport: { width: 1000, height: 900 }, colorScheme: "light" });
+    const page = await browser.newPage({ viewport: { width: 1000, height: 900 }, colorScheme: THEME });
     await page.addInitScript(CURSOR_SCRIPT);
     const { frames, delays, height } = await record(page, baseUrl, recording);
     const bytes = encode(frames, delays, height);
