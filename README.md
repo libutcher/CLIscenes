@@ -28,7 +28,8 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
-- **Clearly practice.** Each app window carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
+- **Your own designs.** Show your app's real prompt as an image that opens, animates, and closes by itself, such as a Touch ID request. Keep it up to date by downloading it from Figma.
+- **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
@@ -119,6 +120,11 @@ steps:
 
 To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes the walkthrough's id, as in `?demo=<file-name>`.
 
+`demos/` has two examples:
+
+- **`cli-signin`:** an interactive prompt that waits for the reader to select **Approve** or **Deny**.
+- **`touch-id-signin`:** an animated Touch ID prompt, shown as an image, that closes by itself before the CLI continues. [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image) explains how it's built.
+
 [docs/authoring.md](docs/authoring.md) describes the full format.
 
 ## Overlay types
@@ -199,7 +205,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - **Focus:** when a prompt appears, focus moves to its main button, but only if the reader already uses the walkthrough.
 - **Announcements:** screen readers announce each new step and what the walkthrough waits for.
 - **Images:** each image needs alt text.
-- **Motion:** when the reader prefers reduced motion, commands appear whole and overlays don't animate.
+- **Motion:** when the reader prefers reduced motion, commands appear whole, overlays appear without sliding in, and animated images are swapped for a version without movement.
 - **Shortcuts:** the player has no single-key shortcuts, so it can't conflict with the page or assistive technology.
 
 [docs/manual-testing.md](docs/manual-testing.md) lists the manual checks.
@@ -209,6 +215,9 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - **Authored output:** writers type all terminal output. CLIscenes never runs commands.
 - **One terminal:** each walkthrough has one terminal, which plays from start to end. Branches are steps that the reader reaches through `next`.
 - **One step per overlay:** an overlay appears in one step. To keep it on screen longer, repeat it in each step.
+- **Images don't wait:** an image prompt closes when its step ends. To wait for the reader, use `auth-prompt` or `app-window`.
+- **Image animations:** only SVG images can use an `animation` stylesheet. Use GIF or animated WebP for other images.
+- **Figma downloads are manual:** run `npm run figma` to fetch the latest designs. Builds use the image files in the folder and never contact Figma.
 - **Small screens:** wide terminals shrink on phones. Keep `cols` near 64 for phone readers.
 - **Colors only:** themes change colors, not fonts or shapes.
 - **Iframe in Mintlify:** the Mintlify snippet embeds the hosted player in an iframe, so the player needs a host of its own.
