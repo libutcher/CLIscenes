@@ -305,6 +305,42 @@ describe("image click areas", () => {
     expect(manifest.steps[0]!.overlays[0]).toMatchObject({ actions: [{ label: "Approve", area: { x: 75, y: 70, width: 20, height: 20 } }] });
   });
 
+  it("places layers from a positions file written by hand, with no figma link", async () => {
+    const src = await tempDir();
+    const out = await tempDir();
+    await writeFile(path.join(src, "p.svg"), "<svg/>");
+    await writeFile(
+      path.join(src, "p.layers.json"),
+      JSON.stringify({ width: 200, height: 100, layers: { Approve: { x: 150, y: 70, width: 40, height: 20 } } }),
+    );
+    await writeFile(path.join(src, "a.yaml"), demo(`{ type: image, src: p.svg, alt: P, actions: [{ label: Approve, layer: Approve }] }`));
+    await generateAll({ sourceDir: src, outDir: out });
+    const manifest: CompiledDemo = JSON.parse(await readFile(path.join(out, "demos/a/demo.json"), "utf8"));
+    expect(manifest.steps[0]!.overlays[0]).toMatchObject({ actions: [{ label: "Approve", area: { x: 75, y: 70, width: 20, height: 20 } }] });
+  });
+
+  it("refuses a positions file with a mistyped box instead of building a button with no size", async () => {
+    const src = await tempDir();
+    await writeFile(path.join(src, "p.svg"), "<svg/>");
+    await writeFile(path.join(src, "a.yaml"), demo(`{ type: image, src: p.svg, alt: P, actions: [{ label: A, layer: Approve }] }`));
+    // `w`/`h` instead of `width`/`height`, the easiest slip to make by hand.
+    await writeFile(path.join(src, "p.layers.json"), JSON.stringify({ width: 200, height: 100, layers: { Approve: { x: 1, y: 1, w: 2, h: 2 } } }));
+    const error = (await generateAll({ sourceDir: src, outDir: src, check: true }).catch((e: unknown) => e)) as Error;
+    expect(error.message).toMatch(/isn't a layer positions file/);
+  });
+
+  it("refuses a box that doesn't fit on the image", async () => {
+    const src = await tempDir();
+    await writeFile(path.join(src, "p.svg"), "<svg/>");
+    await writeFile(path.join(src, "a.yaml"), demo(`{ type: image, src: p.svg, alt: P, actions: [{ label: A, layer: Approve }] }`));
+    await writeFile(
+      path.join(src, "p.layers.json"),
+      JSON.stringify({ width: 200, height: 100, layers: { Approve: { x: 180, y: 10, width: 40, height: 20 } } }),
+    );
+    const error = (await generateAll({ sourceDir: src, outDir: src, check: true }).catch((e: unknown) => e)) as Error;
+    expect(error.message).toMatch(/Layer "Approve" in p\.layers\.json isn't a usable click area: .*runs off the edge/);
+  });
+
   it("asks for a Figma sync when positions are missing, and names a missing layer", async () => {
     const src = await tempDir();
     await writeFile(path.join(src, "p.svg"), "<svg/>");

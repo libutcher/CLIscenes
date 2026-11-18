@@ -6,14 +6,11 @@
 # button. Touching the sensor plays the approval animation; Cancel goes to a
 # separate branch.
 #
-# To use your own design from Figma, add a `figma` link to each image overlay,
-# replace each `area` with the name of the matching Figma layer, and run
-# `npm run figma` (see docs/authoring.md):
-#
-#   figma: https://www.figma.com/design/<file>/<name>?node-id=12-34
-#   actions:
-#     - label: Approve with Touch ID
-#       layer: fingerprint
+# Each click area here is a measured percentage, which someone has to measure
+# again whenever the design moves. demos/figma-touch-id.yaml shows the same
+# flow with each button placed by the name of its layer instead, so the
+# positions come from a file that `npm run figma` can rewrite from the design.
+# See docs/authoring.md#click-areas-from-layer-names.
 title: Sign in to a CLI with Touch ID
 description: >-
   Run a CLI command, confirm it's you with Touch ID in the desktop app, and

@@ -14,7 +14,7 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { parse as parseYaml, YAMLParseError } from "yaml";
-import { demoSchema, formatIssues, type DemoSource } from "../core/schema.ts";
+import { areaSchema, demoSchema, formatIssues, type DemoSource } from "../core/schema.ts";
 import { compileDemo, type CompileResult } from "../core/compile.ts";
 import { parseCast } from "../core/asciicast.ts";
 import type { DemoIndexEntry } from "../core/types.ts";
@@ -159,8 +159,9 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
 }
 
 /**
- * Replace each image action's Figma `layer` with an `area`, using the
- * positions `cliscenes figma` saved next to the image. Returns problems.
+ * Replace each image action's `layer` with an `area`, using the positions
+ * stored next to the image. `cliscenes figma` writes that file from a Figma
+ * frame, and it can also be written by hand. Returns problems.
  */
 async function resolveLayerAreas(source: DemoSource, sourceDir: string): Promise<string[]> {
   const problems: string[] = [];
@@ -180,17 +181,25 @@ async function resolveLayerAreas(source: DemoSource, sourceDir: string): Promise
         const box = positions.layers[action.layer];
         if (!box) {
           problems.push(
-            `No layer named "${action.layer}" in ${file}. Check the layer's name in Figma, then run cliscenes figma again.`,
+            `No layer named "${action.layer}" in ${file}. Check the name (it's case-sensitive), then run cliscenes figma again or add the layer to ${path.basename(file)}.`,
           );
           continue;
         }
-        const pct = (value: number, total: number) => Math.round((value / total) * 100_000) / 1000;
-        action.area = {
+        // Percentages, checked by the same schema as a hand-written `area`,
+        // so a box that is off the image or has no size is reported here
+        // rather than becoming a button the reader can't click.
+        const pct = (value: number, total: number) => `${Math.round((value / total) * 100_000) / 1000}%`;
+        const area = areaSchema.safeParse({
           x: pct(box.x, positions.width),
           y: pct(box.y, positions.height),
           width: pct(box.width, positions.width),
           height: pct(box.height, positions.height),
-        };
+        });
+        if (!area.success) {
+          problems.push(`Layer "${action.layer}" in ${file} isn't a usable click area: ${area.error.issues[0]!.message}`);
+          continue;
+        }
+        action.area = area.data;
         delete action.layer;
       }
     }
@@ -202,14 +211,21 @@ async function resolveLayerAreas(source: DemoSource, sourceDir: string): Promise
 async function readLayerPositions(sourceDir: string, file: string, src: string): Promise<LayerPositions | string> {
   const checked = resolveAsset(sourceDir, file, [".json"]);
   if ("problem" in checked) {
-    return `No click-area positions for ${src} (${file}). Run cliscenes figma (npm run figma) to download them.`;
+    return `No click-area positions for ${src} (${file}). Run cliscenes figma (npm run figma) to download them, or write ${path.basename(file)} by hand.`;
   }
+  const size = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value > 0;
   try {
     const data = JSON.parse(await readFile(checked.real, "utf8")) as LayerPositions;
-    if (!(data.width > 0 && data.height > 0 && data.layers && typeof data.layers === "object")) throw new Error("bad shape");
+    if (!(size(data.width) && size(data.height) && data.layers && typeof data.layers === "object")) throw new Error("bad shape");
+    // Every box is measured in the image's own pixels. A hand-written file is
+    // easy to mistype, so check each one rather than trusting it.
+    for (const box of Object.values(data.layers)) {
+      const fields = [box?.x, box?.y, box?.width, box?.height];
+      if (!fields.every((value) => typeof value === "number" && Number.isFinite(value))) throw new Error("bad box");
+    }
     return data;
   } catch {
-    return `${file} isn't a layer positions file. Delete it and run cliscenes figma again.`;
+    return `${file} isn't a layer positions file. It needs a positive width and height, and a layers object whose entries each have a numeric x, y, width, and height. Run cliscenes figma again, or fix the file by hand.`;
   }
 }
 

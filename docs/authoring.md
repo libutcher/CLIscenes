@@ -111,6 +111,8 @@ overlay:
 
 Write `alt` text that describes what the reader needs from the image. Use `alt: ""` only for purely decorative images.
 
+An image with no `actions` is simply shown: the step holds it for `pause` seconds and moves on, and the walkthrough never waits. `demos/static-screenshot.yaml` is a one-path walkthrough built that way. Add `actions` when the reader should click something in the image, as described in [Clickable images](#clickable-images).
+
 Image rules, which also apply to `icon` and `requesterIcon`:
 
 - **Inside the walkthrough's folder:** the file must be in the same folder as the YAML file, or a folder below it, such as `demos/assets/`. Paths with `..`, absolute paths, and symlinks that point outside the folder are rejected. This keeps a walkthrough from publishing other files from your computer.
@@ -176,13 +178,55 @@ To make an image wait for the reader, add `actions` and set `waitForAction: true
 ```
 
 - **`area`** is where the button sits, as percentages of the image's width and height, measured from its top-left corner. Percentages keep the button in place at any size.
-- **`layer`** can replace `area` for an image from Figma: give the name of the layer to click, and `cliscenes figma` works out the area. See [Images from Figma](#images-from-figma).
+- **`layer`** can replace `area`: give the name of the layer to click, and its position is read from a positions file next to the image. See [Click areas from layer names](#click-areas-from-layer-names).
 - **Label every action** with what it does, such as "Approve with Touch ID". The label isn't shown, because the image shows the button, but screen readers announce it.
 - While the step waits, each area is outlined so readers can see where to click.
 
 To play an animation after the click, show the image again with `animation` in the following step, as `touch-id-signin.yaml` does.
 
-If an area ends up in the wrong place after a design change, the outline shows it. Areas from Figma layers stay in place as long as you run `cliscenes figma` after each change.
+If an area ends up in the wrong place after a design change, the outline shows it. Areas placed by layer name stay put as long as the positions file is kept up to date.
+
+#### Click areas from layer names
+
+A measured `area` is a number someone has to measure again every time the design moves. Naming the layer instead moves that job into a file you can regenerate:
+
+```yaml
+actions:
+  - label: Approve with Touch ID
+    layer: fingerprint        # the layer's name in the design
+  - label: Cancel
+    style: secondary
+    layer: cancel
+    next: cancelled
+```
+
+The position comes from a positions file beside the image, named after it: `assets/prompt.svg` pairs with `assets/prompt.layers.json`. The build reads that file, turns each `layer` into an `area`, and never contacts Figma. Commit it with the image.
+
+```json
+{
+  "width": 340,
+  "height": 372,
+  "layers": {
+    "fingerprint": { "x": 142, "y": 218, "width": 56, "height": 56 },
+    "cancel": { "x": 240.5, "y": 330.5, "width": 79, "height": 29 }
+  }
+}
+```
+
+- **`width` and `height`** are the image's own size at 1×. Every box is in those pixels, measured from the image's top-left corner. The build converts them to percentages, so the buttons hold their place at any display size.
+- **Only the layers you click** need an entry. Layers that are only animated, such as `ridges-active`, are matched by `id` inside the SVG and don't belong here.
+- **Names are unique and case-sensitive.** Two layers with one name is an error, because there's no way to tell which one to click.
+- **Box the button, not its label.** The area is the whole box, so name a layer the size of the button rather than the text inside it.
+- **Format.** Click areas need an `.svg` or `.png` image.
+
+There are two ways to get the file, and the YAML is identical either way:
+
+| How | Use it when | Keeping it current |
+| --- | --- | --- |
+| `cliscenes figma` writes it | You can open the design in Figma | Re-run the command after each design change |
+| You write it yourself | You have no Figma access, or the image doesn't come from Figma | Edit the numbers when the image changes |
+
+**If the build asks for positions,** the file is missing, or it doesn't list a layer that an action names. The message names both the file and the layer.
 
 #### Images from Figma
 
@@ -206,79 +250,39 @@ npm run figma              # or: npx cliscenes figma <source-dir>
 npm run figma -- --dry-run # list the links without downloading
 ```
 
-- **Token.** Create a personal access token in Figma under **Settings > Security > Personal access tokens**, with the **File content: read** scope. Your account must be able to open the file.
+`cliscenes figma` writes two things for each linked image: the image itself, and the positions file for any layers the actions name.
+
+- **Token.** Create a personal access token in Figma under **Settings > Security > Personal access tokens**, with the **File content: read** scope. The token inherits your access, so your account must be able to open the file. Some organizations switch personal access tokens off; if the setting isn't there, ask whoever administers your Figma organization.
+- **The link is optional.** `layer` works without `figma`, as long as the positions file is there. Only `cliscenes figma` needs the link, so a walkthrough with a hand-written positions file leaves `figma` out and the command skips the image.
 - **When it runs.** Only when you run the command. Builds read the file that's already in the folder, so they work offline and give the same result every time. Commit the downloaded image like any other.
 - **Format.** The extension of `src` sets the export format: `.svg`, `.png` (at 2×), or `.jpg`.
 - **SVG exports** have text outlined, because an image in a web page can't load web fonts. Each layer's name becomes its `id`, so name the layers you animate, such as `fingerprint` or `approved`. If two layers share a name, Figma adds a suffix to the later one. Check the exported file if an animation doesn't start.
 - **Corners and shadow.** Link to the dialog's own frame, not a larger frame with a background, so the area outside its rounded corners stays transparent. When the image floats over the terminal, the player adds a shadow, so the frame doesn't need one.
 - **Privacy.** The `figma` link is never copied into the built walkthrough, so an internal file link isn't published.
 
-**Click areas from layers.** For a [clickable image](#clickable-images), name the layer instead of measuring an area:
+#### Writing a positions file by hand
 
-```yaml
-actions:
-  - label: Approve with Touch ID
-    layer: fingerprint        # the layer's name in Figma
-  - label: Cancel
-    style: secondary
-    layer: cancel
-    next: cancelled
-```
+Use this when you can't open the design in Figma, or the image didn't come from Figma at all. `demos/figma-touch-id.yaml` is a working example: its positions file is written by hand, and it produces the same areas as the measured ones in `touch-id-signin.yaml`.
 
-`cliscenes figma` then saves each layer's position in a file next to the image, such as `assets/touch-id-prompt.layers.json`. Commit it with the image. The build reads it to place each button.
+1. Find the image's size at 1×. For an SVG, that's the `width` and `height` on the root element.
+2. For each button, find its box in those same pixels. In an SVG, a button is usually one shape: `<rect x="240.5" y="330.5" width="79" height="29">` is the box. For a PNG, measure it in any image editor.
+3. Write `<image-name>.layers.json` beside the image, in the shape above, with one entry per layer an action names.
+4. Run `npm run validate`, then `npm run dev` and step to the image. While the walkthrough waits, each area is outlined, so a wrong number is visible rather than silent.
 
-- **Unique names.** The layer must be inside the linked frame, and its name must be unique there. Names are case-sensitive.
-- **Click the layer's box.** The area is the layer's bounding box, so name a layer the size of the button, such as the button's frame, rather than its label text.
-- **Format.** Click areas from Figma need an `.svg` or `.png` image.
-- **If the build asks you to run `cliscenes figma`,** the positions file is missing, or doesn't have a layer you named. Check the name in Figma, then run the command again.
+The file is the same shape `cliscenes figma` writes, so adding a `figma` link later replaces it without touching the YAML.
 
 #### Try it with a Figma file
 
-To test the Figma steps before you use them with a real design, make a test file from the example prompt:
+To test the Figma steps against a real design, make a test file from the example prompt:
 
 1. In Figma, create a design file in an account you can use for testing.
-2. Drag `demos/assets/touch-id-prompt.svg` into the file. Figma turns it into a frame.
-3. In the **Layers** panel, find the fingerprint sensor's group and the **Cancel** button's group. Name them `fingerprint` and `cancel` if they aren't already. To keep the animation, also check that `ridges-active`, `approved`, `status`, `status-approved`, and `fingerprint-ring` have those names.
+2. Drag `demos/assets/touch-id-prompt.svg` into the file. Figma turns it into a frame, and the SVG's ids become the layer names.
+3. In the **Layers** panel, check that the sensor group and the **Cancel** button group are named `fingerprint` and `cancel`. To keep the animation, also check `ridges-active`, `approved`, `status`, `status-approved`, and `fingerprint-ring`.
 4. Select the frame, choose **Copy link to selection**, and create a token as described above.
-5. Create `demos/figma-test.yaml` from the walkthrough below, and paste the link into `figma`.
-6. In your terminal, set `FIGMA_TOKEN` and run `npm run figma`. It should print `updated` for `demos/assets/figma-test/prompt.svg`, and create `prompt.layers.json` next to it.
-7. Run `npm run dev` and open the **Figma test** walkthrough. The outlines should sit over the sensor and **Cancel**. Select each one to check both paths.
-
-```yaml
-title: Figma test
-steps:
-  - id: signin
-    title: Run a command
-    terminal: { command: your-cli signin, output: Waiting for Touch ID in YourApp... }
-  - id: prompt
-    title: Touch the sensor
-    overlay:
-      type: image
-      src: assets/figma-test/prompt.svg
-      frame: false
-      figma: https://www.figma.com/design/…   # paste your link
-      alt: YourApp asks to confirm the sign-in.
-      actions:
-        - { label: Approve with Touch ID, layer: fingerprint }
-        - { label: Cancel, style: secondary, layer: cancel, next: cancelled }
-    waitForAction: true
-  - id: approved
-    title: Approved
-    overlay:
-      type: image
-      src: assets/figma-test/prompt.svg
-      animation: assets/touch-id-prompt.css
-      frame: false
-      alt: The fingerprint is read, and YourApp shows Approved.
-    pause: 1.2
-  - id: done
-    title: Signed in
-    terminal: { output: Signed in as demo@example.com }
-    finish: true
-  - id: cancelled
-    title: Cancelled
-    terminal: { clear: true, output: "Error: Touch ID was cancelled." }
-```
+5. Copy `demos/figma-touch-id.yaml` to `demos/figma-test.yaml`. In the copy, change `title` to `Figma test`, change each `src` to `assets/figma-test/prompt.svg`, and add your link as `figma:` on both image overlays.
+6. Set `FIGMA_TOKEN` and run `npm run figma`. It should print `updated` for `demos/assets/figma-test/prompt.svg` and write `prompt.layers.json` next to it.
+7. Run `npm run dev` and open **Figma test**. The outlines should sit over the sensor and **Cancel**. Select each one to check both paths.
+8. Move the **Cancel** button in Figma, run `npm run figma` again, and reload. The click area follows the button.
 
 When you're done, delete `demos/figma-test.yaml` and `demos/assets/figma-test/`, or keep them out of commits.
 

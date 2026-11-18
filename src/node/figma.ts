@@ -314,11 +314,13 @@ async function download(fetch: typeof globalThis.fetch, url: string, image: Figm
  */
 export async function runFigmaCommand(sourceDir: string, { dryRun = false, env = process.env } = {}): Promise<string[]> {
   const rel = (image: FigmaImage) => path.relative(process.cwd(), image.target);
-  if (dryRun) {
-    const images = await findFigmaImages(sourceDir);
-    if (images.length === 0) return [NO_LINKS];
-    return images.map((i) => `would download  ${rel(i)}  (file ${i.link.fileKey}, node ${i.link.nodeId})`);
-  }
+  // Nothing to download is not a token problem, so say so before asking for
+  // a token: a walkthrough whose click areas come from a hand-written
+  // positions file needs no link and no token at all.
+  const images = await findFigmaImages(sourceDir);
+  if (images.length === 0) return [NO_LINKS];
+  if (dryRun) return images.map((i) => `would download  ${rel(i)}  (file ${i.link.fileKey}, node ${i.link.nodeId})`);
+
   const token = env.FIGMA_TOKEN?.trim();
   if (!token) {
     throw new FigmaError(
@@ -327,11 +329,12 @@ export async function runFigmaCommand(sourceDir: string, { dryRun = false, env =
     );
   }
   const results = await syncFigmaImages({ sourceDir, token });
-  if (results.length === 0) return [NO_LINKS];
   return results.map((r) => `${r.status.padEnd(9)}  ${rel(r)}`);
 }
 
-const NO_LINKS = "No image overlays have a figma link. Add `figma: <link>` to an image overlay first.";
+const NO_LINKS =
+  "No image overlays have a figma link, so there is nothing to download. Add `figma: <link>` to an image overlay to download its design.\n" +
+  "Click areas placed by `layer` keep working without a link, as long as the image's .layers.json is there.";
 
 function looksLike(format: FigmaFormat, bytes: Buffer): boolean {
   if (format === "png") return bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));

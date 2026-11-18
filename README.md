@@ -28,7 +28,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes works out the timing. Error messages name the exact field to fix.
-- **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Keep the image and its button positions up to date by downloading them from Figma.
+- **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Each button is placed by the name of its layer, so a design change moves the button and the click area together. With Figma access, `npm run figma` keeps both current; without it, the positions are a small file you write.
 - **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
@@ -124,10 +124,12 @@ steps:
 
 To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes the walkthrough's id, as in `?demo=<file-name>`.
 
-`demos/` has two examples:
+`demos/` has four examples:
 
 - **`cli-signin`:** an interactive prompt that waits for the reader to select **Approve** or **Deny**.
-- **`touch-id-signin`:** a Touch ID prompt shown as an image. The reader touches the sensor to approve, which plays an animation, or selects **Cancel**. [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image) explains how it's built.
+- **`touch-id-signin`:** a Touch ID prompt shown as an image, with each click area measured as a percentage. The reader touches the sensor to approve, which plays an animation, or selects **Cancel**. [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image) explains how it's built.
+- **`figma-touch-id`:** the same flow, with each button placed by the name of its layer in the design. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
+- **`static-screenshot`:** a single path with a screenshot the reader only looks at, and no waiting.
 
 [docs/authoring.md](docs/authoring.md) describes the full format.
 
@@ -139,10 +141,70 @@ An overlay shows an app or note outside the terminal.
 | --- | --- | --- |
 | `auth-prompt` | An app's request for approval | Yes |
 | `app-window` | A simple app window with text and buttons | Yes |
-| `image` | A screenshot, illustration, or an app's real prompt, optionally animated and downloaded from Figma | Yes, through clickable areas over its buttons |
+| `image` | A screenshot, illustration, or an app's real prompt, optionally animated and kept in step with a design | Yes, through clickable areas over its buttons |
 | `annotation` | A short note | No |
 
 [docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add a type.
+
+## Images: a screenshot to read, or a design to click
+
+An `image` overlay does two jobs, and the difference is whether it has `actions`.
+
+### A static screenshot, on one path
+
+With no `actions`, the image is shown for the step's `pause` and the walkthrough moves on. Nothing waits, so the walkthrough has one path from start to finish. Use it for a settings pane, a confirmation, or anything the reader only needs to see.
+
+```yaml
+- id: setting
+  title: Turn on CLI integration
+  overlay:
+    type: image
+    src: assets/cli-settings.svg
+    caption: YourApp > Settings > Developer
+    alt: YourApp settings, Developer section. CLI integration is turned on.
+  pause: 2.5                       # seconds on screen, then the next step
+```
+
+That image needs nothing else: no layer names, no positions file, no Figma link. Run `npm run dev` and open **Turn on CLI access in the desktop app** to see it ([`demos/static-screenshot.yaml`](demos/static-screenshot.yaml)).
+
+### A design the reader clicks, with more than one path
+
+Add `actions` and `waitForAction: true`, and the walkthrough stops until the reader chooses. Each action's `next` sends that choice to a different step, which is how a walkthrough branches. Place each button by the name of its layer in the design:
+
+```yaml
+- id: touch-id
+  title: Touch the sensor to approve
+  overlay:
+    type: image
+    src: assets/figma-touch-id/prompt.svg
+    frame: false                   # it's already a dialog, so no card around it
+    figma: https://www.figma.com/design/AbC123/Prompts?node-id=12-34
+    alt: YourApp asks to confirm the sign-in, using Touch ID or a password.
+    actions:
+      - label: Approve with Touch ID
+        layer: fingerprint         # the layer's name in the design
+      - label: Cancel
+        style: secondary
+        layer: cancel
+        next: cancelled            # a second path
+  waitForAction: true
+```
+
+Each `layer` is looked up in a positions file beside the image, `prompt.layers.json`, which holds each layer's box in the image's own pixels. The build reads that file, turns every `layer` into a position, and never contacts Figma.
+
+There are two ways to get that file, and the YAML above is the same either way:
+
+| | With Figma access | Without Figma access |
+| --- | --- | --- |
+| The `figma` link | Add it to the overlay | Leave it out |
+| The positions file | `npm run figma` writes it, along with a fresh copy of the image | You write it once, by hand |
+| After a design change | Run `npm run figma` again and the click areas follow the buttons | Update the numbers you changed |
+
+A Figma personal access token (scope **File content: read**) in `FIGMA_TOKEN` is what `npm run figma` needs; it never goes into a file in the repository. [Writing a positions file by hand](docs/authoring.md#writing-a-positions-file-by-hand) covers the other column.
+
+Run `npm run dev` and open **Sign in to a CLI with Touch ID, from a design** ([`demos/figma-touch-id.yaml`](demos/figma-touch-id.yaml)). Its positions file is hand-written, so the demo runs with no Figma account at all, and it places the buttons where `touch-id-signin` measured them by hand.
+
+[Clickable images](docs/authoring.md#clickable-images) and [Click areas from layer names](docs/authoring.md#click-areas-from-layer-names) describe every field.
 
 ## Customization
 
@@ -151,7 +213,7 @@ You can match a walkthrough to your product without code changes:
 - **Icon:** set `icon` on an `auth-prompt` to your app's icon.
 - **Colors:** set `theme.accent` to your brand color. CLIscenes picks a readable text color for you.
 - **Text:** set the app name, title, message, account, and button labels.
-- **Your own design:** show your app's real prompt as an image, with an optional CSS animation, such as a Touch ID sensor reading a fingerprint. Add a `figma` link and run `npm run figma` to download the latest design. See [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image).
+- **Your own design:** show your app's real prompt as an image, with an optional CSS animation, such as a Touch ID sensor reading a fingerprint. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
 
 For example, to use your brand color:
 
@@ -221,9 +283,9 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - **Authored output:** writers type all terminal output. CLIscenes never runs commands.
 - **One terminal:** each walkthrough has one terminal, which plays from start to end. Branches are steps that the reader reaches through `next`.
 - **One step per overlay:** an overlay appears in one step. To keep it on screen longer, repeat it in each step.
-- **Click areas need upkeep:** if a design moves a button and you don't update the image's click areas, they no longer line up. Areas from Figma layers update when you run `npm run figma`.
+- **Click areas need upkeep:** if a design moves a button and the image's positions file isn't updated, the click area no longer lines up. `npm run figma` rewrites that file from the design; a hand-written one is edited by hand.
 - **Image animations:** only SVG images can use an `animation` stylesheet. Use GIF or animated WebP for other images.
-- **Figma downloads are manual:** run `npm run figma` to fetch the latest designs. Builds use the image files in the folder and never contact Figma.
+- **Figma downloads are manual:** run `npm run figma` to fetch the latest designs. Builds use the image files in the folder and never contact Figma, so a walkthrough builds offline and gives the same result every time.
 - **Small screens:** wide terminals shrink on phones. Keep `cols` near 64 for phone readers.
 - **Colors only:** themes change colors, not fonts or shapes.
 - **Iframe in Mintlify:** the Mintlify snippet loads the player in an iframe, so you need to host the player separately.

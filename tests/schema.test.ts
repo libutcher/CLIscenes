@@ -120,8 +120,11 @@ describe("source schema", () => {
 
     expect(problems(image([{ label: "OK", area: { ...area, x: "10" } }]))[0]).toMatch(/percentage/);
     expect(problems(image([{ label: "OK", area: { ...area, x: "80%" } }]))[0]).toMatch(/runs off the edge/);
-    expect(problems(image([{ label: "OK" }]))[0]).toMatch(/either an area or a Figma layer/);
-    expect(problems(image([{ label: "OK", layer: "Approve" }]))[0]).toMatch(/layer needs a figma link/);
+    expect(problems(image([{ label: "OK" }]))[0]).toMatch(/either an area or a layer name/);
+    expect(problems(image([{ label: "OK", area, layer: "Approve" }]))[0]).toMatch(/either an area or a layer name/);
+    // A layer name stands on its own: the position comes from the image's
+    // .layers.json, whether cliscenes figma wrote it or a person did.
+    expect(problems(image([{ label: "OK", layer: "Approve" }]))).toEqual([]);
     expect(problems(image([{ label: "OK", layer: "Approve" }], { figma: "https://www.figma.com/design/K1/N?node-id=1-2" }))).toEqual([]);
   });
 

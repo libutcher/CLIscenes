@@ -134,6 +134,21 @@ describe("syncing from Figma", () => {
     expect(lines[0]).toMatch(/would download .*p\.svg .*file AbC123, node 12:34/);
     await expect(runFigmaCommand(dir, { env: {} })).rejects.toThrow(/Set FIGMA_TOKEN/);
   });
+
+  it("says there is nothing to download before it asks for a token", async () => {
+    // A walkthrough whose click areas come from a hand-written positions file
+    // has no link, so the command has no work and needs no token.
+    const dir = await tempDir();
+    await mkdir(path.join(dir, "assets"));
+    await writeFile(path.join(dir, "assets", "p.svg"), SVG);
+    await writeFile(path.join(dir, "assets", "p.layers.json"), JSON.stringify({ width: 10, height: 10, layers: { Approve: { x: 1, y: 1, width: 2, height: 2 } } }));
+    await writeFile(
+      path.join(dir, "a.yaml"),
+      walkthrough([`{ type: image, src: assets/p.svg, alt: P, actions: [{ label: A, layer: Approve }] }`]),
+    );
+    expect(await findFigmaImages(dir)).toHaveLength(0);
+    expect((await runFigmaCommand(dir, { env: {} }))[0]).toMatch(/No image overlays have a figma link/);
+  });
 });
 
 describe("click areas from Figma layers", () => {

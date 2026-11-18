@@ -109,13 +109,14 @@ export type Area = z.infer<typeof areaSchema>;
 
 /**
  * A button drawn on an image, over the button the image shows. Give its
- * position with `area`, or name a Figma layer with `layer` and run
- * `cliscenes figma` to fill in the position.
+ * position with `area`, or name a layer with `layer` and let the position
+ * come from the image's `.layers.json` file. `cliscenes figma` writes that
+ * file from a Figma frame; without Figma access you can write it by hand.
  */
 export const imageActionSchema = actionSchema
   .extend({ area: areaSchema.optional(), layer: text.optional() })
   .refine((a) => Boolean(a.area) !== Boolean(a.layer), {
-    message: "Give each image action either an area or a Figma layer, not both.",
+    message: "Give each image action either an area or a layer name, not both.",
   });
 
 // ---------------------------------------------------------------------------
@@ -191,19 +192,12 @@ export const imageSchema = z
     /**
      * Clickable areas over the buttons in the image. With these, the step
      * can wait for the reader (`waitForAction`) and branch with `next`.
+     * Each action gives an `area` directly, or names a `layer` whose
+     * position is read from the image's `.layers.json` file.
      */
     actions: z.array(imageActionSchema).optional(),
   })
   .superRefine((image, ctx) => {
-    image.actions?.forEach((action, i) => {
-      if (action.layer && !image.figma) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["actions", i, "layer"],
-          message: "layer needs a figma link on the image, so `cliscenes figma` can find the layer. Without one, use area.",
-        });
-      }
-    });
     if (image.actions?.some((a) => a.layer) && image.figma && figmaFormat(image.src) === "jpg") {
       ctx.addIssue({ code: "custom", path: ["src"], message: "Click areas from Figma need an .svg or .png image." });
     }

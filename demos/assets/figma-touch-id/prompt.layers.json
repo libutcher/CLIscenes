@@ -1,0 +1,18 @@
+{
+  "width": 340,
+  "height": 372,
+  "layers": {
+    "fingerprint": {
+      "x": 142,
+      "y": 218,
+      "width": 56,
+      "height": 56
+    },
+    "cancel": {
+      "x": 240.5,
+      "y": 330.5,
+      "width": 79,
+      "height": 29
+    }
+  }
+}

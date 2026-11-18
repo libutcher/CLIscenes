@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif">
+  <!-- A settings window for the fictional YourApp, used as a plain screenshot:
+       the reader looks at it and the walkthrough moves on. Nothing here is
+       clickable, so this file needs no layer names and no layers.json. -->
+  <rect id="window" x="0.5" y="0.5" width="359" height="199" rx="14" fill="#f6f6f7" stroke="#d2d2d7"/>
+
+  <text x="20" y="31" font-size="13.5" font-weight="600" fill="#1d1d1f">YourApp — Settings</text>
+  <line x1="0.5" y1="48" x2="359.5" y2="48" stroke="#d2d2d7"/>
+
+  <text x="20" y="76" font-size="11" font-weight="600" fill="#6e6e73" letter-spacing="0.7">DEVELOPER</text>
+
+  <rect x="20" y="90" width="320" height="58" rx="10" fill="#ffffff" stroke="#d2d2d7"/>
+  <text x="36" y="113" font-size="13.5" font-weight="600" fill="#1d1d1f">CLI integration</text>
+  <text x="36" y="132" font-size="12" fill="#6e6e73">your-cli can sign in to this account.</text>
+  <g id="toggle">
+    <rect x="286" y="108" width="38" height="22" rx="11" fill="#0f7b6c"/>
+    <circle cx="313" cy="119" r="8.5" fill="#ffffff"/>
+  </g>
+
+  <text x="20" y="176" font-size="12" fill="#6e6e73">Signed in as demo@example.com</text>
+</svg>

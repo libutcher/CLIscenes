@@ -1,0 +1,50 @@
+# A walkthrough with one path and a screenshot the reader only looks at.
+# `your-cli` and YourApp are made up, and nothing in this file is executed.
+#
+# The image overlay has no `actions`, so the step never waits: it shows the
+# screenshot for `pause` seconds and moves on. An image used this way needs no
+# layer names, no layers.json, and no Figma link — just the file and its alt
+# text. `frame` is left at its default, so the screenshot gets a card around
+# it rather than floating like a dialog.
+title: Turn on CLI access in the desktop app
+description: >-
+  Check whether the CLI can sign in, see the setting that controls it, and
+  check again.
+
+theme:
+  accent: "#0f7b6c"
+
+terminal:
+  cols: 80
+  rows: 16
+
+steps:
+  - id: status-off
+    title: Check whether the CLI can sign in
+    terminal:
+      command: your-cli status
+      output: |
+        CLI integration: off
+        Turn it on in YourApp under Settings > Developer.
+    pause: 0.8
+
+  - id: setting
+    title: Turn on CLI integration
+    overlay:
+      type: image
+      src: assets/cli-settings.svg
+      caption: YourApp > Settings > Developer
+      alt: >-
+        YourApp settings, Developer section. CLI integration is turned on, and
+        the window shows the account demo@example.com.
+    pause: 2.5
+
+  - id: status-on
+    title: Check again
+    terminal:
+      command: your-cli status
+      output: |
+        CLI integration: on
+        Signed in as demo@example.com
+    pause: 1.5
+    finish: true
