@@ -283,3 +283,37 @@ describe("forceReducedMotion", () => {
     );
   });
 });
+
+describe("image click areas", () => {
+  const demo = (overlay: string) => `title: T\nsteps:\n  - id: a\n    title: A\n    overlay: ${overlay}\n    waitForAction: true\n  - id: b\n    title: B\n    terminal: { output: done }\n`;
+  const link = "https://www.figma.com/design/K1/N?node-id=1-2";
+
+  it("turns Figma layer names into areas, and publishes neither the layer names nor the link", async () => {
+    const src = await tempDir();
+    const out = await tempDir();
+    await writeFile(path.join(src, "p.svg"), "<svg/>");
+    await writeFile(
+      path.join(src, "p.layers.json"),
+      JSON.stringify({ width: 200, height: 100, layers: { Approve: { x: 150, y: 70, width: 40, height: 20 } } }),
+    );
+    await writeFile(path.join(src, "a.yaml"), demo(`{ type: image, src: p.svg, alt: P, figma: "${link}", actions: [{ label: Approve, layer: Approve }] }`));
+    await generateAll({ sourceDir: src, outDir: out });
+    const json = await readFile(path.join(out, "demos/a/demo.json"), "utf8");
+    expect(json).not.toMatch(/layer|K1/);
+    const manifest: CompiledDemo = JSON.parse(json);
+    expect(manifest.steps[0]!.gate).toBeDefined();
+    expect(manifest.steps[0]!.overlays[0]).toMatchObject({ actions: [{ label: "Approve", area: { x: 75, y: 70, width: 20, height: 20 } }] });
+  });
+
+  it("asks for a Figma sync when positions are missing, and names a missing layer", async () => {
+    const src = await tempDir();
+    await writeFile(path.join(src, "p.svg"), "<svg/>");
+    await writeFile(path.join(src, "a.yaml"), demo(`{ type: image, src: p.svg, alt: P, figma: "${link}", actions: [{ label: A, layer: Approve }] }`));
+    const error = (await generateAll({ sourceDir: src, outDir: src, check: true }).catch((e: unknown) => e)) as Error;
+    expect(error.message).toMatch(/No click-area positions for p\.svg \(p\.layers\.json\)\. Run cliscenes figma/);
+
+    await writeFile(path.join(src, "p.layers.json"), JSON.stringify({ width: 1, height: 1, layers: {} }));
+    const again = (await generateAll({ sourceDir: src, outDir: src, check: true }).catch((e: unknown) => e)) as Error;
+    expect(again.message).toMatch(/No layer named "Approve" in p\.layers\.json/);
+  });
+});

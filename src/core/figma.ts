@@ -45,6 +45,22 @@ export function parseFigmaLink(value: string): FigmaLink | undefined {
   return { fileKey, nodeId };
 }
 
+/**
+ * Positions of named layers in a downloaded image, in the image's pixels at
+ * 1×. `cliscenes figma` writes it next to the image; builds read it to place
+ * click areas named by `layer`.
+ */
+export interface LayerPositions {
+  width: number;
+  height: number;
+  layers: Record<string, { x: number; y: number; width: number; height: number }>;
+}
+
+/** Where the layer positions for an image are stored: x.svg → x.layers.json. */
+export function layerPositionsPath(src: string): string {
+  return src.replace(/\.[^./\\]+$/, "") + ".layers.json";
+}
+
 /** The export format for an image path, or undefined if Figma can't produce it. */
 export function figmaFormat(src: string): FigmaFormat | undefined {
   const extension = src.slice(src.lastIndexOf(".")).toLowerCase();

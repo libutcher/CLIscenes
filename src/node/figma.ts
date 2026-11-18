@@ -10,7 +10,14 @@
 import { lstat, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync, realpathSync } from "node:fs";
 import path from "node:path";
-import { figmaFormat, parseFigmaLink, type FigmaFormat, type FigmaLink } from "../core/figma.ts";
+import {
+  figmaFormat,
+  layerPositionsPath,
+  parseFigmaLink,
+  type FigmaFormat,
+  type FigmaLink,
+  type LayerPositions,
+} from "../core/figma.ts";
 import { DemoSourceError, listSources, parseDemoSource } from "./generate.ts";
 
 const API = "https://api.figma.com/v1";
@@ -26,6 +33,8 @@ export interface FigmaImage {
   target: string;
   link: FigmaLink;
   format: FigmaFormat;
+  /** Layer names that image actions point at. Their positions are saved too. */
+  layers: string[];
 }
 
 export type FigmaSyncResult = FigmaImage & { status: "updated" | "unchanged" };
@@ -64,9 +73,14 @@ export async function findFigmaImages(sourceDir: string): Promise<FigmaImage[]> 
         const link = parseFigmaLink(overlay.figma)!;
         const format = figmaFormat(overlay.src)!;
         const target = path.resolve(path.dirname(sourceFile), overlay.src);
-        // The same frame used twice is downloaded once.
-        if (images.some((i) => i.target === target)) continue;
-        images.push({ sourceFile, src: overlay.src, target, link, format });
+        const layers = (overlay.actions ?? []).flatMap((a) => (a.layer ? [a.layer] : []));
+        // The same frame used twice is downloaded once, with every layer either use names.
+        const existing = images.find((i) => i.target === target);
+        if (existing) {
+          existing.layers = [...new Set([...existing.layers, ...layers])];
+          continue;
+        }
+        images.push({ sourceFile, src: overlay.src, target, link, format, layers: [...new Set(layers)] });
       }
     }
   }
@@ -90,20 +104,145 @@ export async function syncFigmaImages({ sourceDir, token, fetch = globalThis.fet
   for (const group of groups.values()) {
     const { fileKey } = group[0]!.link;
     const format = group[0]!.format;
-    const urls = await renderUrls(fetch, token, fileKey, format, [...new Set(group.map((i) => i.link.nodeId))]);
+    const nodeIds = [...new Set(group.map((i) => i.link.nodeId))];
+    const urls = await renderUrls(fetch, token, fileKey, format, nodeIds);
+    const withLayers = group.filter((i) => i.layers.length > 0);
+    const nodes = withLayers.length
+      ? await fetchNodes(fetch, token, fileKey, [...new Set(withLayers.map((i) => i.link.nodeId))])
+      : {};
     for (const image of group) {
       const bytes = await download(fetch, urls[image.link.nodeId]!, image);
-      const current = existsSync(image.target) ? await readFile(image.target) : undefined;
-      if (current?.equals(bytes)) {
-        results.push({ ...image, status: "unchanged" });
-        continue;
+      let changed = await writeIfChanged(image.target, bytes);
+      if (image.layers.length) {
+        const positions = layerPositions(image, nodes[image.link.nodeId], bytes);
+        const file = path.resolve(path.dirname(image.target), path.basename(layerPositionsPath(image.target)));
+        changed = (await writeIfChanged(file, Buffer.from(JSON.stringify(positions, null, 2) + "\n"))) || changed;
       }
-      await mkdir(path.dirname(image.target), { recursive: true });
-      await writeFile(image.target, bytes);
-      results.push({ ...image, status: "updated" });
+      results.push({ ...image, status: changed ? "updated" : "unchanged" });
     }
   }
   return results;
+}
+
+async function writeIfChanged(file: string, bytes: Buffer): Promise<boolean> {
+  // checkTarget covers the folder; this also stops writing through a symlinked file.
+  if (existsSync(file) && (await lstat(file)).isSymbolicLink()) {
+    throw new FigmaError(`Won't write ${path.basename(file)}, because it's a symlink.`);
+  }
+  const current = existsSync(file) ? await readFile(file) : undefined;
+  if (current?.equals(bytes)) return false;
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, bytes);
+  return true;
+}
+
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** The parts of a Figma node this module reads. */
+export interface FigmaNode {
+  id: string;
+  name: string;
+  absoluteBoundingBox?: Box | null;
+  absoluteRenderBounds?: Box | null;
+  children?: FigmaNode[];
+}
+
+async function fetchNodes(
+  fetch: typeof globalThis.fetch,
+  token: string,
+  fileKey: string,
+  nodeIds: string[],
+): Promise<Record<string, FigmaNode | undefined>> {
+  const params = new URLSearchParams({ ids: nodeIds.join(",") });
+  const response = await fetch(`${API}/files/${fileKey}/nodes?${params}`, { headers: { "X-Figma-Token": token } });
+  if (!response.ok) throw new FigmaError(`File ${fileKey}: ${apiErrorReason(response.status)}`);
+  const body = (await response.json()) as { err?: string | null; nodes?: Record<string, { document?: FigmaNode } | null> };
+  if (body.err) throw new FigmaError(`File ${fileKey}: ${body.err}`);
+  return Object.fromEntries(nodeIds.map((id) => [id, body.nodes?.[id]?.document]));
+}
+
+/**
+ * Work out where each named layer sits in the downloaded image.
+ *
+ * Figma positions are absolute on the canvas, so they're measured from the
+ * frame's corner. An export can be the size of the frame's box, or larger to
+ * fit effects such as a drop shadow. Rather than assume, this matches the
+ * image's real size against both and measures from whichever fits.
+ */
+export function layerPositions(image: FigmaImage, frame: FigmaNode | undefined, bytes: Buffer): LayerPositions {
+  const where = `${path.basename(image.sourceFile)}: ${image.src}`;
+  if (!frame) throw new FigmaError(`${where}: Figma didn't return the layers of node ${image.link.nodeId}.`);
+  const size = imageSize(image.format, bytes);
+  if (!size) throw new FigmaError(`${where}: couldn't read the exported image's size.`);
+
+  const fits = (box?: Box | null) =>
+    box && Math.abs(box.width - size.width) <= 1 && Math.abs(box.height - size.height) <= 1 ? box : undefined;
+  const origin = fits(frame.absoluteBoundingBox) ?? fits(frame.absoluteRenderBounds);
+  if (!origin) {
+    throw new FigmaError(
+      `${where}: the export is ${size.width}×${size.height}, which doesn't match the frame's size in Figma, so click areas can't be placed. Check the frame isn't rotated or scaled.`,
+    );
+  }
+
+  const layers: LayerPositions["layers"] = {};
+  for (const name of image.layers) {
+    const matches = descendants(frame).filter((node) => node.name === name);
+    if (matches.length === 0) {
+      throw new FigmaError(`${where}: no layer named "${name}" inside the linked frame. Check the name in Figma (it's case-sensitive).`);
+    }
+    if (matches.length > 1) {
+      throw new FigmaError(`${where}: ${matches.length} layers are named "${name}". Rename them so the one to click is unique.`);
+    }
+    const box = matches[0]!.absoluteBoundingBox;
+    if (!box) throw new FigmaError(`${where}: layer "${name}" has no position. Is it hidden?`);
+    layers[name] = {
+      x: round2(box.x - origin.x),
+      y: round2(box.y - origin.y),
+      width: round2(box.width),
+      height: round2(box.height),
+    };
+  }
+  return { width: round2(size.width), height: round2(size.height), layers };
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+function descendants(node: FigmaNode): FigmaNode[] {
+  return (node.children ?? []).flatMap((child) => [child, ...descendants(child)]);
+}
+
+/** The image's size in Figma's units (PNGs are exported at 2×). */
+function imageSize(format: FigmaFormat, bytes: Buffer): { width: number; height: number } | undefined {
+  if (format === "png" && bytes.length >= 24) {
+    return { width: bytes.readUInt32BE(16) / 2, height: bytes.readUInt32BE(20) / 2 };
+  }
+  if (format === "svg") {
+    const tag = /<svg\b[^>]*>/i.exec(bytes.toString("utf8"))?.[0];
+    const attr = (name: string) => Number.parseFloat(new RegExp(`\\s${name}="([\\d.]+)(px)?"`).exec(tag ?? "")?.[1] ?? "");
+    let width = attr("width");
+    let height = attr("height");
+    if (!(width > 0 && height > 0)) {
+      const viewBox = /\sviewBox="([^"]+)"/.exec(tag ?? "")?.[1]?.trim().split(/[\s,]+/).map(Number);
+      [width, height] = [viewBox?.[2] ?? NaN, viewBox?.[3] ?? NaN];
+    }
+    return width > 0 && height > 0 ? { width, height } : undefined;
+  }
+  return undefined;
+}
+
+function apiErrorReason(status: number): string {
+  return status === 403
+    ? "Figma refused the token. Check that FIGMA_TOKEN is current, has the file_content:read scope, and belongs to an account that can open the file."
+    : status === 404
+      ? "Figma couldn't find the file. Check the link, and that your account can open it."
+      : status === 429
+        ? "Figma is limiting requests. Wait a minute, then try again."
+        : `Figma returned HTTP ${status}.`;
 }
 
 /**
@@ -140,17 +279,7 @@ async function renderUrls(
   }
 
   const response = await fetch(`${API}/images/${fileKey}?${params}`, { headers: { "X-Figma-Token": token } });
-  if (!response.ok) {
-    const reason =
-      response.status === 403
-        ? "Figma refused the token. Check that FIGMA_TOKEN is current, has the file_content:read scope, and belongs to an account that can open the file."
-        : response.status === 404
-          ? "Figma couldn't find the file. Check the link, and that your account can open it."
-          : response.status === 429
-            ? "Figma is limiting requests. Wait a minute, then try again."
-            : `Figma returned HTTP ${response.status}.`;
-    throw new FigmaError(`File ${fileKey}: ${reason}`);
-  }
+  if (!response.ok) throw new FigmaError(`File ${fileKey}: ${apiErrorReason(response.status)}`);
   const body = (await response.json()) as { err?: string | null; images?: Record<string, string | null> };
   if (body.err) throw new FigmaError(`File ${fileKey}: ${body.err}`);
 

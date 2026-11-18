@@ -34,7 +34,7 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 | Approve or deny a request in a desktop app | `auth-prompt` | Yes, through `actions` |
 | See a simple app window with text and buttons | `app-window` | Yes, through `actions` |
 | See a screenshot or illustration | `image` (local file, with required `alt` text) | No |
-| See an app's prompt that opens and closes on its own, such as Touch ID | `image` with `frame: false` and a `pause`, plus optional `animation` (CSS) and `figma` link. See `demos/touch-id-signin.yaml` | No |
+| See an app's real prompt, such as Touch ID | `image` with `frame: false`. Add `actions` (each with an `area`, or a Figma `layer`) for buttons the person clicks, or a `pause` to close it by itself. Optional `animation` (CSS) and `figma` link. See `demos/touch-id-signin.yaml` | Yes, through `actions` |
 | Read a short explanation | `annotation` | No |
 
 **Flow control:**
@@ -73,6 +73,7 @@ Validation can't tell a missing `finish: true` from a deliberate skip ahead, so 
 | `Image not found` | Paths are relative to the YAML file. Put images in `demos/assets/`. |
 | `can't use ".."`, `outside the walkthrough's folder`, or `Not an image file` | Images must be image files inside the walkthrough's folder. Copy the image into `demos/assets/` and point to it there. |
 | `Copy link to selection` | The `figma` value isn't a link to one frame. In Figma, select the frame and choose Copy link to selection. |
+| `No click-area positions` or `No layer named` | An action uses `layer`, but the positions file is missing or out of date. Ask the person to run `npm run figma`, and check the layer name in Figma. |
 | `Set FIGMA_TOKEN` | `npm run figma` needs a Figma personal access token. Ask the person to set it. Never ask them to paste it into chat or a file. |
 | `Unrecognized key` | A misspelled field. Compare it against `docs/authoring.md`. |
 

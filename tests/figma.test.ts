@@ -135,3 +135,86 @@ describe("syncing from Figma", () => {
     await expect(runFigmaCommand(dir, { env: {} })).rejects.toThrow(/Set FIGMA_TOKEN/);
   });
 });
+
+describe("click areas from Figma layers", () => {
+  // A 200×100 frame at (1000, 500) on the canvas, with a 10px shadow on each side.
+  const frame = {
+    id: "12:34",
+    name: "Prompt",
+    absoluteBoundingBox: { x: 1000, y: 500, width: 200, height: 100 },
+    absoluteRenderBounds: { x: 990, y: 490, width: 220, height: 120 },
+    children: [
+      { id: "1:1", name: "Buttons", children: [{ id: "1:2", name: "Approve", absoluteBoundingBox: { x: 1150, y: 570, width: 40, height: 20 } }] },
+      { id: "1:3", name: "Cancel", absoluteBoundingBox: { x: 1010, y: 570, width: 40, height: 20 } },
+    ],
+  };
+  const svg = (w: number, h: number) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"></svg>`;
+
+  function fakeFigmaWithNodes(image: string, node: object = frame) {
+    const base = fakeFigma({ "12:34": image });
+    const fetch = (async (input: string | URL, init?: RequestInit) => {
+      if (String(input).includes("/v1/files/")) {
+        base.requests.push({ url: String(input), headers: init?.headers });
+        return Response.json({ err: null, nodes: { "12:34": { document: node } } });
+      }
+      return base.fetch(input, init);
+    }) as typeof globalThis.fetch;
+    return { fetch, requests: base.requests };
+  }
+
+  async function setup(actions: string) {
+    const dir = await tempDir();
+    await writeFile(
+      path.join(dir, "a.yaml"),
+      walkthrough([`{ type: image, src: p.svg, alt: P, figma: "${LINK}", actions: [${actions}] }`]),
+    );
+    return dir;
+  }
+
+  it("saves each named layer's position, measured from the frame's corner", async () => {
+    const dir = await setup("{ label: Approve, layer: Approve }, { label: Cancel, layer: Cancel, next: s0 }");
+    const { fetch, requests } = fakeFigmaWithNodes(svg(200, 100));
+    await syncFigmaImages({ sourceDir: dir, token: "t", fetch });
+    expect(JSON.parse(await readFile(path.join(dir, "p.layers.json"), "utf8"))).toEqual({
+      width: 200,
+      height: 100,
+      layers: { Approve: { x: 150, y: 70, width: 40, height: 20 }, Cancel: { x: 10, y: 70, width: 40, height: 20 } },
+    });
+    expect(requests.some((r) => r.url.includes("/v1/files/AbC123/nodes?ids=12%3A34"))).toBe(true);
+  });
+
+  it("measures from the shadow's edge when the export includes it", async () => {
+    const dir = await setup("{ label: Approve, layer: Approve }");
+    await syncFigmaImages({ sourceDir: dir, token: "t", fetch: fakeFigmaWithNodes(svg(220, 120)).fetch });
+    const positions = JSON.parse(await readFile(path.join(dir, "p.layers.json"), "utf8"));
+    expect(positions.layers.Approve).toEqual({ x: 160, y: 80, width: 40, height: 20 });
+  });
+
+  it("stops when the export doesn't match the frame, or a layer is missing or ambiguous", async () => {
+    const dir = await setup("{ label: Approve, layer: Approve }");
+    await expect(syncFigmaImages({ sourceDir: dir, token: "t", fetch: fakeFigmaWithNodes(svg(300, 300)).fetch })).rejects.toThrow(
+      /doesn't match the frame's size/,
+    );
+
+    const missing = await setup("{ label: OK, layer: OK }");
+    await expect(syncFigmaImages({ sourceDir: missing, token: "t", fetch: fakeFigmaWithNodes(svg(200, 100)).fetch })).rejects.toThrow(
+      /no layer named "OK"/,
+    );
+
+    const twice = { ...frame, children: [...frame.children, { id: "1:9", name: "Approve", absoluteBoundingBox: { x: 0, y: 0, width: 1, height: 1 } }] };
+    await expect(syncFigmaImages({ sourceDir: dir, token: "t", fetch: fakeFigmaWithNodes(svg(200, 100), twice).fetch })).rejects.toThrow(
+      /2 layers are named "Approve"/,
+    );
+  });
+
+  it("reads the size of a 2× PNG export", async () => {
+    const dir = await tempDir();
+    await writeFile(path.join(dir, "a.yaml"), walkthrough([`{ type: image, src: p.png, alt: P, figma: "${LINK}", actions: [{ label: A, layer: Approve }] }`]));
+    const png = Buffer.alloc(24);
+    PNG.copy(png, 0, 0, 8);
+    png.writeUInt32BE(400, 16);
+    png.writeUInt32BE(200, 20);
+    await syncFigmaImages({ sourceDir: dir, token: "t", fetch: fakeFigmaWithNodes(png as unknown as string).fetch });
+    expect(JSON.parse(await readFile(path.join(dir, "p.layers.json"), "utf8")).width).toBe(200);
+  });
+});

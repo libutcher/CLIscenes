@@ -2,13 +2,18 @@
 # made up: the command, prompt, and output are invented, and nothing in this
 # file is ever executed.
 #
-# The prompt is an image, not an interactive overlay: it appears, plays its
-# animation, and closes on its own before the terminal continues.
+# The prompt is an image with clickable areas over the sensor and the Cancel
+# button. Touching the sensor plays the approval animation; Cancel goes to a
+# separate branch.
 #
-# To use your own design from Figma, add a `figma` link to the image overlay
-# and run `npm run figma` (see docs/authoring.md):
+# To use your own design from Figma, add a `figma` link to each image overlay,
+# replace each `area` with the name of the matching Figma layer, and run
+# `npm run figma` (see docs/authoring.md):
 #
 #   figma: https://www.figma.com/design/<file>/<name>?node-id=12-34
+#   actions:
+#     - label: Approve with Touch ID
+#       layer: fingerprint
 title: Sign in to a CLI with Touch ID
 description: >-
   Run a CLI command, confirm it's you with Touch ID in the desktop app, and
@@ -30,16 +35,32 @@ steps:
     pause: 0.6
 
   - id: touch-id
-    title: Confirm with Touch ID
+    title: Touch the sensor to approve
+    overlay:
+      type: image
+      src: assets/touch-id-prompt.svg
+      frame: false
+      alt: >-
+        YourApp asks to confirm that your-cli can sign in as Demo Account
+        (demo@example.com), using Touch ID or a password.
+      actions:
+        - label: Approve with Touch ID
+          area: { x: 41.76%, y: 58.6%, width: 16.47%, height: 15.05% }
+        - label: Cancel
+          style: secondary
+          area: { x: 70.74%, y: 88.84%, width: 23.24%, height: 7.8% }
+          next: cancelled
+    waitForAction: true
+
+  - id: approved
+    title: Touch ID approves the request
     overlay:
       type: image
       src: assets/touch-id-prompt.svg
       animation: assets/touch-id-prompt.css
       frame: false
-      alt: >-
-        YourApp asks to confirm that your-cli can sign in as Demo Account
-        (demo@example.com). A fingerprint is read, and the request is approved.
-    pause: 1.8
+      alt: The fingerprint is read, and YourApp shows Approved.
+    pause: 1.2
 
   - id: signed-in
     title: Sign-in succeeds
@@ -59,3 +80,16 @@ steps:
         prj_002   Mobile app       yesterday
         prj_003   Internal tools   3 days ago
     pause: 2.5
+    # The main path ends here. The next step is reached only by choosing Cancel.
+    finish: true
+
+  - id: cancelled
+    title: If you cancel
+    terminal:
+      clear: true
+      command: your-cli signin
+      typing: false
+      output: |
+        Waiting for Touch ID in YourApp...
+        Error: Touch ID was cancelled in YourApp.
+        No session was created. Run `your-cli signin` to try again.

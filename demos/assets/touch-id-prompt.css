@@ -4,24 +4,24 @@
  * SVG when it builds the walkthrough (the `animation` field), so a fresh
  * export from Figma keeps the animation as long as the layer names match.
  *
- * Timeline (from when the prompt appears):
- *   0.35 s  finger touches the sensor
- *   0.35–1.0 s  ridges fill in
- *   1.0 s   approved
+ * Timeline (from when this image appears, right after the reader touches the sensor):
+ *   0.05 s  finger touches the sensor
+ *   0.1–0.7 s  ridges fill in
+ *   0.75 s  approved
  *
- * The step's `pause` should be longer than 1.2 s, so readers see the result.
+ * The step's `pause` should be longer than 1 s, so readers see the result.
  */
 
 /* Fades only: safe for readers who ask for reduced motion. */
 #ridges-active {
-  animation: touch-id-show 0.15s ease-out 0.35s forwards;
+  animation: touch-id-show 0.15s ease-out 0.1s forwards;
 }
 #approved,
 #status-approved {
-  animation: touch-id-show 0.2s ease-out 1s forwards;
+  animation: touch-id-show 0.2s ease-out 0.75s forwards;
 }
 #status {
-  animation: touch-id-hide 0.15s ease-out 1s forwards;
+  animation: touch-id-hide 0.15s ease-out 0.75s forwards;
 }
 
 /* Movement: the press and the ridges being traced. */
@@ -29,17 +29,18 @@
   #fingerprint-ring {
     transform-box: fill-box;
     transform-origin: center;
-    animation: touch-id-press 0.35s ease-out 0.3s;
+    animation: touch-id-press 0.35s ease-out 0.05s;
   }
   #ridges-active path {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: touch-id-trace 0.6s ease-out 0.35s forwards;
+    /* No pathLength needed (it may not survive a Figma export). Longer ridges start first. */
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    animation: touch-id-trace 0.6s linear 0.1s forwards;
   }
   #approved {
     transform-box: fill-box;
     transform-origin: center;
-    animation: touch-id-pop 0.25s ease-out 1s forwards;
+    animation: touch-id-pop 0.25s ease-out 0.75s forwards;
   }
 }
 

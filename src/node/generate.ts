@@ -18,6 +18,7 @@ import { demoSchema, formatIssues, type DemoSource } from "../core/schema.ts";
 import { compileDemo, type CompileResult } from "../core/compile.ts";
 import { parseCast } from "../core/asciicast.ts";
 import type { DemoIndexEntry } from "../core/types.ts";
+import { layerPositionsPath, type LayerPositions } from "../core/figma.ts";
 
 const SOURCE_EXTENSIONS = new Set([".yaml", ".yml", ".json"]);
 
@@ -100,6 +101,8 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
     ]);
   }
   const source = parseDemoSource(await readFile(sourceFile, "utf8"), sourceFile);
+  const layerProblems = await resolveLayerAreas(source, path.dirname(sourceFile));
+  if (layerProblems.length) throw new DemoSourceError(sourceFile, layerProblems);
 
   const assets: GeneratedDemo["assets"] = [];
   // A Set, because an animated image is checked for both of its copies.
@@ -153,6 +156,61 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
   parseCast(result.cast);
   parseCast(result.castReducedMotion);
   return { ...result, id, sourceFile, assets };
+}
+
+/**
+ * Replace each image action's Figma `layer` with an `area`, using the
+ * positions `cliscenes figma` saved next to the image. Returns problems.
+ */
+async function resolveLayerAreas(source: DemoSource, sourceDir: string): Promise<string[]> {
+  const problems: string[] = [];
+  const cache = new Map<string, LayerPositions | string>();
+  for (const step of source.steps) {
+    for (const overlay of step.overlays ?? (step.overlay ? [step.overlay] : [])) {
+      if (overlay.type !== "image" || !overlay.actions?.some((a) => a.layer)) continue;
+      const file = layerPositionsPath(overlay.src);
+      if (!cache.has(file)) cache.set(file, await readLayerPositions(sourceDir, file, overlay.src));
+      const positions = cache.get(file)!;
+      for (const action of overlay.actions) {
+        if (!action.layer) continue;
+        if (typeof positions === "string") {
+          problems.push(positions);
+          continue;
+        }
+        const box = positions.layers[action.layer];
+        if (!box) {
+          problems.push(
+            `No layer named "${action.layer}" in ${file}. Check the layer's name in Figma, then run cliscenes figma again.`,
+          );
+          continue;
+        }
+        const pct = (value: number, total: number) => Math.round((value / total) * 100_000) / 1000;
+        action.area = {
+          x: pct(box.x, positions.width),
+          y: pct(box.y, positions.height),
+          width: pct(box.width, positions.width),
+          height: pct(box.height, positions.height),
+        };
+        delete action.layer;
+      }
+    }
+  }
+  return [...new Set(problems)];
+}
+
+/** Read an image's layer positions, or return a problem to report. */
+async function readLayerPositions(sourceDir: string, file: string, src: string): Promise<LayerPositions | string> {
+  const checked = resolveAsset(sourceDir, file, [".json"]);
+  if ("problem" in checked) {
+    return `No click-area positions for ${src} (${file}). Run cliscenes figma (npm run figma) to download them.`;
+  }
+  try {
+    const data = JSON.parse(await readFile(checked.real, "utf8")) as LayerPositions;
+    if (!(data.width > 0 && data.height > 0 && data.layers && typeof data.layers === "object")) throw new Error("bad shape");
+    return data;
+  } catch {
+    return `${file} isn't a layer positions file. Delete it and run cliscenes figma again.`;
+  }
 }
 
 /** File types an overlay may reference. Anything else is refused. */
@@ -211,7 +269,8 @@ export function assetOutputPath(sourceDir: string, from: string, taken: Set<stri
 export async function listSources(sourceDir: string): Promise<string[]> {
   const entries = await readdir(sourceDir, { withFileTypes: true });
   return entries
-    .filter((e) => e.isFile() && SOURCE_EXTENSIONS.has(path.extname(e.name)))
+    // Layer positions saved by `cliscenes figma` are JSON too, but not walkthroughs.
+    .filter((e) => e.isFile() && SOURCE_EXTENSIONS.has(path.extname(e.name)) && !e.name.endsWith(".layers.json"))
     .map((e) => path.join(sourceDir, e.name))
     .sort();
 }

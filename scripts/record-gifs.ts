@@ -50,9 +50,13 @@ const recordings: Recording[] = [
   {
     file: "touch-id.gif",
     demo: "touch-id-signin",
-    // No clicks after Play: the prompt opens, animates, and closes on its own.
+    // The reader touches the sensor in the image; the approval then plays by itself.
     script: async (page, click) => {
       await click(page.getByRole("button", { name: "Play" }));
+      const sensor = page.getByRole("button", { name: "Approve with Touch ID" });
+      await page.getByRole("button", { name: "Waiting for your action" }).waitFor();
+      await page.waitForTimeout(1200);
+      await click(sensor);
       await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(1500);
     },
