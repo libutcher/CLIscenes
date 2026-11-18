@@ -6,6 +6,7 @@
  */
 import { z } from "zod";
 import { contrast, HEX_COLOR, MIN_TEXT_CONTRAST, resolvedAccent } from "./theme.ts";
+import { FIGMA_FORMATS, figmaFormat, parseFigmaLink } from "./figma.ts";
 
 const text = z.string().trim().min(1);
 
@@ -21,6 +22,22 @@ const localPath = text
   .refine((value) => !value.split(/[\\/]/).includes(".."), {
     message: 'Images must be inside the walkthrough\'s folder, so paths can\'t use "..". Move the image into demos/assets/.',
   });
+
+/** A local CSS file, with the same location rules as images. */
+const localCssPath = text
+  .refine((value) => !/^[a-z]+:/i.test(value) && !value.startsWith("/") && !value.startsWith("\\"), {
+    message: "Use a relative path to a local .css file (remote URLs and absolute paths are not supported).",
+  })
+  .refine((value) => !value.split(/[\\/]/).includes(".."), {
+    message: 'Files must be inside the walkthrough\'s folder, so paths can\'t use "..". Move the file into demos/assets/.',
+  })
+  .refine((value) => value.toLowerCase().endsWith(".css"), { message: "Use a .css file." });
+
+/** A link to one layer in a Figma file, as copied with "Copy link to selection". */
+const figmaLink = text.refine((value) => parseFigmaLink(value) !== undefined, {
+  message:
+    "Use a link to one Figma frame, such as https://www.figma.com/design/<file>/<name>?node-id=12-34. In Figma, select the frame and choose Copy link to selection.",
+});
 
 const color = z.string().regex(HEX_COLOR, 'Use a hex color such as "#2457c5".');
 
@@ -115,13 +132,47 @@ export const appWindowSchema = z.strictObject({
   annotations: z.array(text).optional(),
 });
 
-export const imageSchema = z.strictObject({
-  type: z.literal("image"),
-  /** Path to a local image, relative to the source file. */
-  src: localPath,
-  alt: z.string(),
-  caption: text.optional(),
-});
+export const imageSchema = z
+  .strictObject({
+    type: z.literal("image"),
+    /** Path to a local image, relative to the source file. */
+    src: localPath,
+    /**
+     * Image for readers who ask for reduced motion, such as a still frame of
+     * an animated GIF. Built automatically for an SVG with `animation`.
+     */
+    srcReducedMotion: localPath.optional(),
+    alt: z.string(),
+    caption: text.optional(),
+    /**
+     * Draw a card around the image. Turn it off for an image that is already
+     * a window or dialog with its own edges, so it floats like the real thing.
+     */
+    frame: z.boolean().default(true),
+    /**
+     * A CSS file added inside the SVG when the walkthrough is built, to
+     * animate its layers by id. Kept separate so a new export of the SVG
+     * (for example from Figma) doesn't lose the animation.
+     */
+    animation: localCssPath.optional(),
+    /**
+     * Where the image comes from in Figma. `cliscenes figma` downloads this
+     * frame into `src`. Builds only read `src`, and the link isn't published.
+     */
+    figma: figmaLink.optional(),
+  })
+  .superRefine((image, ctx) => {
+    if (image.animation && !image.src.toLowerCase().endsWith(".svg")) {
+      ctx.addIssue({ code: "custom", path: ["animation"], message: "animation only works with an .svg image." });
+    }
+    if (image.figma && !figmaFormat(image.src)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["src"],
+        message: `Figma can export ${Object.keys(FIGMA_FORMATS).join(", ")} only. Change src to one of those.`,
+      });
+    }
+  });
 
 export const annotationSchema = z.strictObject({
   type: z.literal("annotation"),

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="372" viewBox="0 0 340 372" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif">
+  <!-- A generic Touch ID prompt for the fictional YourApp. Layer ids match the
+       names to use in Figma, so touch-id-prompt.css also animates a Figma
+       export with the same layer names. This file is the state before the
+       reader touches the sensor; the stylesheet animates the rest. -->
+  <rect id="dialog" x="0.5" y="0.5" width="339" height="371" rx="14" fill="#f6f6f7" stroke="#d2d2d7"/>
+
+  <g id="app-icon">
+    <rect x="144" y="24" width="52" height="52" rx="12" fill="#0f7b6c"/>
+    <path d="M170 34.5 158.5 39v9.3c0 7 4.9 13.2 11.5 15.3 6.6-2.1 11.5-8.3 11.5-15.3V39L170 34.5Z" fill="#ffffff" opacity="0.3"/>
+    <path d="M170 42.5a4 4 0 0 0-1.8 7.5V55.5h3.6V50a4 4 0 0 0-1.8-7.5Z" fill="#ffffff"/>
+  </g>
+
+  <text id="title" x="170" y="104" text-anchor="middle" font-size="15" font-weight="600" fill="#1d1d1f">your-cli wants to sign in</text>
+  <text id="message" x="170" y="125" text-anchor="middle" font-size="12.5" fill="#6e6e73">YourApp needs to confirm it's you.</text>
+
+  <g id="account-selector">
+    <rect x="20.5" y="144.5" width="299" height="51" rx="10" fill="#ffffff" stroke="#d2d2d7"/>
+    <circle cx="46" cy="170" r="15" fill="#d7efeb"/>
+    <text x="46" y="174.5" text-anchor="middle" font-size="12" font-weight="700" fill="#0f7b6c">DA</text>
+    <text x="70" y="166" font-size="13.5" font-weight="600" fill="#1d1d1f">Demo Account</text>
+    <text x="70" y="184" font-size="12" fill="#6e6e73">demo@example.com</text>
+    <path d="M293 166l4-4 4 4M293 174l4 4 4-4" fill="none" stroke="#6e6e73" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g id="fingerprint">
+    <circle id="fingerprint-ring" cx="170" cy="246" r="28" fill="#ffffff" stroke="#d2d2d7"/>
+    <!-- Fingerprint ridges: grey while waiting, then drawn over in the accent color. -->
+    <g transform="translate(170 246) scale(1.75) translate(-12 -13)" fill="none" stroke-width="1.5" stroke-linecap="round">
+      <g id="ridges" stroke="#a1a1a6">
+        <path d="M6.1 7.6A7.5 7.5 0 0 1 19.5 12v1"/>
+        <path d="M4.6 11.2A7.6 7.6 0 0 1 5 9.5"/>
+        <path d="M4.5 14.5v-2.5"/>
+        <path d="M8 18.5a9 9 0 0 1-1.1-4.3V12a5.1 5.1 0 0 1 10.2 0v1.6"/>
+        <path d="M17 17.1c-.3 1.1-.7 2.1-1.2 3"/>
+        <path d="M12 12v2.2a9 9 0 0 1-1.6 5.4"/>
+        <path d="M14.6 14.3a12 12 0 0 1-1.5 5.9"/>
+        <path d="M9.5 12a2.5 2.5 0 0 1 5 0v.9"/>
+      </g>
+      <g id="ridges-active" stroke="#0f7b6c" opacity="0">
+        <path pathLength="1" d="M6.1 7.6A7.5 7.5 0 0 1 19.5 12v1"/>
+        <path pathLength="1" d="M4.6 11.2A7.6 7.6 0 0 1 5 9.5"/>
+        <path pathLength="1" d="M4.5 14.5v-2.5"/>
+        <path pathLength="1" d="M8 18.5a9 9 0 0 1-1.1-4.3V12a5.1 5.1 0 0 1 10.2 0v1.6"/>
+        <path pathLength="1" d="M17 17.1c-.3 1.1-.7 2.1-1.2 3"/>
+        <path pathLength="1" d="M12 12v2.2a9 9 0 0 1-1.6 5.4"/>
+        <path pathLength="1" d="M14.6 14.3a12 12 0 0 1-1.5 5.9"/>
+        <path pathLength="1" d="M9.5 12a2.5 2.5 0 0 1 5 0v.9"/>
+      </g>
+    </g>
+    <g id="approved" opacity="0">
+      <circle cx="190" cy="266" r="10" fill="#0f7b6c" stroke="#f6f6f7" stroke-width="2"/>
+      <path d="M185.5 266.2l3 3 6-6" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <text id="status" x="170" y="300" text-anchor="middle" font-size="12.5" fill="#6e6e73">Touch ID to approve</text>
+  <text id="status-approved" x="170" y="300" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0f7b6c" opacity="0">Approved</text>
+
+  <line x1="0.5" y1="318.5" x2="339.5" y2="318.5" stroke="#e3e3e8"/>
+  <text id="use-password" x="20" y="350" font-size="13" fill="#0f7b6c">Use password…</text>
+  <g id="cancel">
+    <rect x="240.5" y="330.5" width="79" height="29" rx="7" fill="#ffffff" stroke="#d2d2d7"/>
+    <text x="280" y="349.5" text-anchor="middle" font-size="13" fill="#1d1d1f">Cancel</text>
+  </g>
+</svg>

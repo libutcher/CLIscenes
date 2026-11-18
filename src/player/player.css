@@ -532,6 +532,27 @@
   font-size: 0.85rem;
 }
 
+/* An image that is a whole dialog: no card, so its own edges show. */
+.cs-image--bare {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.cs-image--bare img {
+  border-radius: 0;
+}
+
+.cs-image--bare figcaption {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cs-image--bare .cs-window__simulated {
+  background: var(--cs-surface);
+}
+
 .cs-annotation {
   display: flex;
   gap: 10px;

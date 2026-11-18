@@ -97,6 +97,19 @@ describe("source schema", () => {
     expect(problems(minimal([{ id: "a", title: "A", overlay: remote }]))[0]).toMatch(/relative path/);
   });
 
+  it("checks the image fields for animation and Figma", () => {
+    const image = (extra: object) => minimal([{ id: "a", title: "A", overlay: { type: "image", src: "p.svg", alt: "x", ...extra } }]);
+    const link = "https://www.figma.com/design/K1/N?node-id=1-2";
+    expect(problems(image({ animation: "p.css", figma: link, frame: false }))).toEqual([]);
+    expect(problems(image({ animation: "p.js" }))[0]).toMatch(/\.css file/);
+    expect(problems(image({ animation: "../p.css" }))[0]).toMatch(/inside the walkthrough's folder/);
+    expect(problems(image({ figma: "https://www.figma.com/design/K1/N" }))[0]).toMatch(/Copy link to selection/);
+    const png = minimal([{ id: "a", title: "A", overlay: { type: "image", src: "p.png", alt: "x", animation: "p.css" } }]);
+    expect(problems(png)[0]).toMatch(/animation only works with an \.svg/);
+    const webp = minimal([{ id: "a", title: "A", overlay: { type: "image", src: "p.webp", alt: "x", figma: link } }]);
+    expect(problems(webp)[0]).toMatch(/Figma can export/);
+  });
+
   it("rejects a terminal block with nothing in it", () => {
     expect(problems(minimal([{ id: "a", title: "A", terminal: {} }]))[0]).toMatch(/needs a command, output, or clear/);
   });

@@ -1,0 +1,61 @@
+# A fictional CLI sign-in confirmed with Touch ID. `your-cli` and YourApp are
+# made up: the command, prompt, and output are invented, and nothing in this
+# file is ever executed.
+#
+# The prompt is an image, not an interactive overlay: it appears, plays its
+# animation, and closes on its own before the terminal continues.
+#
+# To use your own design from Figma, add a `figma` link to the image overlay
+# and run `npm run figma` (see docs/authoring.md):
+#
+#   figma: https://www.figma.com/design/<file>/<name>?node-id=12-34
+title: Sign in to a CLI with Touch ID
+description: >-
+  Run a CLI command, confirm it's you with Touch ID in the desktop app, and
+  continue in the terminal.
+
+theme:
+  accent: "#0f7b6c"
+
+terminal:
+  cols: 80
+  rows: 20
+
+steps:
+  - id: signin
+    title: Run a command
+    terminal:
+      command: your-cli signin
+      output: Waiting for Touch ID in YourApp...
+    pause: 0.6
+
+  - id: touch-id
+    title: Confirm with Touch ID
+    overlay:
+      type: image
+      src: assets/touch-id-prompt.svg
+      animation: assets/touch-id-prompt.css
+      frame: false
+      alt: >-
+        YourApp asks to confirm that your-cli can sign in as Demo Account
+        (demo@example.com). A fingerprint is read, and the request is approved.
+    pause: 1.8
+
+  - id: signed-in
+    title: Sign-in succeeds
+    terminal:
+      output: |
+        Approved with Touch ID.
+        Signed in as demo@example.com (session expires in 30 minutes)
+    pause: 1
+
+  - id: list-projects
+    title: Run an authenticated command
+    terminal:
+      command: your-cli projects list
+      output: |
+        ID        NAME             UPDATED
+        prj_001   Website          2 hours ago
+        prj_002   Mobile app       yesterday
+        prj_003   Internal tools   3 days ago
+    pause: 2.5

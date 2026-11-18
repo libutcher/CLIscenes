@@ -57,11 +57,12 @@ Open the URL that the command prints, usually http://localhost:5173. The page up
 | `npm run generate` | Writes the walkthrough files to `generated/demos/` |
 | `npm run build` | Builds the static site in `dist/` |
 | `npm run preview` | Serves `dist/` on your computer |
+| `npm run figma` | Downloads images linked to Figma frames into `demos/` (needs `FIGMA_TOKEN`) |
 | `npm test` | Runs the unit tests |
 | `npm run test:e2e` | Runs the browser tests (first run `npx playwright install chromium`) |
 | `npm run typecheck` | Checks the TypeScript code |
 | `npm run check` | Runs the type check, unit tests, and build |
-| `npm run gifs` | Records the demo GIFs in `docs/media/` |
+| `npm run gifs` | Records the demo GIFs in `docs/media/` (add file names, such as `-- touch-id.gif`, to record only those) |
 | `npm run build:lib` | Builds the React and Docusaurus components and the `cliscenes` command into `dist-lib/` |
 
 Currently, you need to edit a YAML file to use the code and app visualization you need. You can use the bundled skill to do this quickly with your AI agent.
@@ -128,7 +129,7 @@ An overlay shows an app or note outside the terminal.
 | --- | --- | --- |
 | `auth-prompt` | An app's request for approval | Yes |
 | `app-window` | A simple app window with text and buttons | Yes |
-| `image` | A screenshot or illustration | No |
+| `image` | A screenshot, illustration, or an app's prompt that opens and closes on its own (optionally animated, and downloaded from Figma) | No |
 | `annotation` | A short note | No |
 
 [docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add a type.
@@ -140,6 +141,7 @@ You can match a walkthrough to your product without code changes:
 - **Icon:** set `icon` on an `auth-prompt` to your app's icon.
 - **Colors:** set `theme.accent` to your brand color. CLIscenes picks a readable text color for you.
 - **Text:** set the app name, title, message, account, and button labels.
+- **Your own design:** show your app's real prompt as an image, with an optional CSS animation, such as a Touch ID sensor reading a fingerprint. Add a `figma` link and run `npm run figma` to download the latest design. See [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image).
 
 ```yaml
 theme:

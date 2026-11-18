@@ -24,10 +24,12 @@ src/core/                 Framework-free logic, also used by Node
   compile.ts              Source → timeline, asciicast, manifest
   asciicast.ts            asciicast v3 writer and validator
   timeline.ts             Time ↔ step helpers
+  figma.ts                Figma links on image overlays
   orchestrator.ts         State machine and TerminalAdapter interface
   types.ts                Compiled manifest types
 src/node/                 Node-only code
-  generate.ts             Reads demos/, writes generated/
+  generate.ts             Reads demos/, writes generated/ (and builds animated SVGs)
+  figma.ts                Downloads linked Figma frames (the only network code)
   vite-plugin.ts          Regenerates on change during `npm run dev`
   licenses-plugin.ts      Writes dist/THIRD_PARTY_LICENSES.txt at build time
 src/player/               Browser player (React)
@@ -37,9 +39,10 @@ src/player/               Browser player (React)
   terminal/               Terminal adapter (the only asciinema import)
   overlays/               One component per overlay type, plus the registry
 src/lib/                  Library entry points (cliscenes/react, cliscenes/docusaurus)
-src/cli/cliscenes.ts      The `cliscenes build` / `cliscenes validate` command
+src/cli/cliscenes.ts      The `cliscenes build` / `validate` / `figma` command
 src/main.tsx, page.css    The standalone app around the player
 scripts/generate.ts       `npm run generate` / `npm run validate`
+scripts/figma.ts          `npm run figma`
 scripts/record-gifs.ts    `npm run gifs`
 tests/                    Unit tests (Vitest)
 e2e/                      Browser smoke tests (Playwright)
@@ -129,3 +132,13 @@ These aren't built, but the design leaves room for them:
 - **Generating sources automatically** (from CLI help text, tested docs examples, SDK comments, or test runs): anything that can write the YAML/JSON format, or call `compileDemo` with a `DemoSource` object, works. Validation is the same either way.
 - **Real recorded output:** a future step could take output from a recording (for example, a VHS or asciinema capture) instead of authored text. The compiler would only need to accept timed output events for a step.
 - **New overlay types:** see above.
+
+## Images from Figma
+
+Builds never use the network. A `figma` link on an image overlay is only read by `cliscenes figma` (`src/node/figma.ts`). That command asks the Figma REST API to render each linked node in the format named by `src`'s extension, downloads the result, and writes it to `src` if it changed. The downloaded file is committed like any other image, so builds stay offline and deterministic.
+
+- The token comes from `FIGMA_TOKEN`. It's sent only to `api.figma.com`, never to the signed download URLs.
+- Writes go through the same folder rules as reads: the schema rejects `..` and absolute paths, and the command refuses targets whose real location is outside the walkthrough's folder.
+- `figma` and `animation` are dropped from the published manifest, so an internal file link isn't published.
+
+An image's `animation` CSS is added inside the SVG at build time (`addSvgStyle`), because an SVG shown with `<img>` runs CSS animations but can't load other files. The build also writes a reduced-motion copy (`forceReducedMotion`), in which each `prefers-reduced-motion` query is answered as `reduce`. The manifest names that copy in `srcReducedMotion`, and the player chooses it the same way it chooses the reduced-motion recording, since browsers don't reliably pass the reader's setting into images.

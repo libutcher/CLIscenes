@@ -1,7 +1,8 @@
 /**
  * Record the README's demo GIFs from the built player.
  *
- *   npm run gifs        (builds first, then writes docs/media/*.gif)
+ *   npm run gifs                      (builds first, then writes docs/media/*.gif)
+ *   npm run gifs -- touch-id.gif      record only the named GIFs
  *
  * Each recording plays a walkthrough in a headless browser, clicks through it
  * with a visible cursor, and screenshots the walkthrough about 10 times a
@@ -42,6 +43,16 @@ const recordings: Recording[] = [
       await dialog.waitFor();
       await page.waitForTimeout(1500);
       await click(dialog.getByRole("button", { name: "Approve" }));
+      await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
+      await page.waitForTimeout(1500);
+    },
+  },
+  {
+    file: "touch-id.gif",
+    demo: "touch-id-signin",
+    // No clicks after Play: the prompt opens, animates, and closes on its own.
+    script: async (page, click) => {
+      await click(page.getByRole("button", { name: "Play" }));
       await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(1500);
     },
@@ -189,7 +200,10 @@ const baseUrl = server.resolvedUrls!.local[0]!;
 const browser = await chromium.launch();
 try {
   await mkdir(outDir, { recursive: true });
-  for (const recording of recordings) {
+  const only = process.argv.slice(2).filter((arg) => arg.endsWith(".gif"));
+  const unknown = only.filter((file) => !recordings.some((r) => r.file === file));
+  if (unknown.length) throw new Error(`No recording named ${unknown.join(", ")}. Choose from ${recordings.map((r) => r.file).join(", ")}.`);
+  for (const recording of recordings.filter((r) => only.length === 0 || only.includes(r.file))) {
     const page = await browser.newPage({ viewport: { width: 1000, height: 900 }, deviceScaleFactor: SCALE, colorScheme: THEME });
     await page.addInitScript(CURSOR_SCRIPT);
     const { frames, delays, height } = await record(page, baseUrl, recording);
