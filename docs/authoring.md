@@ -121,9 +121,9 @@ Image rules, which also apply to `icon` and `requesterIcon`:
 
 #### Show a dialog as an image
 
-An image can stand in for a real app's prompt, such as a Touch ID request. It can close by itself after a set time, or wait for the reader to click a button in the image. `demos/touch-id-signin.yaml` does both: the reader touches the sensor, then the approval animation plays and closes.
+An image can stand in for a real app's prompt, such as a Touch ID request. It can close by itself after a set time, or wait for the reader to click a button in the image. `demos/touch-id-signin.yaml` and `demos/figma-touch-id.yaml` both do this: the reader touches the sensor, then the approval animation plays and closes. They differ only in how each click area is placed.
 
-![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal with an account selector, and the sensor and Cancel button are outlined. A cursor selects the sensor, the fingerprint is read and shows Approved, then the prompt closes and the terminal shows the sign-in succeed and a list of projects.](media/touch-id.gif)
+![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal with an account selector, and the sensor and Cancel button are outlined. A cursor selects the sensor, the fingerprint is read and shows Approved, then the prompt closes and the terminal shows the sign-in succeed and a list of projects.](media/interactive-approve.gif)
 
 An image that closes by itself stays open for the step's `pause`:
 

@@ -2,7 +2,7 @@
  * Record the README's demo GIFs from the built player.
  *
  *   npm run gifs                      (builds first, then writes docs/media/*.gif)
- *   npm run gifs -- touch-id.gif      record only the named GIFs
+ *   npm run gifs -- non-interactive.gif   record only the named GIFs
  *
  * Each recording plays a walkthrough in a headless browser, clicks through it
  * with a visible cursor, and screenshots the walkthrough about 10 times a
@@ -35,28 +35,39 @@ interface Recording {
 
 const recordings: Recording[] = [
   {
-    file: "overlay.gif",
-    demo: "cli-signin",
+    // The interactive pattern: clickable areas over an image, and a step that
+    // waits. One recording per path, because the branch is the point.
+    file: "interactive-approve.gif",
+    demo: "figma-touch-id",
     script: async (page, click) => {
       await click(page.getByRole("button", { name: "Play" }));
-      const dialog = page.getByRole("dialog");
-      await dialog.waitFor();
-      await page.waitForTimeout(1500);
-      await click(dialog.getByRole("button", { name: "Approve" }));
+      await page.getByRole("button", { name: "Waiting for your action" }).waitFor();
+      await page.waitForTimeout(1200);
+      await click(page.getByRole("button", { name: "Approve with Touch ID" }));
       await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(1500);
     },
   },
   {
-    file: "touch-id.gif",
-    demo: "touch-id-signin",
-    // The reader touches the sensor in the image; the approval then plays by itself.
+    file: "interactive-cancel.gif",
+    demo: "figma-touch-id",
     script: async (page, click) => {
       await click(page.getByRole("button", { name: "Play" }));
-      const sensor = page.getByRole("button", { name: "Approve with Touch ID" });
       await page.getByRole("button", { name: "Waiting for your action" }).waitFor();
       await page.waitForTimeout(1200);
-      await click(sensor);
+      // `exact` keeps this off the "If you cancel" button in the step list.
+      await click(page.getByRole("button", { name: "Cancel", exact: true }));
+      await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
+      await page.waitForTimeout(1500);
+    },
+  },
+  {
+    // The non-interactive pattern: a screenshot the reader only looks at. It
+    // never waits, so the recording just plays from start to finish.
+    file: "non-interactive.gif",
+    demo: "static-screenshot",
+    script: async (page, click) => {
+      await click(page.getByRole("button", { name: "Play" }));
       await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(1500);
     },
