@@ -1,33 +1,33 @@
 # CLIscenes
 
-CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows that involve a terminal interacting with another app.
+CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows that move between a terminal and another app, such as a CLI sign-in that you approve in a desktop app.
 
-The terminal shows commands and output as real text that readers can select and copy. Approval prompts and screenshots appear at the right moment in the flow, with supporting documentation. When a step needs the reader to act, the walkthrough waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. Approval prompts and screenshots appear at the right moment, with short notes that explain each step. When a step needs the reader to act, the walkthrough waits until they do.
 
 > **Status:** early release (v0). The format and APIs may change.
 
-The app's prompt appears over the terminal, as an auth prompt would. The walkthrough waits to continue until the reader selects **Approve**, and shows an alternative path if they choose **Deny**.
+In this example, YourApp's approval prompt appears over the terminal. The walkthrough waits until the reader selects **Approve**, and shows a different path if they select **Deny**.
 
 ![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
 
 ## The problem
 
-Some CLI workflows don't stay in the terminal, and as a result are difficult to visualize in end-to-end demos without requiring screen recordings. For example:
+Some CLI workflows don't stay in the terminal, which makes them hard to show from start to finish without a screen recording. For example:
 
 1. You run a CLI command.
 2. A desktop app asks you to approve the request.
 3. You approve it, and the CLI continues.
 
-Being able to visualize screens like auth prompts helps the reader to understand how the tool works, and avoid getting confused during setup.
+Seeing screens like these approval prompts helps readers understand how the tool works, and keeps them from getting lost during setup.
 
 Docs usually show this flow with code blocks, screenshots, videos, and prose. Readers struggle to follow these as one flow. Writers struggle to keep them up to date. A terminal replay can't show the dialog the reader clicks. A video shows everything, but readers can't copy its text. Each product change also means a new video.
 
 ## Features
 
-- **Timeline.** The terminal and the apps around it stay aligned, and the user can see which step happens when.
+- **Timeline.** The terminal and the other apps stay in step, so the reader can see what happens at each point.
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
-- **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes sets the delays. Error messages name the exact field to fix.
+- **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes works out the timing. Error messages name the exact field to fix.
 - **Your own designs.** Show your app's real prompt as an image that opens, animates, and closes by itself, such as a Touch ID request. Keep it up to date by downloading it from Figma.
 - **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
@@ -40,16 +40,20 @@ CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player)
 
 - Node.js 20.19 or later.
 
-### Install CLIscenes
+### Run CLIscenes locally
 
-To install the tool, open your project in the terminal and run:
+Clone the repository, install its dependencies, and start the local player:
 
 ```sh
+git clone https://github.com/libutcher/CLIscenes.git
+cd CLIscenes
 npm install
 npm run dev
 ```
 
-Open the URL that the command prints, usually http://localhost:5173. The page updates each time you save a file in `demos/`.
+Open the URL that `npm run dev` prints, usually http://localhost:5173. You should see the example walkthroughs. The page updates each time you save a file in `demos/`.
+
+You can use these commands from the repository folder:
 
 | Command | What it does |
 | --- | --- |
@@ -66,7 +70,7 @@ Open the URL that the command prints, usually http://localhost:5173. The page up
 | `npm run gifs` | Records the demo GIFs in `docs/media/` (add file names, such as `-- touch-id.gif`, to record only those) |
 | `npm run build:lib` | Builds the React and Docusaurus components and the `cliscenes` command into `dist-lib/` |
 
-Currently, you need to edit a YAML file to use the code and app visualization you need. You can use the bundled skill to do this quickly with your AI agent.
+To create or change a walkthrough, edit its YAML file in `demos/`. An AI assistant can write the file for you (see [AI assistants](#ai-assistants)).
 
 ## Example
 
@@ -149,6 +153,8 @@ You can match a walkthrough to your product without code changes:
 - **Text:** set the app name, title, message, account, and button labels.
 - **Your own design:** show your app's real prompt as an image, with an optional CSS animation, such as a Touch ID sensor reading a fingerprint. Add a `figma` link and run `npm run figma` to download the latest design. See [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image).
 
+For example, to use your brand color:
+
 ```yaml
 theme:
   accent: "#0f7b6c"
@@ -168,7 +174,7 @@ A [skill file](.claude/skills/cliscenes-authoring/SKILL.md) tells AI assistants 
 
 The reader controls the walkthrough with Restart, Previous step, Play or Pause, and Next step. A step list lets the reader jump to any step.
 
-The reader never sees a step's result before they complete its action. The reader can still move freely:
+When a step waits for the reader, its result doesn't appear until they act. The reader can still move freely:
 
 - **Back:** the reader returns to a step, and that step asks for the action again.
 - **Forward:** the reader skips a step that waits for an action, and the step list marks it "Skipped".
@@ -202,7 +208,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 
 - **Controls:** each control is a button with a clear name and a visible focus ring.
 - **Prompts:** each prompt is a labeled dialog. The terminal stays visible behind it.
-- **Focus:** when a prompt appears, focus moves to its main button, but only if the reader already uses the walkthrough.
+- **Focus:** when a prompt appears, focus moves to its main button, but only if the reader is already using the walkthrough. This keeps the page from jumping while someone scrolls past it.
 - **Announcements:** screen readers announce each new step and what the walkthrough waits for.
 - **Images:** each image needs alt text.
 - **Motion:** when the reader prefers reduced motion, commands appear whole, overlays appear without sliding in, and animated images are swapped for a version without movement.
@@ -220,7 +226,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - **Figma downloads are manual:** run `npm run figma` to fetch the latest designs. Builds use the image files in the folder and never contact Figma.
 - **Small screens:** wide terminals shrink on phones. Keep `cols` near 64 for phone readers.
 - **Colors only:** themes change colors, not fonts or shapes.
-- **Iframe in Mintlify:** the Mintlify snippet embeds the hosted player in an iframe, so the player needs a host of its own.
+- **Iframe in Mintlify:** the Mintlify snippet loads the player in an iframe, so you need to host the player separately.
 
 ## Roadmap
 
