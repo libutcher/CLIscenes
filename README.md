@@ -28,7 +28,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes works out the timing. Error messages name the exact field to fix.
-- **Your own designs.** Show your app's real prompt as an image that opens, animates, and closes by itself, such as a Touch ID request. Keep it up to date by downloading it from Figma.
+- **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Keep the image and its button positions up to date by downloading them from Figma.
 - **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
@@ -127,7 +127,7 @@ To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes t
 `demos/` has two examples:
 
 - **`cli-signin`:** an interactive prompt that waits for the reader to select **Approve** or **Deny**.
-- **`touch-id-signin`:** an animated Touch ID prompt, shown as an image, that closes by itself before the CLI continues. [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image) explains how it's built.
+- **`touch-id-signin`:** a Touch ID prompt shown as an image. The reader touches the sensor to approve, which plays an animation, or selects **Cancel**. [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image) explains how it's built.
 
 [docs/authoring.md](docs/authoring.md) describes the full format.
 
@@ -139,7 +139,7 @@ An overlay shows an app or note outside the terminal.
 | --- | --- | --- |
 | `auth-prompt` | An app's request for approval | Yes |
 | `app-window` | A simple app window with text and buttons | Yes |
-| `image` | A screenshot, illustration, or an app's prompt that opens and closes on its own (optionally animated, and downloaded from Figma) | No |
+| `image` | A screenshot, illustration, or an app's real prompt, optionally animated and downloaded from Figma | Yes, through clickable areas over its buttons |
 | `annotation` | A short note | No |
 
 [docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add a type.
@@ -221,7 +221,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 - **Authored output:** writers type all terminal output. CLIscenes never runs commands.
 - **One terminal:** each walkthrough has one terminal, which plays from start to end. Branches are steps that the reader reaches through `next`.
 - **One step per overlay:** an overlay appears in one step. To keep it on screen longer, repeat it in each step.
-- **Images don't wait:** an image prompt closes when its step ends. To wait for the reader, use `auth-prompt` or `app-window`.
+- **Click areas need upkeep:** if a design moves a button and you don't update the image's click areas, they no longer line up. Areas from Figma layers update when you run `npm run figma`.
 - **Image animations:** only SVG images can use an `animation` stylesheet. Use GIF or animated WebP for other images.
 - **Figma downloads are manual:** run `npm run figma` to fetch the latest designs. Builds use the image files in the folder and never contact Figma.
 - **Small screens:** wide terminals shrink on phones. Keep `cols` near 64 for phone readers.
