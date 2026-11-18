@@ -28,7 +28,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes works out the timing. Error messages name the exact field to fix.
-- **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Each button is placed by the name of its layer, so a design change moves the button and the click area together. With Figma access, `npm run figma` keeps both current; without it, the positions are a small file you write.
+- **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Place each button by measuring it, or by naming its layer in the design so that a design change moves the button and its click area together. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
 - **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
