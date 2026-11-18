@@ -117,6 +117,68 @@ Image rules, which also apply to `icon` and `requesterIcon`:
 - **Images only:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.avif`, or `.svg`.
 - **Local only:** remote URLs aren't supported.
 
+#### Show a dialog as an image
+
+An image can stand in for a real app's prompt, such as a Touch ID request. It appears when its step starts and closes when the step ends, so the reader doesn't click anything. Set `pause` to how long it stays open. `demos/touch-id-signin.yaml` is a complete example.
+
+![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal with an account selector. The fingerprint sensor reads a fingerprint and shows Approved, then the prompt closes and the terminal shows the sign-in succeed and a list of projects.](media/touch-id.gif)
+
+```yaml
+- id: touch-id
+  title: Confirm with Touch ID
+  overlay:
+    type: image
+    src: assets/touch-id-prompt.svg
+    animation: assets/touch-id-prompt.css   # optional; see below
+    frame: false                            # no card around the image
+    alt: YourApp asks to confirm the sign-in, and Touch ID approves it.
+  pause: 1.8                                # seconds the prompt stays open
+```
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `frame` | `true` | Draw a card around the image. Use `false` for an image that is already a window, with its own edges and transparent corners. A "Simulated" label still appears below it. |
+| `animation` | – | A CSS file that CLIscenes puts inside the SVG when it builds the walkthrough. SVG images only. |
+| `srcReducedMotion` | – | An image to show instead to readers who ask for reduced motion, such as a still frame of an animated GIF. Made for you when you use `animation`. |
+| `figma` | – | A link to the Figma frame the image comes from. See [Images from Figma](#images-from-figma). |
+
+**Animation.** An SVG shown in a web page can run CSS animations, but it can't load a separate stylesheet. So you keep the CSS in its own file, and CLIscenes adds it to the SVG at build time. That way a new export of the SVG never loses the animation.
+
+- **Target layers by `id`.** The animation starts when the image appears. Use `animation-delay` to time each part, and `animation-fill-mode: forwards` to keep the end state.
+- **Keep the timing short.** The image closes at the end of the step, so make `pause` a little longer than the animation.
+- **Reduced motion.** Put movement inside `@media (prefers-reduced-motion: no-preference)`, and leave simple fades outside it. CLIscenes builds a second copy for readers who ask for reduced motion. In that copy, every `prefers-reduced-motion` query is answered as `reduce`. The player picks the copy itself, because browsers don't reliably pass the reader's setting into images.
+
+`demos/assets/touch-id-prompt.css` is a commented example.
+
+#### Images from Figma
+
+Add a `figma` link to keep an image in step with a design in Figma. In Figma, select the frame, then choose **Copy link to selection**.
+
+```yaml
+overlay:
+  type: image
+  src: assets/touch-id-prompt.svg
+  animation: assets/touch-id-prompt.css
+  frame: false
+  figma: https://www.figma.com/design/AbC123/Prompts?node-id=12-34
+  alt: …
+```
+
+Then download the frame into `src`:
+
+```sh
+export FIGMA_TOKEN=…       # a personal access token; never commit it
+npm run figma              # or: npx cliscenes figma <source-dir>
+npm run figma -- --dry-run # list the links without downloading
+```
+
+- **Token.** Create a personal access token in Figma under **Settings > Security > Personal access tokens**, with the **File content: read** scope. Your account must be able to open the file.
+- **When it runs.** Only when you run the command. Builds read the file that's already in the folder, so they work offline and give the same result every time. Commit the downloaded image like any other.
+- **Format.** The extension of `src` sets the export format: `.svg`, `.png` (at 2×), or `.jpg`.
+- **SVG exports** have text outlined, because an image in a web page can't load web fonts. Each layer's name becomes its `id`, so name the layers you animate, such as `fingerprint` or `approved`. If two layers share a name, Figma adds a suffix to the later one. Check the exported file if an animation doesn't start.
+- **Corners and shadow.** Link to the dialog's own frame, not a larger frame with a background, so the area outside its rounded corners stays transparent. When the image floats over the terminal, the player adds a shadow, so the frame doesn't need one.
+- **Privacy.** The `figma` link is never copied into the built walkthrough, so an internal file link isn't published.
+
 ### `annotation`
 
 A short callout.

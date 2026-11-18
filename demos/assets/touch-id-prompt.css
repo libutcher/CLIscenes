@@ -1,0 +1,61 @@
+/*
+ * Animates touch-id-prompt.svg: a finger rests on the sensor, the ridges
+ * light up, and the request is approved. CLIscenes adds this file inside the
+ * SVG when it builds the walkthrough (the `animation` field), so a fresh
+ * export from Figma keeps the animation as long as the layer names match.
+ *
+ * Timeline (from when the prompt appears):
+ *   0.35 s  finger touches the sensor
+ *   0.35–1.0 s  ridges fill in
+ *   1.0 s   approved
+ *
+ * The step's `pause` should be longer than 1.2 s, so readers see the result.
+ */
+
+/* Fades only: safe for readers who ask for reduced motion. */
+#ridges-active {
+  animation: touch-id-show 0.15s ease-out 0.35s forwards;
+}
+#approved,
+#status-approved {
+  animation: touch-id-show 0.2s ease-out 1s forwards;
+}
+#status {
+  animation: touch-id-hide 0.15s ease-out 1s forwards;
+}
+
+/* Movement: the press and the ridges being traced. */
+@media (prefers-reduced-motion: no-preference) {
+  #fingerprint-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: touch-id-press 0.35s ease-out 0.3s;
+  }
+  #ridges-active path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: touch-id-trace 0.6s ease-out 0.35s forwards;
+  }
+  #approved {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: touch-id-pop 0.25s ease-out 1s forwards;
+  }
+}
+
+@keyframes touch-id-show {
+  to { opacity: 1; }
+}
+@keyframes touch-id-hide {
+  to { opacity: 0; }
+}
+@keyframes touch-id-press {
+  50% { transform: scale(0.94); stroke: #0f7b6c; }
+}
+@keyframes touch-id-trace {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes touch-id-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}

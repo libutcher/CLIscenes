@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "vite",
     "generate": "tsx scripts/generate.ts",
+    "figma": "tsx scripts/figma.ts",
     "validate": "tsx scripts/generate.ts --check",
     "build": "vite build",
     "preview": "vite preview",

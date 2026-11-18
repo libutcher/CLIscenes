@@ -3,15 +3,19 @@
  *
  *   cliscenes build <source-dir> --out <dir>   Generate walkthroughs into <dir>
  *   cliscenes validate <source-dir>            Check sources without writing
+ *   cliscenes figma <source-dir> [--dry-run]   Download linked Figma frames
  *
  * For a Docusaurus site:  cliscenes build walkthroughs --out static/walkthroughs
  */
 import path from "node:path";
 import { generateAll } from "../node/generate.ts";
+import { runFigmaCommand } from "../node/figma.ts";
 
 const USAGE = `Usage:
   cliscenes build <source-dir> --out <dir>   Generate walkthroughs into <dir>
   cliscenes validate <source-dir>            Check walkthrough files without writing anything
+  cliscenes figma <source-dir> [--dry-run]   Download each image overlay's linked Figma frame into its src
+                                             (needs FIGMA_TOKEN; --dry-run only lists the links)
 
 Example (Docusaurus):
   cliscenes build walkthroughs --out static/walkthroughs`;
@@ -27,8 +31,14 @@ async function main(argv: string[]) {
     console.log(USAGE);
     return;
   }
-  if (command !== "build" && command !== "validate") fail(`Unknown command "${command}".`);
+  if (command !== "build" && command !== "validate" && command !== "figma") fail(`Unknown command "${command}".`);
   if (!sourceArg) fail("Missing <source-dir>.");
+
+  if (command === "figma") {
+    const lines = await runFigmaCommand(path.resolve(sourceArg), { dryRun: rest.includes("--dry-run") });
+    for (const line of lines) console.log(line);
+    return;
+  }
 
   const sourceDir = path.resolve(sourceArg);
   const outIndex = rest.indexOf("--out");

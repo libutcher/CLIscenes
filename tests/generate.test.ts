@@ -203,3 +203,83 @@ describe("generator", () => {
     await expect(generateAll({ sourceDir: src, outDir: src })).rejects.toThrow(/No \.yaml/);
   });
 });
+
+describe("animated images", () => {
+  const svg = '<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect id="dot"/></svg>';
+  const css = "#dot { animation: fade 1s; }\n@media (prefers-reduced-motion: no-preference) { #dot { animation: spin 1s; } }";
+
+  it("builds the CSS into the SVG, makes a reduced-motion copy, and doesn't publish the Figma link", async () => {
+    const src = await tempDir();
+    const out = await tempDir();
+    await mkdir(path.join(src, "assets"));
+    await writeFile(path.join(src, "assets/p.svg"), svg);
+    await writeFile(path.join(src, "assets/p.css"), css);
+    await writeFile(
+      path.join(src, "anim.yaml"),
+      [
+        "title: Anim",
+        "steps:",
+        "  - id: a",
+        "    title: A",
+        "    overlay:",
+        "      type: image",
+        "      src: assets/p.svg",
+        "      animation: assets/p.css",
+        "      frame: false",
+        "      alt: A prompt",
+        '      figma: "https://www.figma.com/design/Internal1/Secret?node-id=1-2"',
+        "  - id: b",
+        "    title: B",
+        "    overlay: { type: image, src: assets/p.svg, alt: Still }",
+      ].join("\n"),
+    );
+
+    await generateAll({ sourceDir: src, outDir: out });
+    const dir = path.join(out, "demos/anim");
+    const json = await readFile(path.join(dir, "demo.json"), "utf8");
+    expect(json).not.toMatch(/figma|Internal1|p\.css/);
+    const manifest: CompiledDemo = JSON.parse(json);
+    const [animated, still] = manifest.steps.map((s) => s.overlays[0]!);
+    expect(animated).toMatchObject({ src: "assets/p.svg", srcReducedMotion: "assets/p.reduced-motion.svg", frame: false });
+    expect(still).toMatchObject({ frame: true });
+    expect(still).not.toHaveProperty("srcReducedMotion");
+
+    const built = await readFile(path.join(dir, "assets/p.svg"), "utf8");
+    expect(built).toContain('height="10">\n<style><![CDATA[\n#dot');
+    expect(built).toContain("(prefers-reduced-motion: no-preference)");
+    const reduced = await readFile(path.join(dir, "assets/p.reduced-motion.svg"), "utf8");
+    expect(reduced).toContain("@media (max-width: 0px)");
+    // The plain image is a separate, unchanged copy.
+    const plain = (still as { src: string }).src;
+    expect(plain).not.toBe("assets/p.svg");
+    expect(await readFile(path.join(dir, plain), "utf8")).toBe(svg);
+  });
+
+  it("reports an animation on a file that isn't an SVG, and CSS that can't go inside one", async () => {
+    const src = await tempDir();
+    await writeFile(path.join(src, "p.svg"), "not svg");
+    await writeFile(path.join(src, "ok.svg"), svg);
+    await writeFile(path.join(src, "bad.css"), "a { content: ']]>' }");
+    await writeFile(path.join(src, "p.css"), css);
+    const demo = (overlay: string) => `title: T\nsteps:\n  - id: a\n    title: A\n    overlay: ${overlay}\n`;
+    await writeFile(path.join(src, "one.yaml"), demo("{ type: image, src: p.svg, animation: p.css, alt: x }"));
+    await writeFile(path.join(src, "two.yaml"), demo("{ type: image, src: ok.svg, animation: bad.css, alt: x }"));
+    await writeFile(path.join(src, "three.yaml"), demo("{ type: image, src: ok.svg, animation: missing.css, alt: x }"));
+    const error = (await generateAll({ sourceDir: src, outDir: src, check: true }).catch((e: unknown) => e)) as Error;
+    expect(error.message).toMatch(/one\.yaml[\s\S]*Could not add animation to p\.svg: the file doesn't contain an <svg> element/);
+    expect(error.message).toMatch(/two\.yaml[\s\S]*"\]\]>"/);
+    expect(error.message).toMatch(/three\.yaml[\s\S]*File not found: missing\.css/);
+  });
+});
+
+describe("forceReducedMotion", () => {
+  it("answers every prefers-reduced-motion query as reduce, keeping not and and", async () => {
+    const { forceReducedMotion } = await import("../src/node/generate.ts");
+    expect(forceReducedMotion("@media (prefers-reduced-motion: no-preference) {}")).toBe("@media (max-width: 0px) {}");
+    expect(forceReducedMotion("@media (prefers-reduced-motion:reduce) {}")).toBe("@media (min-width: 0px) {}");
+    expect(forceReducedMotion("@media (prefers-reduced-motion) {}")).toBe("@media (min-width: 0px) {}");
+    expect(forceReducedMotion("@media not all and (prefers-reduced-motion: no-preference) {}")).toBe(
+      "@media not all and (max-width: 0px) {}",
+    );
+  });
+});

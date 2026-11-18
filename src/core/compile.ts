@@ -51,8 +51,11 @@ export interface CompileResult {
 
 export interface CompileOptions {
   id: string;
-  /** Rewrites overlay asset paths (for example image `src`) for the output folder. */
-  rewriteAsset?: (src: string) => string;
+  /**
+   * Rewrites overlay asset paths (for example image `src`) for the output
+   * folder. `animation` is a CSS file to add inside an SVG as it's copied.
+   */
+  rewriteAsset?: RewriteAsset;
 }
 
 /** Normalize authored output to terminal line endings, one entry per line. */
@@ -170,12 +173,30 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
   };
 }
 
-/** Point every local file an overlay references at its copy in the output folder. */
-function rewriteOverlay(overlay: Overlay, rewriteAsset?: (src: string) => string): Overlay {
-  if (!rewriteAsset) return overlay;
+export type RewriteAsset = (src: string, options?: { animation?: string; reducedMotion?: boolean }) => string;
+
+/**
+ * Point every local file an overlay references at its copy in the output
+ * folder, and drop source-only fields that readers don't need.
+ */
+function rewriteOverlay(overlay: Overlay, rewriteAsset?: RewriteAsset): Overlay {
   if (overlay.type === "image") {
-    return { ...overlay, src: rewriteAsset(overlay.src) };
+    // `animation` is built into the image, and `figma` may be an internal link.
+    const { animation, figma: _figma, ...published } = overlay;
+    if (!rewriteAsset) return published;
+    // An animated SVG gets a reduced-motion copy unless the author chose one.
+    const srcReducedMotion = overlay.srcReducedMotion
+      ? rewriteAsset(overlay.srcReducedMotion)
+      : animation
+        ? rewriteAsset(overlay.src, { animation, reducedMotion: true })
+        : undefined;
+    return {
+      ...published,
+      src: rewriteAsset(overlay.src, animation ? { animation } : undefined),
+      ...(srcReducedMotion ? { srcReducedMotion } : {}),
+    };
   }
+  if (!rewriteAsset) return overlay;
   if (overlay.type === "auth-prompt") {
     return {
       ...overlay,

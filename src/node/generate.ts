@@ -48,7 +48,47 @@ export function parseDemoSource(text: string, file: string): DemoSource {
 export interface GeneratedDemo extends CompileResult {
   id: string;
   sourceFile: string;
-  assets: { from: string; to: string }[];
+  assets: {
+    from: string;
+    /** The path as written in the walkthrough, for messages. */
+    src: string;
+    to: string;
+    /** CSS file to add inside the SVG. */
+    animation?: string;
+    /** Build the copy for readers who ask for reduced motion. */
+    reducedMotion?: boolean;
+    /** The file to write, when it isn't a plain copy of `from`. */
+    content?: string;
+  }[];
+}
+
+/**
+ * The stylesheet for the reduced-motion copy of an animated SVG. Browsers
+ * don't reliably tell an image about the reader's motion setting, so the
+ * player picks the copy instead, and in it every `prefers-reduced-motion`
+ * query answers as if the reader asked for reduced motion. The feature is
+ * swapped for one that is always true or always false for an image, so
+ * queries that combine it with `not` or `and` keep their meaning.
+ */
+export function forceReducedMotion(css: string): string {
+  const ALWAYS = "(min-width: 0px)";
+  const NEVER = "(max-width: 0px)";
+  return css.replace(/\(\s*prefers-reduced-motion\s*(?::\s*(no-preference|reduce)\s*)?\)/gi, (_, value?: string) =>
+    value?.toLowerCase() === "no-preference" ? NEVER : ALWAYS,
+  );
+}
+
+/**
+ * Add a stylesheet inside an SVG, right after its opening tag. An SVG shown
+ * with <img> still runs CSS animations, but can't load other files, so the
+ * styles must be inside it.
+ */
+export function addSvgStyle(svg: string, css: string): string {
+  const open = /<svg\b[^>]*>/i.exec(svg);
+  if (!open) throw new Error("the file doesn't contain an <svg> element.");
+  if (css.includes("]]>")) throw new Error('the CSS file contains "]]>", which can\'t appear inside an SVG style.');
+  const end = open.index + open[0].length;
+  return `${svg.slice(0, end)}\n<style><![CDATA[\n${css.trim()}\n]]></style>${svg.slice(end)}`;
 }
 
 /** Compile a single source file in memory (no files are written). */
@@ -62,24 +102,52 @@ export async function buildDemo(sourceFile: string): Promise<GeneratedDemo> {
   const source = parseDemoSource(await readFile(sourceFile, "utf8"), sourceFile);
 
   const assets: GeneratedDemo["assets"] = [];
-  const missing: string[] = [];
+  // A Set, because an animated image is checked for both of its copies.
+  const missing = new Set<string>();
+  const sourceDir = path.dirname(sourceFile);
   const result = compileDemo(source, {
     id,
-    rewriteAsset: (src) => {
-      const sourceDir = path.dirname(sourceFile);
+    rewriteAsset: (src, options) => {
       const checked = resolveAsset(sourceDir, src);
       if ("problem" in checked) {
-        missing.push(checked.problem);
+        missing.add(checked.problem);
         return src;
       }
-      const existing = assets.find((a) => a.from === checked.real);
+      let animation: string | undefined;
+      if (options?.animation) {
+        const css = resolveAsset(sourceDir, options.animation, [".css"]);
+        if ("problem" in css) {
+          missing.add(css.problem);
+          return src;
+        }
+        animation = css.real;
+      }
+      const reducedMotion = Boolean(animation && options?.reducedMotion);
+      const existing = assets.find(
+        (a) => a.from === checked.real && a.animation === animation && Boolean(a.reducedMotion) === reducedMotion,
+      );
       if (existing) return existing.to;
-      const to = assetOutputPath(sourceDir, checked.logical, new Set(assets.map((a) => a.to)));
-      assets.push({ from: checked.real, to });
+      // The reduced-motion copy sits next to the image: x.svg → x.reduced-motion.svg.
+      const logical = reducedMotion ? checked.logical.replace(/(\.[^./\\]+)$/, ".reduced-motion$1") : checked.logical;
+      const variant = animation ? `${animation}${reducedMotion ? "\0reduced" : ""}` : "";
+      const to = assetOutputPath(sourceDir, logical, new Set(assets.map((a) => a.to)), variant);
+      assets.push({ from: checked.real, src, to, ...(animation ? { animation } : {}), ...(reducedMotion ? { reducedMotion } : {}) });
       return to;
     },
   });
-  if (missing.length) throw new DemoSourceError(sourceFile, missing);
+  if (missing.size) throw new DemoSourceError(sourceFile, [...missing]);
+
+  // Build animated SVGs now, so validation reports a bad SVG or CSS file.
+  for (const asset of assets) {
+    if (!asset.animation) continue;
+    try {
+      const css = await readFile(asset.animation, "utf8");
+      asset.content = addSvgStyle(await readFile(asset.from, "utf8"), asset.reducedMotion ? forceReducedMotion(css) : css);
+    } catch (error) {
+      missing.add(`Could not add animation to ${asset.src}: ${error instanceof Error ? error.message : error}`);
+    }
+  }
+  if (missing.size) throw new DemoSourceError(sourceFile, [...missing]);
 
   // Self-check: the cast we produced must be a valid asciicast v3 file.
   parseCast(result.cast);
@@ -101,19 +169,25 @@ const isInside = (dir: string, file: string) => {
  * symlinks) must be inside the walkthrough's folder. This keeps a source file
  * from publishing anything else on the machine, such as a key or a .env file.
  */
-export function resolveAsset(sourceDir: string, src: string): { logical: string; real: string } | { problem: string } {
+export function resolveAsset(
+  sourceDir: string,
+  src: string,
+  extensions: readonly string[] = IMAGE_EXTENSIONS,
+): { logical: string; real: string } | { problem: string } {
+  const kind = extensions === IMAGE_EXTENSIONS ? "Image" : "File";
   const extension = path.extname(src).toLowerCase();
-  if (!IMAGE_EXTENSIONS.includes(extension)) {
-    return { problem: `Not an image file: ${src}. Use ${IMAGE_EXTENSIONS.join(", ")}.` };
+  if (!extensions.includes(extension)) {
+    const expected = extensions === IMAGE_EXTENSIONS ? "an image file" : `a ${extensions.join(" or ")} file`;
+    return { problem: `Not ${expected}: ${src}. Use ${extensions.join(", ")}.` };
   }
   const logical = path.resolve(sourceDir, src);
   if (!isInside(sourceDir, logical)) {
-    return { problem: `Image must be inside the walkthrough's folder: ${src}` };
+    return { problem: `${kind} must be inside the walkthrough's folder: ${src}` };
   }
-  if (!existsSync(logical)) return { problem: `Image not found: ${src}` };
+  if (!existsSync(logical)) return { problem: `${kind} not found: ${src}` };
   const real = realpathSync(logical);
   if (!isInside(realpathSync(sourceDir), real)) {
-    return { problem: `Image links to a file outside the walkthrough's folder: ${src}` };
+    return { problem: `${kind} links to a file outside the walkthrough's folder: ${src}` };
   }
   if (!statSync(real).isFile()) return { problem: `Not a file: ${src}` };
   return { logical, real };
@@ -125,11 +199,12 @@ export function resolveAsset(sourceDir: string, src: string): { logical: string;
  * files in different folders stay apart. If the preferred path is already
  * taken by a different file, a short hash of the file's location is added.
  */
-export function assetOutputPath(sourceDir: string, from: string, taken: Set<string>): string {
+export function assetOutputPath(sourceDir: string, from: string, taken: Set<string>, variant = ""): string {
   const relative = path.relative(sourceDir, from).split(path.sep).join("/");
   const preferred = `assets/${relative.replace(/^assets\//, "")}`;
   if (!taken.has(preferred)) return preferred;
-  const hash = createHash("sha256").update(from).digest("hex").slice(0, 8);
+  // `variant` keeps one image with and without an animation apart.
+  const hash = createHash("sha256").update(from + "\0" + variant).digest("hex").slice(0, 8);
   return `${path.posix.dirname(preferred)}/${hash}-${path.basename(from)}`;
 }
 
@@ -213,7 +288,8 @@ export async function generateAll({ sourceDir, outDir, check = false, flat = fal
     for (const asset of demo.assets) {
       const target = path.join(dir, asset.to);
       await mkdir(path.dirname(target), { recursive: true });
-      await copyFile(asset.from, target);
+      if (asset.content !== undefined) await writeFile(target, asset.content);
+      else await copyFile(asset.from, target);
     }
   }
   const index: DemoIndexEntry[] = demos.map((d) => ({
