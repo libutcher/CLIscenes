@@ -553,6 +553,41 @@
   background: var(--cs-surface);
 }
 
+/* Clickable areas over the buttons an image shows. */
+.cs-image__stage {
+  position: relative;
+}
+
+.cs-hotspot {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cs-hotspot:hover {
+  background: color-mix(in srgb, var(--cs-accent) 14%, transparent);
+}
+
+.cs-hotspot:focus-visible {
+  outline: 3px solid var(--cs-accent);
+  outline-offset: 2px;
+}
+
+/* While the step waits, outline every area so readers can see where to click. */
+.cs-image[data-waiting] .cs-hotspot {
+  outline: 2px dashed var(--cs-accent);
+  outline-offset: 2px;
+}
+
+.cs-image[data-waiting] .cs-hotspot:focus-visible {
+  outline-style: solid;
+  outline-width: 3px;
+}
+
 .cs-annotation {
   display: flex;
   gap: 10px;

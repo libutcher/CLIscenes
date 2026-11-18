@@ -182,7 +182,9 @@ export type RewriteAsset = (src: string, options?: { animation?: string; reduced
 function rewriteOverlay(overlay: Overlay, rewriteAsset?: RewriteAsset): Overlay {
   if (overlay.type === "image") {
     // `animation` is built into the image, and `figma` may be an internal link.
-    const { animation, figma: _figma, ...published } = overlay;
+    const { animation, figma: _figma, ...rest } = overlay;
+    // Layer names are resolved into areas before compiling; don't publish them.
+    const published = rest.actions ? { ...rest, actions: rest.actions.map(({ layer: _layer, ...action }) => action) } : rest;
     if (!rewriteAsset) return published;
     // An animated SVG gets a reduced-motion copy unless the author chose one.
     const srcReducedMotion = overlay.srcReducedMotion

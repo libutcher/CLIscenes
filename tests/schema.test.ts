@@ -110,6 +110,24 @@ describe("source schema", () => {
     expect(problems(webp)[0]).toMatch(/Figma can export/);
   });
 
+  it("checks image click areas", () => {
+    const image = (actions: object[], extra: object = {}) =>
+      minimal([{ id: "a", title: "A", overlay: { type: "image", src: "p.svg", alt: "x", actions, ...extra }, waitForAction: true }]);
+    const area = { x: "10%", y: "20.5%", width: "30%", height: "10%" };
+    const parsed = demoSchema.parse(image([{ label: "OK", area }]));
+    const overlay = parsed.steps[0]!.overlay as { actions: { area: object }[] };
+    expect(overlay.actions[0]!.area).toEqual({ x: 10, y: 20.5, width: 30, height: 10 });
+
+    expect(problems(image([{ label: "OK", area: { ...area, x: "10" } }]))[0]).toMatch(/percentage/);
+    expect(problems(image([{ label: "OK", area: { ...area, x: "80%" } }]))[0]).toMatch(/runs off the edge/);
+    expect(problems(image([{ label: "OK" }]))[0]).toMatch(/either an area or a layer name/);
+    expect(problems(image([{ label: "OK", area, layer: "Approve" }]))[0]).toMatch(/either an area or a layer name/);
+    // A layer name stands on its own: the position comes from the image's
+    // .layers.json, whether cliscenes figma wrote it or a person did.
+    expect(problems(image([{ label: "OK", layer: "Approve" }]))).toEqual([]);
+    expect(problems(image([{ label: "OK", layer: "Approve" }], { figma: "https://www.figma.com/design/K1/N?node-id=1-2" }))).toEqual([]);
+  });
+
   it("rejects a terminal block with nothing in it", () => {
     expect(problems(minimal([{ id: "a", title: "A", terminal: {} }]))[0]).toMatch(/needs a command, output, or clear/);
   });

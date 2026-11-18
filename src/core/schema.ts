@@ -90,6 +90,35 @@ export const actionSchema = z.strictObject({
   style: z.enum(["primary", "secondary"]).default("primary"),
 });
 
+/** A percentage of the image's width or height, such as "42%". Becomes a number. */
+const percent = z
+  .string()
+  .regex(/^\d+(\.\d+)?%$/, 'Use a percentage of the image, such as "42%".')
+  .transform((value) => Number.parseFloat(value))
+  .refine((value) => value <= 100, { message: "Use a percentage from 0% to 100%." });
+
+/** Where a clickable area sits on an image, measured from its top-left corner. */
+export const areaSchema = z
+  .strictObject({ x: percent, y: percent, width: percent, height: percent })
+  .refine((a) => a.x + a.width <= 100.01 && a.y + a.height <= 100.01, {
+    message: "The area runs off the edge of the image. Check x + width and y + height.",
+  })
+  .refine((a) => a.width > 0 && a.height > 0, { message: "The area needs a width and height above 0%." });
+
+export type Area = z.infer<typeof areaSchema>;
+
+/**
+ * A button drawn on an image, over the button the image shows. Give its
+ * position with `area`, or name a layer with `layer` and let the position
+ * come from the image's `.layers.json` file. `cliscenes figma` writes that
+ * file from a Figma frame; without Figma access you can write it by hand.
+ */
+export const imageActionSchema = actionSchema
+  .extend({ area: areaSchema.optional(), layer: text.optional() })
+  .refine((a) => Boolean(a.area) !== Boolean(a.layer), {
+    message: "Give each image action either an area or a layer name, not both.",
+  });
+
 // ---------------------------------------------------------------------------
 // Overlay types. To add a type: add a schema here, add it to `overlaySchema`,
 // then register a component in src/player/overlays/registry.tsx.
@@ -160,8 +189,18 @@ export const imageSchema = z
      * frame into `src`. Builds only read `src`, and the link isn't published.
      */
     figma: figmaLink.optional(),
+    /**
+     * Clickable areas over the buttons in the image. With these, the step
+     * can wait for the reader (`waitForAction`) and branch with `next`.
+     * Each action gives an `area` directly, or names a `layer` whose
+     * position is read from the image's `.layers.json` file.
+     */
+    actions: z.array(imageActionSchema).optional(),
   })
   .superRefine((image, ctx) => {
+    if (image.actions?.some((a) => a.layer) && image.figma && figmaFormat(image.src) === "jpg") {
+      ctx.addIssue({ code: "custom", path: ["src"], message: "Click areas from Figma need an .svg or .png image." });
+    }
     if (image.animation && !image.src.toLowerCase().endsWith(".svg")) {
       ctx.addIssue({ code: "custom", path: ["animation"], message: "animation only works with an .svg image." });
     }
