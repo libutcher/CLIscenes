@@ -65,8 +65,8 @@ Library styles never touch the host page:
 
 For each step:
 
-1. Wait `lead` seconds (so no event sits on the step boundary).
-2. Optionally clear the screen.
+1. If the step has `clear: true`, clear the screen *before* the step's own start, and give that time to the previous step. A branch is reached by seeking to its start, and seeking replays the recording up to that point, so putting the clear inside the step would draw the previous path's output and wipe it a moment later. Placing it in the gap means the branch opens on a screen that is already blank.
+2. Wait `lead` seconds (so no event sits on the step boundary).
 3. Print the prompt, type the command one character at a time (or all at once), and press Enter.
 4. Print output line by line.
 5. Then one of:
@@ -74,7 +74,7 @@ For each step:
    - **Finish** (`finish`): wait `pause`, emit a marker, then wait `afterGate`.
    - Otherwise wait `pause` (default 1.2 s).
 
-Each compiled step records `start`, `end`, and optionally `gate.time` or `finish.time`. Markers always sit strictly inside their step, so while playback is stopped at a marker, the current time still maps to that step.
+Each compiled step records `start`, `end`, and optionally `gate.time` or `finish.time`. Markers always sit strictly inside their step, so while playback is stopped at a marker, the current time still maps to that step. Steps stay end to end: a step's `start` is the previous step's `end`, including the time taken by a clear.
 
 The output is deterministic: the same source always produces byte-identical files.
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCast, serializeCast } from "../src/core/asciicast.ts";
+import { TIMING } from "../src/core/compile.ts";
 import { stepIndexAt, commandForStep } from "../src/core/timeline.ts";
 import { compileYaml, SIGNIN_YAML, stepById } from "./helpers.ts";
 
@@ -143,5 +144,97 @@ describe("step-to-timeline mapping", () => {
     expect(commandForStep(manifest, 0)).toBe("demo signin");
     expect(commandForStep(manifest, 2)).toBe("demo signin");
     expect(commandForStep(manifest, 3)).toBe("demo list");
+  });
+});
+
+describe("a branch that clears the screen", () => {
+  /** The main path ends with output the branch must not inherit. */
+  const YAML = `
+title: Branch
+steps:
+  - id: ask
+    title: Ask
+    terminal:
+      command: demo signin
+    overlay:
+      type: auth-prompt
+      title: Allow sign-in?
+      message: Approve to continue.
+      actions:
+        - label: Approve
+        - label: Deny
+          next: denied
+    waitForAction: true
+  - id: main
+    title: Main path
+    terminal:
+      output: Signed in, and here is your list.
+    finish: true
+  - id: denied
+    title: Denied
+    terminal:
+      clear: true
+      output: Request denied.
+`;
+  const { manifest, cast } = compileYaml(YAML);
+  const events = parseCast(cast).events;
+  const clear = events.find((e) => e.data.includes("\u001b[2J"))!;
+  const denied = stepById(manifest, "denied");
+
+  it("clears before the branch begins, so jumping to it never shows the main path", () => {
+    expect(events.find((e) => e.data.includes("here is your list"))!.time).toBeLessThan(clear.time);
+    expect(clear.time).toBeLessThan(denied.start);
+    // Seeking to the step's start replays everything up to it. Nothing is
+    // drawn between the clear and the start, so the screen is blank on arrival.
+    expect(events.filter((e) => e.code === "o" && e.time > clear.time && e.time <= denied.start)).toEqual([]);
+  });
+
+  it("gives the clear's time to the previous step, so the steps stay end to end", () => {
+    expect(manifest.steps[0]!.start).toBe(0);
+    manifest.steps.forEach((step, i) => {
+      expect(step.end).toBeGreaterThan(step.start);
+      if (i > 0) expect(step.start).toBe(manifest.steps[i - 1]!.end);
+    });
+  });
+});
+
+describe("a static image, with no Figma and no clicks", () => {
+  /**
+   * The other way to use an image: no `actions`, so there is nothing to place
+   * from a design and nothing for the reader to click. The step shows the
+   * image for its `pause` and moves on. demos/ no longer carries an example of
+   * this, so the behaviour is pinned here.
+   */
+  const { manifest } = compileYaml(`
+title: Screenshot
+steps:
+  - id: before
+    title: Check the setting
+    terminal:
+      command: demo status
+      output: "CLI integration: off"
+  - id: setting
+    title: Turn it on
+    overlay:
+      type: image
+      src: settings.svg
+      caption: YourApp > Settings > Developer
+      alt: YourApp settings, with CLI integration turned on.
+    pause: 2.5
+  - id: after
+    title: Check again
+    terminal:
+      output: "CLI integration: on"
+    finish: true
+`);
+
+  it("never waits, so the walkthrough keeps one path from start to finish", () => {
+    expect(manifest.steps.every((step) => step.gate === undefined)).toBe(true);
+    const setting = stepById(manifest, "setting");
+    expect(setting.overlays).toEqual([
+      { type: "image", src: "settings.svg", caption: "YourApp > Settings > Developer", alt: "YourApp settings, with CLI integration turned on.", frame: true },
+    ]);
+    // `pause` is how long it stays on screen.
+    expect(setting.end - setting.start).toBeCloseTo(TIMING.lead + 2.5, 3);
   });
 });

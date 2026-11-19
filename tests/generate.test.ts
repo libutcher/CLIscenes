@@ -28,7 +28,7 @@ describe("generator", () => {
   it("validates every walkthrough in demos/, including the built-in examples", async () => {
     const demos = await generateAll({ sourceDir: repoDemos, outDir: "unused", check: true });
     expect(demos.map((d) => d.id)).toEqual(await repoDemoIds());
-    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["cli-signin"]));
+    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["figma-touch-id"]));
   });
 
   it("writes a cast, manifest, assets, and index for each demo", async () => {
@@ -38,15 +38,15 @@ describe("generator", () => {
     const index: DemoIndexEntry[] = JSON.parse(await readFile(path.join(out, "demos/index.json"), "utf8"));
     expect(index.map((d) => d.id)).toEqual(await repoDemoIds());
 
-    const dir = path.join(out, "demos/cli-signin");
+    const dir = path.join(out, "demos/figma-touch-id");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
     const cast = parseCast(await readFile(path.join(dir, "demo.cast"), "utf8"));
     expect(manifest.cast).toBe("demo.cast");
     expect(cast.duration).toBeCloseTo(manifest.duration, 2);
 
-    const prompt = manifest.steps.flatMap((s) => s.overlays).find((o) => o.type === "auth-prompt");
-    expect(prompt).toMatchObject({ icon: "assets/yourapp-icon.svg" });
-    await expect(readFile(path.join(dir, "assets/yourapp-icon.svg"))).resolves.toBeTruthy();
+    const image = manifest.steps.flatMap((s) => s.overlays).find((o) => o.type === "image");
+    expect(image).toMatchObject({ src: "assets/figma-touch-id/prompt.svg" });
+    await expect(readFile(path.join(dir, "assets/figma-touch-id/prompt.svg"))).resolves.toBeTruthy();
 
   });
 

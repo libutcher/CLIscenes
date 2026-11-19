@@ -1,20 +1,22 @@
-# The same Touch ID flow as touch-id-signin.yaml, with one difference: each
-# button's position comes from a named layer instead of a measured percentage.
+# The one example walkthrough. A CLI sign-in confirmed with Touch ID, where
+# each button in the prompt is placed by the name of its layer in the design.
 # `your-cli` and YourApp are made up, and nothing in this file is executed.
 #
-# How the positions get here:
+# This copy is the no-Figma case, and it is the one that ships:
 #
 #   assets/figma-touch-id/prompt.layers.json holds each layer's box in the
-#   image's own pixels. The build reads it and turns every `layer` below into
-#   an `area`, so the walkthrough never contacts Figma.
+#   image's own pixels. It is written by hand, so the demo builds with no
+#   Figma account, no link, and no token. The build reads that file, turns
+#   every `layer` below into an `area`, and never contacts Figma.
 #
-#   `npm run figma` writes that file, and re-writes the image, from the design.
-#   This copy is written by hand so the demo runs without a Figma account.
-#
-# To point it at a real design, add the frame's link to the image overlay and
-# run `npm run figma`. Nothing else in this file changes:
+# To drive the same file from a real design instead, add the frame's link to
+# the image overlay and run `npm run figma`, which rewrites both the image and
+# the positions file. Nothing else here changes:
 #
 #   figma: https://www.figma.com/design/<file>/<name>?node-id=12-34
+#
+# An image can also be used with no `actions` at all, in which case it is a
+# screenshot the reader only looks at and the step never waits.
 #
 # See docs/authoring.md#images-from-figma.
 title: Sign in to a CLI with Touch ID, from a design
@@ -63,7 +65,7 @@ steps:
     overlay:
       type: image
       src: assets/figma-touch-id/prompt.svg
-      animation: assets/touch-id-prompt.css
+      animation: assets/figma-touch-id/prompt.css
       frame: false
       alt: The fingerprint is read, and YourApp shows Approved.
     pause: 1.2

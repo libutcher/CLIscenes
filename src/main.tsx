@@ -2,8 +2,8 @@
  * Player page. Loads a generated demo and renders it.
  *
  *   index.html                          first demo, with a demo picker
- *   index.html?demo=cli-signin          a specific demo
- *   index.html?demo=cli-signin&embed=1  walkthrough only, for iframes
+ *   index.html?demo=figma-touch-id          a specific demo
+ *   index.html?demo=figma-touch-id&embed=1  walkthrough only, for iframes
  *   index.html?...&theme=dark           force light or dark (default: follow the system)
  *   ...&embed=1&header=1&steps=1        also show the title and the step list in an embed
  */

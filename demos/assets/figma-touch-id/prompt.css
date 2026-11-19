@@ -1,5 +1,5 @@
 /*
- * Animates touch-id-prompt.svg: a finger rests on the sensor, the ridges
+ * Animates prompt.svg: a finger rests on the sensor, the ridges
  * light up, and the request is approved. CLIscenes adds this file inside the
  * SVG when it builds the walkthrough (the `animation` field), so a fresh
  * export from Figma keeps the animation as long as the layer names match.

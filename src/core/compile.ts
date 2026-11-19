@@ -77,14 +77,23 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
 
   let t = 0;
   source.steps.forEach((step, index) => {
-    const start = t;
-    t += TIMING.lead;
     const term = step.terminal;
 
-    if (term?.clear) {
+    // `clear` wipes what earlier steps left on screen, so it belongs to the
+    // gap before this step rather than inside it: the time goes to the
+    // previous step, and this step starts on a blank screen. Jumping straight
+    // here — a branch taken from an overlay action, or the step list — then
+    // seeks past the clear, instead of landing on the earlier output and
+    // showing it for a moment before the clear plays.
+    const previous = steps[index - 1];
+    if (term?.clear && previous) {
       emit(t, CLEAR_SCREEN);
       t += 0.05;
+      previous.end = round(t);
     }
+
+    const start = t;
+    t += TIMING.lead;
 
     if (term?.command) {
       emit(t, prompt);

@@ -113,12 +113,15 @@ export class FakeTerminal implements TerminalAdapter {
     this.time = target;
   }
 
-  /** Terminal output visible at the current time (ignores clear sequences). */
+  /** Terminal output visible at the current time. A clear wipes what came before it. */
   screen(): string {
-    return this.events
+    const text = this.events
       .filter((e) => e.code === "o" && e.time <= this.time + 1e-9)
       .map((e) => e.data)
       .join("");
+    const CLEAR = "\u001b[2J\u001b[3J\u001b[H";
+    const last = text.lastIndexOf(CLEAR);
+    return last === -1 ? text : text.slice(last + CLEAR.length);
   }
 
   /** Simulate something other than the orchestrator starting playback. */

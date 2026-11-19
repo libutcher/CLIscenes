@@ -20,8 +20,8 @@ Host `dist/` on any static file server. It doesn't need a backend or the origina
 
 ```html
 <iframe
-  src="https://docs.example.com/cliscenes/?demo=cli-signin&embed=1"
-  title="Interactive walkthrough: sign in to a CLI with a desktop app"
+  src="https://docs.example.com/cliscenes/?demo=figma-touch-id&embed=1"
+  title="Interactive walkthrough: sign in to a CLI with Touch ID"
   loading="lazy"
   allow="clipboard-write"
   style="width: 100%; height: 560px; border: 0;"
@@ -101,12 +101,12 @@ Docusaurus sites can use a native component, with no iframe and no separate play
    ```mdx
    import CLIscene from "cliscenes/docusaurus";
 
-   <CLIscene walkthrough="cli-signin" />
+   <CLIscene walkthrough="figma-touch-id" />
    ```
 
    `walkthrough` is the source file's name. The component finds `static/walkthroughs/<name>/` and adds the site's `baseUrl` for you. To load a walkthrough from somewhere else, pass `src="/path/to/folder/"` instead.
 
-   The component shows only the terminal, the UI around it, and the playback controls, so the page's own heading and text introduce it. Add `header` to also show the walkthrough's title, description, and prerequisites, or `steps` to show the clickable step list: `<CLIscene walkthrough="cli-signin" header steps />`.
+   The component shows only the terminal, the UI around it, and the playback controls, so the page's own heading and text introduce it. Add `header` to also show the walkthrough's title, description, and prerequisites, or `steps` to show the clickable step list: `<CLIscene walkthrough="figma-touch-id" header steps />`.
 
 The component loads its own styles, and they only affect the walkthrough. It follows the site's light/dark toggle automatically. On the server, it renders a placeholder, and the walkthrough loads in the browser.
 
@@ -116,7 +116,7 @@ The component loads its own styles, and they only affect the walkthrough. It fol
 import { CLIscene } from "cliscenes/react";
 import "cliscenes/style.css";
 
-<CLIscene src="/walkthroughs/cli-signin/" />;
+<CLIscene src="/walkthroughs/figma-touch-id/" />;
 ```
 
 ### Docusaurus with an iframe
@@ -127,7 +127,7 @@ If the player is hosted elsewhere, copy [`examples/docusaurus/CLIscenesEmbed.jsx
 import CLIscenesEmbed from "@site/src/components/CLIscenesEmbed";
 
 <CLIscenesEmbed
-  src="https://docs.example.com/cliscenes/?demo=cli-signin"
+  src="https://docs.example.com/cliscenes/?demo=figma-touch-id"
   title="Interactive walkthrough: sign in to the CLI"
 />
 ```
@@ -143,7 +143,7 @@ Tested with the Mintlify CLI 4.3 (`mint dev`).
 import { CLIscenesEmbed } from "/snippets/cliscenes-embed.jsx";
 
 <CLIscenesEmbed
-  src="https://docs.example.com/cliscenes/?demo=cli-signin"
+  src="https://docs.example.com/cliscenes/?demo=figma-touch-id"
   title="Interactive walkthrough: sign in to the CLI"
 />
 ```

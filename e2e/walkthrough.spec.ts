@@ -1,25 +1,28 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * Smoke test for the sign-in example: the success message must not appear
- * before the reader approves, and must appear after.
+ * Player mechanics, checked against the one example walkthrough. The image
+ * overlay itself is covered by image-prompt.spec.ts.
  */
-test("authentication prompt gates the rest of the walkthrough", async ({ page }) => {
-  await page.goto("?demo=cli-signin");
+const DEMO = "figma-touch-id";
+const TITLE = "Sign in to a CLI with Touch ID, from a design";
+
+test("the gate holds the rest of the walkthrough back until the reader acts", async ({ page }) => {
+  await page.goto(`?demo=${DEMO}`);
   const terminal = page.getByRole("region", { name: /Terminal/ });
-  const dialog = page.getByRole("dialog", { name: "Allow CLI sign-in?" });
+  const prompt = page.getByRole("img", { name: /YourApp asks to confirm/ });
 
   await expect(page.getByRole("button", { name: "Play" })).toBeEnabled();
   await page.getByRole("button", { name: "Play" }).click();
 
   await expect(terminal).toContainText("your-cli signin");
-  await expect(dialog).toBeVisible({ timeout: 10_000 });
+  await expect(prompt).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("button", { name: "Waiting for your action" })).toBeVisible();
 
   // Give playback every chance to run ahead. It must stay stopped at the gate.
   await page.waitForTimeout(2_500);
   await expect(terminal).not.toContainText("Signed in as demo@example.com");
-  await expect(dialog).toBeVisible();
+  await expect(prompt).toBeVisible();
 
   // The player's own keyboard shortcuts must not be able to skip the gate.
   await terminal.locator("pre").focus();
@@ -36,36 +39,37 @@ test("authentication prompt gates the rest of the walkthrough", async ({ page })
     selection.addRange(range);
     return selection.toString();
   });
-  expect(selected).toContain("Waiting for approval in YourApp");
+  expect(selected).toContain("Waiting for Touch ID in YourApp");
 
-  await dialog.getByRole("button", { name: "Approve" }).click();
-  await expect(dialog).toBeHidden();
+  await page.getByRole("button", { name: "Approve with Touch ID" }).click();
   await expect(terminal).toContainText("Signed in as demo@example.com", { timeout: 10_000 });
   await expect(terminal).toContainText("your-cli projects list", { timeout: 10_000 });
   await expect(terminal).toContainText("Internal tools", { timeout: 10_000 });
 
-  // The main path ends at the project list; the Deny branch does not play on.
+  // The main path ends at the project list; the Cancel branch does not play on.
   await expect(page.getByRole("button", { name: "Replay" })).toBeVisible({ timeout: 10_000 });
-  await expect(terminal).not.toContainText("sign-in request was denied");
+  await expect(terminal).not.toContainText("Touch ID was cancelled");
 
-  // Going back to the gated step asks for approval again.
-  await page.getByRole("navigation", { name: "Walkthrough steps" }).getByRole("button", { name: /Approve the sign-in request/ }).click();
-  await expect(dialog).toBeVisible({ timeout: 10_000 });
+  // Going back to the gated step asks for the action again.
+  await page
+    .getByRole("navigation", { name: "Walkthrough steps" })
+    .getByRole("button", { name: /Touch the sensor to approve/ })
+    .click();
+  await expect(prompt).toBeVisible({ timeout: 10_000 });
   await expect(terminal).not.toContainText("Signed in as demo@example.com");
 });
 
-test("choosing Deny jumps to the denied path", async ({ page }) => {
-  await page.goto("?demo=cli-signin");
+test("choosing Cancel jumps to the other path", async ({ page }) => {
+  await page.goto(`?demo=${DEMO}`);
   const terminal = page.getByRole("region", { name: /Terminal/ });
-  const dialog = page.getByRole("dialog", { name: "Allow CLI sign-in?" });
 
   await page.getByRole("button", { name: "Play" }).click();
-  await dialog.getByRole("button", { name: "Deny" }).click();
+  // `exact` keeps this off the "If you cancel" button in the step list.
+  await page.getByRole("button", { name: "Cancel", exact: true }).click({ timeout: 10_000 });
 
-  await expect(dialog).toBeHidden();
-  await expect(terminal).toContainText("sign-in request was denied", { timeout: 10_000 });
+  await expect(terminal).toContainText("Touch ID was cancelled", { timeout: 10_000 });
   await expect(terminal).not.toContainText("Signed in as");
-  await expect(page.getByText("Step 5 of 5", { exact: true })).toBeVisible();
+  await expect(page.getByText("Step 6 of 6", { exact: true })).toBeVisible();
 });
 
 test.describe("host-controlled theme", () => {
@@ -75,7 +79,7 @@ test.describe("host-controlled theme", () => {
 
   test("?theme=dark overrides a light system setting, and messages switch it live", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
-    await page.goto("?demo=cli-signin&theme=dark");
+    await page.goto(`?demo=${DEMO}&theme=dark`);
     await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
     expect(await surface(page)).not.toBe(WHITE);
 
@@ -90,7 +94,7 @@ test.describe("host-controlled theme", () => {
 
   test("ignores invalid theme values", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
-    await page.goto("?demo=cli-signin&theme=purple");
+    await page.goto(`?demo=${DEMO}&theme=purple`);
     await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
     expect(await surface(page)).toBe(WHITE);
   });
@@ -99,40 +103,40 @@ test.describe("host-controlled theme", () => {
 test("reduced motion shows commands without the typing animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const castRequest = page.waitForRequest((r) => r.url().endsWith(".cast"));
-  await page.goto("?demo=cli-signin");
+  await page.goto(`?demo=${DEMO}`);
   expect((await castRequest).url()).toContain("demo.reduced-motion.cast");
 
   const terminal = page.getByRole("region", { name: /Terminal/ });
   await page.getByRole("button", { name: "Play" }).click();
   // The full command appears in one go; with typing, "your-cli" would show first.
   await expect(terminal).toContainText("your-cli signin", { timeout: 5_000 });
-  await expect(page.getByRole("dialog", { name: "Allow CLI sign-in?" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("img", { name: /YourApp asks to confirm/ })).toBeVisible({ timeout: 10_000 });
 });
 
 test.describe("embed options", () => {
   test("embeds show only the terminal and controls by default", async ({ page }) => {
-    await page.goto("?demo=cli-signin&embed=1");
+    await page.goto(`?demo=${DEMO}&embed=1`);
     await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Sign in to a CLI with a desktop app" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: TITLE })).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: "Walkthrough steps" })).toHaveCount(0);
     // The walkthrough still has an accessible name.
-    await expect(page.getByRole("region", { name: "Interactive walkthrough: Sign in to a CLI with a desktop app" })).toBeVisible();
+    await expect(page.getByRole("region", { name: `Interactive walkthrough: ${TITLE}` })).toBeVisible();
     // Gates still work without the step list.
     await page.getByRole("button", { name: "Play" }).click();
-    await expect(page.getByRole("dialog", { name: "Allow CLI sign-in?" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "Waiting for your action" })).toBeVisible({ timeout: 10_000 });
   });
 
   test("header=1 and steps=1 add the title and step list back", async ({ page }) => {
-    await page.goto("?demo=cli-signin&embed=1&header=1&steps=1");
-    await expect(page.getByRole("heading", { name: "Sign in to a CLI with a desktop app" })).toBeVisible();
+    await page.goto(`?demo=${DEMO}&embed=1&header=1&steps=1`);
+    await expect(page.getByRole("heading", { name: TITLE })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Walkthrough steps" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Sign in to a CLI with a desktop app" })).toBeVisible();
+    await expect(page.getByRole("region", { name: TITLE })).toBeVisible();
   });
 });
 
 test("player styles are applied to controls and the step list", async ({ page }) => {
   // Functional tests pass even with missing CSS, so check a few key styles.
-  await page.goto("?demo=cli-signin");
+  await page.goto(`?demo=${DEMO}`);
   const play = page.getByRole("button", { name: "Play" });
   await expect(play).toBeVisible();
   expect(await play.evaluate((el) => getComputedStyle(el).borderRadius)).toBe("8px");

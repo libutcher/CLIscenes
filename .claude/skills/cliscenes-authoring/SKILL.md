@@ -12,8 +12,7 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 ## Workflow
 
 1. **Understand the flow before writing YAML.** List the moments in order and where each one happens: the terminal, a desktop app prompt, app settings, or a browser. Note every point where the real CLI waits for the person to do something outside the terminal. Those become gates.
-2. **Start from the closest example.**
-   - `demos/cli-signin.yaml`: a command that triggers an approval prompt, with Approve and Deny branches. Uses the `overlay` layout.
+2. **Start from the example.** `demos/figma-touch-id.yaml`: a command that triggers an approval prompt shown as an image, with Approve and Cancel branches. Uses the `overlay` layout. It is the only walkthrough in `demos/`, so it is also what the tests and the docs refer to.
 3. **Create `demos/<id>.yaml`.** The file name is the walkthrough's id and appears in URLs: lowercase letters, numbers, and hyphens.
 4. **Validate:** run `npm run validate`. It checks every file and prints errors with the file and field path, for example `steps[1].overlay.actions[0].next: Unknown step "sucess"`. Fix each error at that path and run it again until it passes.
    - On success, it prints one line per walkthrough, such as `valid  my-demo  (5 steps, 2 gated, 10.9s)`.
@@ -33,8 +32,8 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 | --- | --- | --- |
 | Approve or deny a request in a desktop app | `auth-prompt` | Yes, through `actions` |
 | See a simple app window with text and buttons | `app-window` | Yes, through `actions` |
-| See a screenshot or illustration | `image` (local file, with required `alt` text). With no `actions` it just shows for `pause` seconds. See `demos/static-screenshot.yaml` | No |
-| See an app's real prompt, such as Touch ID | `image` with `frame: false`. Add `actions` for buttons the person clicks, each with an `area` (a measured percentage, see `demos/touch-id-signin.yaml`) or a `layer` (a name looked up in the image's `.layers.json`, see `demos/figma-touch-id.yaml`). Or give the step a `pause` to close it by itself. Optional `animation` (CSS) and `figma` link | Yes, through `actions` |
+| See a screenshot or illustration | `image` (local file, with required `alt` text). With no `actions` it just shows for `pause` seconds, needs no layer names, positions file or Figma link, and works with any image | No |
+| See an app's real prompt, such as Touch ID | `image` with `frame: false`. Add `actions` for buttons the person clicks, each with an `area` (a measured percentage) or a `layer` (a name looked up in the image's `.layers.json`, see `demos/figma-touch-id.yaml`). Or give the step a `pause` to close it by itself. Optional `animation` (CSS) and `figma` link | Yes, through `actions` |
 | Read a short explanation | `annotation` | No |
 
 **Flow control:**
@@ -47,7 +46,9 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 
 **Jumps and the terminal.** A walkthrough is one continuous recording, and a jump moves to a later or earlier point in it. After a jump, the terminal shows everything recorded up to the target step, *not* what was on screen when the person clicked.
 
-So a branch placed after the main path would show the main path's output above its own. Start every branch step that's reached by a jump with `clear: true`, then repeat whatever the reader needs to see. For example, in `cli-signin.yaml` the `denied` step clears the screen, then shows the command and the waiting message again before the error. Add `typing: false` to show a repeated command at once instead of typing it again.
+So a branch placed after the main path would show the main path's output above its own. Start every branch step that's reached by a jump with `clear: true`, then repeat whatever the reader needs to see. For example, in `figma-touch-id.yaml` the `cancelled` step clears the screen, then shows the command and the waiting message again before the error. Add `typing: false` to show a repeated command at once instead of typing it again.
+
+The clear is placed just before the step begins, so a jump lands on an already-blank screen rather than flashing the main path's output first. That only works if the branch step has `clear: true`; without it, the earlier output stays.
 
 Validation can't tell a missing `finish: true` from a deliberate skip ahead, so it won't catch a main path that plays into a branch. Preview every branch once, or ask the person to.
 

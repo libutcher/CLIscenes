@@ -4,7 +4,7 @@
  *   import { CLIscene } from "cliscenes/react";
  *   import "cliscenes/style.css";
  *
- *   <CLIscene src="/walkthroughs/cli-signin/" />
+ *   <CLIscene src="/walkthroughs/figma-touch-id/" />
  *
  * By default it shows only the terminal, the UI around it, and the playback
  * controls. Add `header` or `steps` to show the title or the step list.
@@ -18,7 +18,7 @@ import { MANIFEST_VERSION, type CompiledDemo } from "../core/types.ts";
 import { Walkthrough } from "../player/Walkthrough.tsx";
 
 export interface CLISceneProps {
-  /** URL of a walkthrough folder, such as "/walkthroughs/cli-signin/", or of its demo.json. */
+  /** URL of a walkthrough folder, such as "/walkthroughs/figma-touch-id/", or of its demo.json. */
   src: string;
   /** Also show the walkthrough's title, description, and prerequisites. Default: hidden, since the page usually has its own. */
   header?: boolean;

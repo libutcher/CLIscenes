@@ -267,3 +267,59 @@ describe("navigation and gates", () => {
     expect(overlayTypes()).toEqual(["auth-prompt"]);
   });
 });
+
+describe("a branch that clears the screen", () => {
+  /** The main path ends with output the branch must not inherit. */
+  const YAML = `
+title: Branch
+steps:
+  - id: ask
+    title: Ask
+    terminal:
+      command: demo signin
+    overlay:
+      type: auth-prompt
+      title: Allow sign-in?
+      message: Approve to continue.
+      actions:
+        - label: Approve
+        - label: Deny
+          next: denied
+    waitForAction: true
+  - id: main
+    title: Main path
+    terminal:
+      output: Signed in, and here is your list.
+    finish: true
+  - id: denied
+    title: Denied
+    terminal:
+      clear: true
+      output: Request denied.
+`;
+
+  it("arrives on a blank screen, with no flash of the main path's output", async () => {
+    const compiled = compileYaml(YAML);
+    const term = new FakeTerminal(compiled.cast);
+    const orch = new Orchestrator(compiled.manifest, term);
+    const tick = (seconds: number) => {
+      for (let t = 0; t < seconds; t += 0.05) {
+        term.advance(0.05);
+        orch.sync();
+      }
+    };
+
+    await orch.play();
+    tick(30);
+    expect(orch.getState().status).toBe("awaiting-action");
+
+    await orch.completeAction("ask", "denied");
+    // The jump seeks past the clear, so the main path's output is already gone
+    // when the branch appears, rather than showing for a moment first.
+    expect(term.screen()).toBe("");
+
+    tick(5);
+    expect(term.screen()).toContain("Request denied.");
+    expect(term.screen()).not.toContain("here is your list");
+  });
+});
