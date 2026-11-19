@@ -6,9 +6,11 @@ The terminal shows commands and output as real text that readers can select and 
 
 > **Status:** early release (v0). The format and APIs may change.
 
-In this example, YourApp's approval prompt appears over the terminal. The walkthrough waits until the reader selects **Approve**, and shows a different path if they select **Deny**.
+In this example, YourApp's Touch ID prompt appears over the terminal. The walkthrough waits until the reader touches the sensor, and takes a different path if they select **Cancel**.
 
-![A terminal runs "your-cli signin" and waits. An approval window from YourApp appears over the terminal. A cursor selects Approve, the window closes, and the terminal shows the sign-in succeed and a list of projects.](docs/media/overlay.gif)
+[![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal, with the sensor and the Cancel button outlined. A cursor touches the sensor, the fingerprint is read and the prompt shows Approved, then it closes and the terminal shows the sign-in succeed and a list of projects.](docs/media/interactive-approve.gif)](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id)
+
+**[Try the walkthroughs yourself](https://libutcher.github.io/CLIscenes/)** — GitHub can't run the player inside a README, so each recording below links to the live version, where the buttons really work.
 
 ## The problem
 
@@ -67,7 +69,7 @@ You can use these commands from the repository folder:
 | `npm run test:e2e` | Runs the browser tests (first run `npx playwright install chromium`) |
 | `npm run typecheck` | Checks the TypeScript code |
 | `npm run check` | Runs the type check, unit tests, and build |
-| `npm run gifs` | Records the demo GIFs in `docs/media/` (add file names, such as `-- touch-id.gif`, to record only those) |
+| `npm run gifs` | Records the demo GIFs in `docs/media/` (add file names, such as `-- non-interactive.gif`, to record only those) |
 | `npm run build:lib` | Builds the React and Docusaurus components and the `cliscenes` command into `dist-lib/` |
 
 To create or change a walkthrough, edit its YAML file in `demos/`. An AI assistant can write the file for you (see [AI assistants](#ai-assistants)).
@@ -165,7 +167,9 @@ With no `actions`, the image is shown for the step's `pause` and the walkthrough
   pause: 2.5                       # seconds on screen, then the next step
 ```
 
-That image needs nothing else: no layer names, no positions file, no Figma link. Run `npm run dev` and open **Turn on CLI access in the desktop app** to see it ([`demos/static-screenshot.yaml`](demos/static-screenshot.yaml)).
+[![A terminal runs "your-cli status" and reports that CLI integration is off. A YourApp settings window appears beside the terminal, showing CLI integration turned on, then closes by itself. The terminal runs the command again and reports that CLI integration is on.](docs/media/non-interactive.gif)](https://libutcher.github.io/CLIscenes/?demo=static-screenshot)
+
+That image needs nothing else: no layer names, no positions file, no Figma link, and no clicks from the reader. [Play it live](https://libutcher.github.io/CLIscenes/?demo=static-screenshot), or run `npm run dev` and open **Turn on CLI access in the desktop app** ([`demos/static-screenshot.yaml`](demos/static-screenshot.yaml)).
 
 ### A design the reader clicks, with more than one path
 
@@ -202,7 +206,11 @@ There are two ways to get that file, and the YAML above is the same either way:
 
 A Figma personal access token (scope **File content: read**) in `FIGMA_TOKEN` is what `npm run figma` needs; it never goes into a file in the repository. [Writing a positions file by hand](docs/authoring.md#writing-a-positions-file-by-hand) covers the other column.
 
-Run `npm run dev` and open **Sign in to a CLI with Touch ID, from a design** ([`demos/figma-touch-id.yaml`](demos/figma-touch-id.yaml)). Its positions file is hand-written, so the demo runs with no Figma account at all, and it places the buttons where `touch-id-signin` measured them by hand.
+The GIF at the top of this README is the **Approve** path. Selecting **Cancel** takes the other one:
+
+[![The same Touch ID prompt waits over the terminal. A cursor selects Cancel, the prompt closes, and the terminal clears and reports that Touch ID was cancelled and no session was created.](docs/media/interactive-cancel.gif)](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id)
+
+[Click through it live](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id), or run `npm run dev` and open **Sign in to a CLI with Touch ID, from a design** ([`demos/figma-touch-id.yaml`](demos/figma-touch-id.yaml)). Its positions file is hand-written, so the demo runs with no Figma account at all, and it places the buttons where `touch-id-signin` measured them by hand.
 
 [Clickable images](docs/authoring.md#clickable-images) and [Click areas from layer names](docs/authoring.md#click-areas-from-layer-names) describe every field.
 
