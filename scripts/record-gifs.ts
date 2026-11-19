@@ -2,7 +2,7 @@
  * Record the README's demo GIFs from the built player.
  *
  *   npm run gifs                      (builds first, then writes docs/media/*.gif)
- *   npm run gifs -- non-interactive.gif   record only the named GIFs
+ *   npm run gifs -- interactive-cancel.gif   record only the named GIFs
  *
  * Each recording plays a walkthrough in a headless browser, clicks through it
  * with a visible cursor, and screenshots the walkthrough about 10 times a
@@ -35,8 +35,8 @@ interface Recording {
 
 const recordings: Recording[] = [
   {
-    // The interactive pattern: clickable areas over an image, and a step that
-    // waits. One recording per path, because the branch is the point.
+    // One recording per path through the one example walkthrough, because the
+    // branch is the point: the reader's choice changes what the terminal shows.
     file: "interactive-approve.gif",
     demo: "figma-touch-id",
     script: async (page, click) => {
@@ -57,17 +57,6 @@ const recordings: Recording[] = [
       await page.waitForTimeout(1200);
       // `exact` keeps this off the "If you cancel" button in the step list.
       await click(page.getByRole("button", { name: "Cancel", exact: true }));
-      await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
-      await page.waitForTimeout(1500);
-    },
-  },
-  {
-    // The non-interactive pattern: a screenshot the reader only looks at. It
-    // never waits, so the recording just plays from start to finish.
-    file: "non-interactive.gif",
-    demo: "static-screenshot",
-    script: async (page, click) => {
-      await click(page.getByRole("button", { name: "Play" }));
       await page.getByRole("button", { name: "Replay" }).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(1500);
     },

@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="340" height="372" viewBox="0 0 340 372" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif">
-  <!-- A copy of ../touch-id-prompt.svg, kept separate so that pointing this
-       walkthrough at a real Figma frame and running `npm run figma` overwrites
-       only this file. prompt.layers.json holds the click areas.
+  <!-- A generic Touch ID prompt for the fictional YourApp, drawn by hand so
+       the demo needs no Figma account. `npm run figma` overwrites this file,
+       and prompt.layers.json beside it, from a real frame.
 
-       A generic Touch ID prompt for the fictional YourApp. Layer ids match the
-       names to use in Figma, so touch-id-prompt.css also animates a Figma
-       export with the same layer names. This file is the state before the
-       reader touches the sensor; the stylesheet animates the rest. -->
+       Layer ids match the names to use in Figma, so prompt.css animates a
+       Figma export with the same layer names just as well. This file is the
+       state before the reader touches the sensor; the stylesheet animates
+       the rest. -->
   <rect id="dialog" x="0.5" y="0.5" width="339" height="371" rx="14" fill="#f6f6f7" stroke="#d2d2d7"/>
 
   <g id="app-icon">

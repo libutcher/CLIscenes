@@ -1,6 +1,6 @@
 # Authoring reference
 
-A walkthrough is one YAML (`.yaml`, `.yml`) or JSON file in `demos/`. The file name becomes the demo id, which is used in URLs. Use lowercase letters, numbers, and hyphens, for example `cli-signin.yaml`.
+A walkthrough is one YAML (`.yaml`, `.yml`) or JSON file in `demos/`. The file name becomes the demo id, which is used in URLs. Use lowercase letters, numbers, and hyphens, for example `sign-in.yaml`.
 
 Nothing in a source file is ever executed. All output is text you write.
 
@@ -42,60 +42,14 @@ Nothing in a source file is ever executed. All output is text you write.
 
 A terminal block needs at least one of `command`, `output`, or `clear: true`.
 
-## Overlay types
+## The overlay: `image`
 
-### `auth-prompt`
+An image is the only overlay. To show an app's prompt, window or settings, use a picture of the real thing — a screenshot, or a frame exported from your design — rather than a drawing of one. That way the reader sees what they will actually see, and the picture is updated by re-exporting it rather than by editing fields here.
 
-A desktop authentication request, drawn as a plain wireframe app window. Only `title`, `message`, and `actions` are required. The other fields add detail so the prompt looks like what the real app shows.
+There are two ways to use one:
 
-```yaml
-overlay:
-  type: auth-prompt
-  app: Example Desktop       # optional, default "Desktop app"; shown in the title bar
-  icon: assets/app-icon.svg  # optional; your app's icon (default: a generic icon)
-  requester: Terminal        # optional; shown as an icon beside the app
-  requesterIcon: assets/terminal.png  # optional (default: a terminal icon)
-  title: Allow CLI sign-in?
-  message: Terminal is running "example signin" and wants to access your account.
-  account:                   # optional
-    name: Demo Account
-    email: demo@example.com  # optional
-  details:                   # optional; what approving allows
-    - Run commands as you from this terminal
-    - Access ends after 30 minutes of inactivity
-  verification: biometric    # optional: none (default), biometric, or password
-  actions:
-    - label: Approve          # goes to the following step
-    - label: Deny
-      style: secondary        # primary (default) or secondary
-      next: denied            # step id to go to
-```
-
-Buttons are laid out the way desktop dialogs usually are: secondary actions on the left, the primary action on the right. `verification: biometric` shows a fingerprint cue, and `password` shows a filled-in, read-only password field. Neither asks the reader for anything real.
-
-Icons are local image files, relative to the source file, like `image` overlays. Square images work best. They're shown at 52 × 52 pixels with rounded corners, so SVG or a PNG of at least 104 × 104 pixels stays sharp.
-
-The prompt is a generic design. Use your own product's icon and colors (see [Theme](#theme)). When you model it on another product's prompt, copy its structure and wording, not its logo or brand colors.
-
-### `app-window`
-
-A simple mock application window with a title bar.
-
-```yaml
-overlay:
-  type: app-window
-  title: Example App — Settings   # title bar text
-  heading: Developer               # optional
-  body: |                          # optional; blank lines separate paragraphs
-    Turn on the integration to continue.
-  fields:                          # optional read-only settings
-    - label: Integration
-      value: "On"
-  actions:                         # optional
-    - label: Done
-  annotations:                     # optional notes inside the window
-    - Select Done to return to the walkthrough.
-```
+- **A static image.** No `actions`: the step shows it for `pause` seconds and moves on. Any image file works, and nothing else is needed.
+- **An image the reader clicks.** With `actions`, each button in the image gets a clickable area, placed by a measured percentage or by the name of its layer in a Figma design.
 
 ### `image`
 
@@ -111,9 +65,9 @@ overlay:
 
 Write `alt` text that describes what the reader needs from the image. Use `alt: ""` only for purely decorative images.
 
-An image with no `actions` is simply shown: the step holds it for `pause` seconds and moves on, and the walkthrough never waits. `demos/static-screenshot.yaml` is a one-path walkthrough built that way. Add `actions` when the reader should click something in the image, as described in [Clickable images](#clickable-images).
+An image with no `actions` is simply shown: the step holds it for `pause` seconds and moves on, and the walkthrough never waits. A walkthrough built only from images like that has one path from start to finish, needs no layer names, no positions file, and no Figma link, and works with any image file. Add `actions` when the reader should click something in the image, as described in [Clickable images](#clickable-images).
 
-Image rules, which also apply to `icon` and `requesterIcon`:
+Image rules:
 
 - **Inside the walkthrough's folder:** the file must be in the same folder as the YAML file, or a folder below it, such as `demos/assets/`. Paths with `..`, absolute paths, and symlinks that point outside the folder are rejected. This keeps a walkthrough from publishing other files from your computer.
 - **Images only:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.avif`, or `.svg`.
@@ -121,9 +75,9 @@ Image rules, which also apply to `icon` and `requesterIcon`:
 
 #### Show a dialog as an image
 
-An image can stand in for a real app's prompt, such as a Touch ID request. It can close by itself after a set time, or wait for the reader to click a button in the image. `demos/touch-id-signin.yaml` and `demos/figma-touch-id.yaml` both do this: the reader touches the sensor, then the approval animation plays and closes. They differ only in how each click area is placed.
+An image can stand in for a real app's prompt, such as a Touch ID request. It can close by itself after a set time, or wait for the reader to click a button in the image. `demos/figma-touch-id.yaml` does this: the reader touches the sensor, then the approval animation plays and closes.
 
-[![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal with an account selector, and the sensor and Cancel button are outlined. A cursor selects the sensor, the fingerprint is read and shows Approved, then the prompt closes and the terminal shows the sign-in succeed and a list of projects.](media/interactive-approve.gif)](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id)
+[![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal with an account selector, and the sensor and Cancel button are outlined. A cursor selects the sensor, the fingerprint is read and shows Approved, then the prompt closes and the terminal shows the sign-in succeed and a list of projects.](media/interactive-approve.gif)](https://libutcher.github.io/CLIscenes/embed-example.html)
 
 An image that closes by itself stays open for the step's `pause`:
 
@@ -132,8 +86,8 @@ An image that closes by itself stays open for the step's `pause`:
   title: Confirm with Touch ID
   overlay:
     type: image
-    src: assets/touch-id-prompt.svg
-    animation: assets/touch-id-prompt.css   # optional; see below
+    src: assets/figma-touch-id/prompt.svg
+    animation: assets/figma-touch-id/prompt.css   # optional; see below
     frame: false                            # no card around the image
     alt: YourApp asks to confirm the sign-in, and Touch ID approves it.
   pause: 1.8                                # seconds the prompt stays open
@@ -153,18 +107,18 @@ An image that closes by itself stays open for the step's `pause`:
 - **Keep the timing short.** The image closes at the end of the step, so make `pause` a little longer than the animation.
 - **Reduced motion.** Put movement inside `@media (prefers-reduced-motion: no-preference)`, and leave simple fades outside it. CLIscenes builds a second copy for readers who ask for reduced motion. In that copy, every `prefers-reduced-motion` query is answered as `reduce`. The player picks the copy itself, because browsers don't reliably pass the reader's setting into images.
 
-`demos/assets/touch-id-prompt.css` is a commented example.
+`demos/assets/figma-touch-id/prompt.css` is a commented example.
 
 #### Clickable images
 
-To make an image wait for the reader, add `actions` and set `waitForAction: true` on the step. Each action is a real button, placed over the button the image shows. It works like the buttons on an `auth-prompt`: `next` chooses the step to go to, so you can branch.
+To make an image wait for the reader, add `actions` and set `waitForAction: true` on the step. Each action is a real button, placed over the button the image shows: `next` chooses the step to go to, so you can branch.
 
 ```yaml
 - id: touch-id
   title: Touch the sensor to approve
   overlay:
     type: image
-    src: assets/touch-id-prompt.svg
+    src: assets/figma-touch-id/prompt.svg
     frame: false
     alt: YourApp asks to confirm the sign-in, using Touch ID or a password.
     actions:
@@ -182,7 +136,7 @@ To make an image wait for the reader, add `actions` and set `waitForAction: true
 - **Label every action** with what it does, such as "Approve with Touch ID". The label isn't shown, because the image shows the button, but screen readers announce it.
 - While the step waits, each area is outlined so readers can see where to click.
 
-To play an animation after the click, show the image again with `animation` in the following step, as `touch-id-signin.yaml` does.
+To play an animation after the click, show the image again with `animation` in the following step, as `figma-touch-id.yaml` does.
 
 If an area ends up in the wrong place after a design change, the outline shows it. Areas placed by layer name stay put as long as the positions file is kept up to date.
 
@@ -235,8 +189,8 @@ Add a `figma` link to keep an image in step with a design in Figma. In Figma, se
 ```yaml
 overlay:
   type: image
-  src: assets/touch-id-prompt.svg
-  animation: assets/touch-id-prompt.css
+  src: assets/figma-touch-id/prompt.svg
+  animation: assets/figma-touch-id/prompt.css
   frame: false
   figma: https://www.figma.com/design/AbC123/Prompts?node-id=12-34
   alt: …
@@ -262,7 +216,7 @@ npm run figma -- --dry-run # list the links without downloading
 
 #### Writing a positions file by hand
 
-Use this when you can't open the design in Figma, or the image didn't come from Figma at all. `demos/figma-touch-id.yaml` is a working example: its positions file is written by hand, and it produces the same areas as the measured ones in `touch-id-signin.yaml`.
+Use this when you can't open the design in Figma, or the image didn't come from Figma at all. `demos/figma-touch-id.yaml` is a working example: it ships with no `figma` link, its positions file is written by hand, and it builds with no Figma account and no token.
 
 1. Find the image's size at 1×. For an SVG, that's the `width` and `height` on the root element.
 2. For each button, find its box in those same pixels. In an SVG, a button is usually one shape: `<rect x="240.5" y="330.5" width="79" height="29">` is the box. For a PNG, measure it in any image editor.
@@ -276,7 +230,7 @@ The file is the same shape `cliscenes figma` writes, so adding a `figma` link la
 To test the Figma steps against a real design, make a test file from the example prompt:
 
 1. In Figma, create a design file in an account you can use for testing.
-2. Drag `demos/assets/touch-id-prompt.svg` into the file. Figma turns it into a frame, and the SVG's ids become the layer names.
+2. Drag `demos/assets/figma-touch-id/prompt.svg` into the file. Figma turns it into a frame, and the SVG's ids become the layer names.
 3. In the **Layers** panel, check that the sensor group and the **Cancel** button group are named `fingerprint` and `cancel`. To keep the animation, also check `ridges-active`, `approved`, `status`, `status-approved`, and `fingerprint-ring`.
 4. Select the frame, choose **Copy link to selection**, and create a token as described above.
 5. Copy `demos/figma-touch-id.yaml` to `demos/figma-test.yaml`. In the copy, change `title` to `Figma test`, change each `src` to `assets/figma-test/prompt.svg`, and add your link as `figma:` on both image overlays.
@@ -286,19 +240,9 @@ To test the Figma steps against a real design, make a test file from the example
 
 When you're done, delete `demos/figma-test.yaml` and `demos/assets/figma-test/`, or keep them out of commits.
 
-### `annotation`
-
-A short callout.
-
-```yaml
-overlay:
-  type: annotation
-  text: The CLI waits until you approve the request.
-```
-
 ## Actions and transitions
 
-Actions appear on `auth-prompt` and `app-window` overlays. Clicking an action:
+Actions are the clickable areas on an `image` overlay. Clicking one:
 
 1. marks the step's gate as answered (if the step has `waitForAction`), and
 2. jumps to `next` (or the following step) and plays from there.
@@ -308,7 +252,13 @@ A typical branch:
 ```yaml
 steps:
   - id: approve
-    overlay: { type: auth-prompt, title: Allow?, message: ..., actions: [{ label: Approve }, { label: Deny, next: denied }] }
+    overlay:
+      type: image
+      src: assets/prompt.svg
+      alt: The app asks you to allow the sign-in.
+      actions:
+        - { label: Approve, layer: approve }
+        - { label: Deny, layer: deny, next: denied }
     waitForAction: true
   - id: success
     terminal: { output: Signed in. }
@@ -349,8 +299,8 @@ Everything else (surfaces, text, borders) follows the reader's light or dark set
 Run `npm run validate` to check every file without writing anything. Errors name the file and the exact field:
 
 ```
-demos/cli-signin.yaml
-  - steps[1].overlay.actions[0].next: Unknown step "sucess". Known steps: signin, approve, success, list-projects, denied.
+demos/figma-touch-id.yaml
+  - steps[1].overlay.actions[1].next: Unknown step "canceled". Known steps: signin, touch-id, approved, signed-in, list-projects, cancelled.
 ```
 
 During `npm run dev`, the same errors appear in the terminal and in the browser's error overlay.

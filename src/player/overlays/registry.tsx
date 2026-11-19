@@ -7,18 +7,12 @@
 import type { ComponentType } from "react";
 import type { Overlay, OverlayType } from "../../core/schema.ts";
 import type { OverlayProps } from "./types.ts";
-import { AuthPrompt } from "./AuthPrompt.tsx";
-import { AppWindow } from "./AppWindow.tsx";
 import { ImageOverlay } from "./ImageOverlay.tsx";
-import { Annotation } from "./Annotation.tsx";
 
 type Registry = { [K in OverlayType]: ComponentType<OverlayProps<Extract<Overlay, { type: K }>>> };
 
 export const overlayComponents: Registry = {
-  "auth-prompt": AuthPrompt,
-  "app-window": AppWindow,
   image: ImageOverlay,
-  annotation: Annotation,
 };
 
 export function OverlayView(props: OverlayProps) {

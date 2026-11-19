@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 export interface CLISceneProps {
-  /** URL of a walkthrough folder made by `cliscenes build`, such as "/walkthroughs/cli-signin/", or of its demo.json. */
+  /** URL of a walkthrough folder made by `cliscenes build`, such as "/walkthroughs/figma-touch-id/", or of its demo.json. */
   src: string;
   /** Also show the walkthrough's title, description, and prerequisites. Default: hidden, since the page usually has its own. */
   header?: boolean;

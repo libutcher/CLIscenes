@@ -38,7 +38,7 @@ describe("guided playback", () => {
     expect(terminal.playing).toBe(false);
     expect(terminal.screen()).toContain("Waiting for approval...");
     expect(terminal.screen()).not.toContain("Signed in.");
-    expect(overlayTypes()).toEqual(["auth-prompt"]);
+    expect(overlayTypes()).toEqual(["image"]);
   });
 
   it("ignores Play while waiting for an action", async () => {
@@ -107,7 +107,7 @@ describe("guided playback", () => {
       orchestrator.sync();
     }
     expect(state().status).toBe("playing");
-    expect(overlayTypes()).toEqual(["auth-prompt"]);
+    expect(overlayTypes()).toEqual(["image"]);
     await orchestrator.completeAction("approve");
     run(3);
     expect(state().status).toBe("playing");
@@ -127,10 +127,12 @@ steps:
         Explaining the setting...
         More explanation.
     overlay:
-      type: auth-prompt
-      title: Allow?
-      message: M
-      actions: [{ label: OK }, { label: Skip, next: last }]
+      type: image
+      src: p.svg
+      alt: P
+      actions:
+        - { label: OK, area: { x: 10%, y: 70%, width: 30%, height: 12% } }
+        - { label: Skip, area: { x: 55%, y: 70%, width: 30%, height: 12% }, next: last }
     waitForAction: true
   - id: after
     title: After
@@ -190,7 +192,7 @@ describe("pause and resume", () => {
       orchestrator.sync();
     }
     await orchestrator.pause();
-    expect(overlayTypes()).toEqual(["auth-prompt"]);
+    expect(overlayTypes()).toEqual(["image"]);
   });
 });
 
@@ -204,7 +206,7 @@ describe("navigation and gates", () => {
 
     await orchestrator.previous();
     expect(state()).toMatchObject({ stepIndex: 1, gates: { approve: "pending" } });
-    expect(overlayTypes()).toEqual(["auth-prompt"]);
+    expect(overlayTypes()).toEqual(["image"]);
     run(30);
     expect(state().status).toBe("awaiting-action");
     expect(terminal.screen()).not.toContain("Signed in.");
@@ -264,6 +266,64 @@ describe("navigation and gates", () => {
     await orchestrator.goToStep(4);
     expect(overlayTypes()).toEqual([]);
     await orchestrator.goToStep(1);
-    expect(overlayTypes()).toEqual(["auth-prompt"]);
+    expect(overlayTypes()).toEqual(["image"]);
+  });
+});
+
+describe("a branch that clears the screen", () => {
+  /** The main path ends with output the branch must not inherit. */
+  const YAML = `
+title: Branch
+steps:
+  - id: ask
+    title: Ask
+    terminal:
+      command: demo signin
+    overlay:
+      type: image
+      src: p.svg
+      alt: P
+      actions:
+        - label: Approve
+          area: { x: 10%, y: 70%, width: 30%, height: 12% }
+        - label: Deny
+          area: { x: 55%, y: 70%, width: 30%, height: 12% }
+          next: denied
+    waitForAction: true
+  - id: main
+    title: Main path
+    terminal:
+      output: Signed in, and here is your list.
+    finish: true
+  - id: denied
+    title: Denied
+    terminal:
+      clear: true
+      output: Request denied.
+`;
+
+  it("arrives on a blank screen, with no flash of the main path's output", async () => {
+    const compiled = compileYaml(YAML);
+    const term = new FakeTerminal(compiled.cast);
+    const orch = new Orchestrator(compiled.manifest, term);
+    const tick = (seconds: number) => {
+      for (let t = 0; t < seconds; t += 0.05) {
+        term.advance(0.05);
+        orch.sync();
+      }
+    };
+
+    await orch.play();
+    tick(30);
+    expect(orch.getState().status).toBe("awaiting-action");
+
+    await orch.completeAction("ask", "denied");
+    // The jump seeks past the clear, so the main path's output is already gone
+    // when the branch appears, rather than showing for a moment first.
+    expect(term.screen()).toBe("");
+
+    tick(5);
+    expect(term.screen()).toContain("Request denied.");
+    expect(term.screen()).not.toContain("here is your list");
   });
 });

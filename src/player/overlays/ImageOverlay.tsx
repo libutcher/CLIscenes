@@ -4,11 +4,13 @@ import type { Overlay } from "../../core/schema.ts";
 type ImageOverlayData = Extract<Overlay, { type: "image" }>;
 
 /**
- * A local screenshot or illustration of an application or browser state.
+ * A local screenshot or illustration of an application or browser state. It
+ * is the only overlay: an app's window, prompt or settings are shown as a
+ * picture of the real thing rather than a drawing of one.
  *
  * With `frame: false` the image is shown without a card, for an image that
- * is a whole dialog. It looks like the real thing, so it carries the same
- * "Simulated" label as the app windows.
+ * is a whole dialog. It looks like the real thing, so it carries a
+ * "Simulated" label.
  *
  * With `actions`, each action is a real button laid over the button the image
  * shows, so the reader clicks the pictured button. While the step waits for
@@ -47,7 +49,7 @@ export function ImageOverlay({ overlay, baseUrl, waiting, onAction }: OverlayPro
       {(overlay.caption || bare) && (
         <figcaption>
           {overlay.caption}
-          {bare && <span className="cs-window__simulated">Simulated</span>}
+          {bare && <span className="cs-image__simulated">Simulated</span>}
         </figcaption>
       )}
     </figure>

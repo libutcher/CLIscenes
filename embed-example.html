@@ -5,12 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Embedding example – CLIscenes</title>
     <style>
+      /* The player follows the reader's light or dark setting, so this page does too. */
+      :root {
+        color-scheme: light dark;
+        --page: #ffffff;
+        --text: #1d2330;
+        --code-bg: #f1f3f6;
+        --edge: #d6dae0;
+        --link: #0a6c5f;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #14171c;
+          --text: #e6e8ec;
+          --code-bg: #1e2228;
+          --edge: #333942;
+          --link: #5fd3c0;
+        }
+      }
       body {
         max-width: 860px;
         margin: 0 auto;
         padding: 32px 16px 64px;
         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
-        color: #1d2330;
+        background: var(--page);
+        color: var(--text);
+      }
+      a {
+        color: var(--link);
       }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -19,37 +41,38 @@
       pre {
         padding: 12px 14px;
         border-radius: 8px;
-        background: #f1f3f6;
+        background: var(--code-bg);
         overflow-x: auto;
       }
       iframe {
         display: block;
         width: 100%;
         height: 560px;
-        border: 1px solid #d6dae0;
+        border: 1px solid var(--edge);
         border-radius: 12px;
       }
     </style>
   </head>
   <body>
     <p><a href="./">← Back to the player</a></p>
-    <h1>Sign in to a CLI</h1>
+    <h1>Sign in to a CLI with Touch ID</h1>
     <p>
       This page stands in for a documentation page. The walkthrough below is the static player loaded in an
-      <code>iframe</code>. Run <code>your-cli signin</code>, then approve the request in the desktop app.
+      <code>iframe</code>, so the buttons really work: run <code>your-cli signin</code>, then touch the sensor in
+      YourApp&rsquo;s prompt to approve it &mdash; or select <strong>Cancel</strong> to take the other path.
     </p>
 
     <iframe
-      src="./?demo=cli-signin&amp;embed=1"
-      title="Interactive walkthrough: sign in to a CLI with a desktop app"
+      src="./?demo=figma-touch-id&amp;embed=1"
+      title="Interactive walkthrough: sign in to a CLI with Touch ID"
       loading="lazy"
       allow="clipboard-write"
     ></iframe>
 
     <h2>Embed code</h2>
     <pre><code>&lt;iframe
-  src="https://docs.example.com/cliscenes/?demo=cli-signin&amp;embed=1"
-  title="Interactive walkthrough: sign in to a CLI with a desktop app"
+  src="https://docs.example.com/cliscenes/?demo=figma-touch-id&amp;embed=1"
+  title="Interactive walkthrough: sign in to a CLI with Touch ID"
   loading="lazy"
   allow="clipboard-write"
   style="width: 100%; height: 560px; border: 0;"&gt;&lt;/iframe&gt;</code></pre>

@@ -3,8 +3,8 @@
  *
  *   import CLIscene from "cliscenes/docusaurus";
  *
- *   <CLIscene walkthrough="cli-signin" />
- *   <CLIscene walkthrough="cli-signin" header steps />   (also show the title and step list)
+ *   <CLIscene walkthrough="figma-touch-id" />
+ *   <CLIscene walkthrough="figma-touch-id" header steps />   (also show the title and step list)
  *
  * Looks for walkthroughs in static/walkthroughs/ (made with
  * `cliscenes build walkthroughs --out static/walkthroughs`) and applies the

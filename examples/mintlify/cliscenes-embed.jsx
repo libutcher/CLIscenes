@@ -6,7 +6,7 @@
  *   import { CLIscenesEmbed } from "/snippets/cliscenes-embed.jsx";
  *
  *   <CLIscenesEmbed
- *     src="https://docs.example.com/cliscenes/?demo=cli-signin"
+ *     src="https://docs.example.com/cliscenes/?demo=figma-touch-id"
  *     title="Interactive walkthrough: sign in to the CLI"
  *   />
  *

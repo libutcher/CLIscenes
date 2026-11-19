@@ -2,15 +2,15 @@
 
 CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows that move between a terminal and another app, such as a CLI sign-in that you approve in a desktop app.
 
-The terminal shows commands and output as real text that readers can select and copy. Approval prompts and screenshots appear at the right moment, with short notes that explain each step. When a step needs the reader to act, the walkthrough waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. Your own screenshots and design exports — an approval prompt, a settings pane — appear beside it at the right moment. When a step needs the reader to act, the walkthrough waits until they do.
 
 > **Status:** early release (v0). The format and APIs may change.
 
 In this example, YourApp's Touch ID prompt appears over the terminal. The walkthrough waits until the reader touches the sensor, and takes a different path if they select **Cancel**.
 
-[![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal, with the sensor and the Cancel button outlined. A cursor touches the sensor, the fingerprint is read and the prompt shows Approved, then it closes and the terminal shows the sign-in succeed and a list of projects.](docs/media/interactive-approve.gif)](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id)
+[![A terminal runs "your-cli signin" and waits. A YourApp Touch ID prompt appears over the terminal, with the sensor and the Cancel button outlined. A cursor touches the sensor, the fingerprint is read and the prompt shows Approved, then it closes and the terminal shows the sign-in succeed and a list of projects.](docs/media/interactive-approve.gif)](https://libutcher.github.io/CLIscenes/embed-example.html)
 
-**[Try the walkthroughs yourself](https://libutcher.github.io/CLIscenes/)** — GitHub can't run the player inside a README, so each recording below links to the live version, where the buttons really work.
+**[Try it yourself](https://libutcher.github.io/CLIscenes/embed-example.html)** — GitHub can't run the player inside a README, so the recordings here link to a live page with the walkthrough embedded in it, where the buttons really work.
 
 ## The problem
 
@@ -27,11 +27,11 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 ## Features
 
 - **Timeline.** The terminal and the other apps stay in step, so the reader can see what happens at each point.
-- **Gates.** The walkthrough stops where the real CLI waits. The reader selects **Approve** or **Deny** to continue.
+- **Gates.** The walkthrough stops where the real CLI waits, until the reader approves the request or cancels it.
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes works out the timing. Error messages name the exact field to fix.
 - **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Place each button by measuring it, or by naming its layer in the design so that a design change moves the button and its click area together. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
-- **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
+- **Clearly practice.** Each image shown as a dialog carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
@@ -53,7 +53,7 @@ npm install
 npm run dev
 ```
 
-Open the URL that `npm run dev` prints, usually http://localhost:5173. You should see the example walkthroughs. The page updates each time you save a file in `demos/`.
+Open the URL that `npm run dev` prints, usually http://localhost:5173. You should see the example walkthrough. The page updates each time you save a file in `demos/`.
 
 You can use these commands from the repository folder:
 
@@ -69,41 +69,42 @@ You can use these commands from the repository folder:
 | `npm run test:e2e` | Runs the browser tests (first run `npx playwright install chromium`) |
 | `npm run typecheck` | Checks the TypeScript code |
 | `npm run check` | Runs the type check, unit tests, and build |
-| `npm run gifs` | Records the demo GIFs in `docs/media/` (add file names, such as `-- non-interactive.gif`, to record only those) |
+| `npm run gifs` | Records the demo GIFs in `docs/media/` (add file names, such as `-- interactive-cancel.gif`, to record only those) |
 | `npm run build:lib` | Builds the React and Docusaurus components and the `cliscenes` command into `dist-lib/` |
 
 To create or change a walkthrough, edit its YAML file in `demos/`. An AI assistant can write the file for you (see [AI assistants](#ai-assistants)).
 
 ## Example
 
-This example is a shortened version of `demos/cli-signin.yaml`. The `your-cli` command and the YourApp desktop app are fictional.
+This example is a shortened version of `demos/figma-touch-id.yaml`. The `your-cli` command and the YourApp desktop app are fictional.
 
 ```yaml
-title: Sign in to a CLI with a desktop app
+title: Sign in to a CLI with Touch ID
 
 steps:
   - id: signin
     title: Run a command
     terminal:
       command: your-cli signin
-      output: Waiting for approval in YourApp...
+      output: Waiting for Touch ID in YourApp...
 
-  - id: approve
-    title: Approve the sign-in request
+  - id: touch-id
+    title: Touch the sensor to approve
     overlay:
-      type: auth-prompt
-      app: YourApp
-      title: Allow CLI sign-in?
-      message: Terminal is running "your-cli signin" and wants to access your account.
+      type: image
+      src: assets/figma-touch-id/prompt.svg
+      frame: false             # it's already a dialog, so no card around it
+      alt: YourApp asks to confirm the sign-in, using Touch ID or a password.
       actions:
-        - label: Approve
-          next: success
-        - label: Deny
+        - label: Approve with Touch ID
+          layer: fingerprint   # the layer's name in the design
+        - label: Cancel
           style: secondary
-          next: denied
+          layer: cancel
+          next: cancelled
     waitForAction: true        # the walkthrough waits here for the reader
 
-  - id: success
+  - id: signed-in
     title: Sign-in succeeds
     terminal:
       output: Signed in as demo@example.com
@@ -117,40 +118,24 @@ steps:
         prj_001   Website
     finish: true               # the main path ends here
 
-  - id: denied
-    title: If you deny the request
+  - id: cancelled
+    title: If you cancel
     terminal:
-      clear: true
-      output: "Error: sign-in request was denied in the desktop app."
+      clear: true              # a branch starts on a clean screen
+      output: "Error: Touch ID was cancelled in YourApp."
 ```
 
 To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes the walkthrough's id, as in `?demo=<file-name>`.
 
-`demos/` has four examples:
-
-- **`cli-signin`:** an interactive prompt that waits for the reader to select **Approve** or **Deny**.
-- **`touch-id-signin`:** a Touch ID prompt shown as an image, with each click area measured as a percentage. The reader touches the sensor to approve, which plays an animation, or selects **Cancel**. [Show a dialog as an image](docs/authoring.md#show-a-dialog-as-an-image) explains how it's built.
-- **`figma-touch-id`:** the same flow, with each button placed by the name of its layer in the design. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
-- **`static-screenshot`:** a single path with a screenshot the reader only looks at, and no waiting.
+`demos/` has one example, **`figma-touch-id`**: a Touch ID prompt shown as an image, with each button placed by the name of its layer in the design. The reader touches the sensor to approve, which plays an animation, or selects **Cancel** to take the other path. See [Images](#images-a-screenshot-to-read-or-a-design-to-click) for how it's built, and for the simpler case of an image the reader only looks at.
 
 [docs/authoring.md](docs/authoring.md) describes the full format.
 
-## Overlay types
-
-An overlay shows an app or note outside the terminal.
-
-| Type | Shows | Can wait for the reader |
-| --- | --- | --- |
-| `auth-prompt` | An app's request for approval | Yes |
-| `app-window` | A simple app window with text and buttons | Yes |
-| `image` | A screenshot, illustration, or an app's real prompt, optionally animated and kept in step with a design | Yes, through clickable areas over its buttons |
-| `annotation` | A short note | No |
-
-[docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add a type.
-
 ## Images: a screenshot to read, or a design to click
 
-An `image` overlay does two jobs, and the difference is whether it has `actions`.
+An image is the only kind of overlay. To show your app's prompt, window or settings, you give CLIscenes a picture of the real thing — a screenshot, or a frame exported from your design — rather than describing a dialog for it to draw. The reader sees what they will actually see, and you update it by exporting it again.
+
+An `image` does two jobs, and the difference is whether it has `actions`. [docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add another overlay type.
 
 ### A static screenshot, on one path
 
@@ -161,15 +146,13 @@ With no `actions`, the image is shown for the step's `pause` and the walkthrough
   title: Turn on CLI integration
   overlay:
     type: image
-    src: assets/cli-settings.svg
+    src: assets/settings.svg
     caption: YourApp > Settings > Developer
     alt: YourApp settings, Developer section. CLI integration is turned on.
   pause: 2.5                       # seconds on screen, then the next step
 ```
 
-[![A terminal runs "your-cli status" and reports that CLI integration is off. A YourApp settings window appears beside the terminal, showing CLI integration turned on, then closes by itself. The terminal runs the command again and reports that CLI integration is on.](docs/media/non-interactive.gif)](https://libutcher.github.io/CLIscenes/?demo=static-screenshot)
-
-That image needs nothing else: no layer names, no positions file, no Figma link, and no clicks from the reader. [Play it live](https://libutcher.github.io/CLIscenes/?demo=static-screenshot), or run `npm run dev` and open **Turn on CLI access in the desktop app** ([`demos/static-screenshot.yaml`](demos/static-screenshot.yaml)).
+That image needs nothing else: no layer names, no positions file, no Figma link, and no clicks from the reader. Any image file in `demos/assets/` works, whoever made it and wherever it came from.
 
 ### A design the reader clicks, with more than one path
 
@@ -208,9 +191,9 @@ A Figma personal access token (scope **File content: read**) in `FIGMA_TOKEN` is
 
 The GIF at the top of this README is the **Approve** path. Selecting **Cancel** takes the other one:
 
-[![The same Touch ID prompt waits over the terminal. A cursor selects Cancel, the prompt closes, and the terminal clears and reports that Touch ID was cancelled and no session was created.](docs/media/interactive-cancel.gif)](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id)
+[![The same Touch ID prompt waits over the terminal. A cursor selects Cancel, the prompt closes, and the terminal clears and reports that Touch ID was cancelled and no session was created.](docs/media/interactive-cancel.gif)](https://libutcher.github.io/CLIscenes/embed-example.html)
 
-[Click through it live](https://libutcher.github.io/CLIscenes/?demo=figma-touch-id), or run `npm run dev` and open **Sign in to a CLI with Touch ID, from a design** ([`demos/figma-touch-id.yaml`](demos/figma-touch-id.yaml)). Its positions file is hand-written, so the demo runs with no Figma account at all, and it places the buttons where `touch-id-signin` measured them by hand.
+[Click through it live](https://libutcher.github.io/CLIscenes/embed-example.html), or run `npm run dev` and open **Sign in to a CLI with Touch ID, from a design** ([`demos/figma-touch-id.yaml`](demos/figma-touch-id.yaml)). Its positions file is hand-written, so the example ships with no Figma link and builds with no Figma account at all.
 
 [Clickable images](docs/authoring.md#clickable-images) and [Click areas from layer names](docs/authoring.md#click-areas-from-layer-names) describe every field.
 
@@ -218,10 +201,9 @@ The GIF at the top of this README is the **Approve** path. Selecting **Cancel** 
 
 You can match a walkthrough to your product without code changes:
 
-- **Icon:** set `icon` on an `auth-prompt` to your app's icon.
-- **Colors:** set `theme.accent` to your brand color. CLIscenes picks a readable text color for you.
-- **Text:** set the app name, title, message, account, and button labels.
-- **Your own design:** show your app's real prompt as an image, with an optional CSS animation, such as a Touch ID sensor reading a fingerprint. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
+- **Your own design:** the prompt the reader sees is your image, so it already looks like your product. Add an optional CSS animation, such as a Touch ID sensor reading a fingerprint. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
+- **Colors:** set `theme.accent` to your brand color, for the player's own buttons and progress. CLIscenes picks a readable text color for you.
+- **Text:** set the walkthrough's title, each step's title, the commands, and the label on each clickable area.
 
 For example, to use your brand color:
 
@@ -257,27 +239,27 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 
 ```html
 <iframe
-  src="https://docs.example.com/cliscenes/?demo=cli-signin&embed=1"
-  title="Interactive walkthrough: sign in to a CLI with a desktop app"
+  src="https://docs.example.com/cliscenes/?demo=figma-touch-id&embed=1"
+  title="Interactive walkthrough: sign in to a CLI with Touch ID"
   loading="lazy"
   allow="clipboard-write"
   style="width: 100%; height: 560px; border: 0;"
 ></iframe>
 ```
 
-- **Docusaurus:** add `<CLIscene walkthrough="cli-signin" />` to any MDX page. The native component needs no iframe and follows the site's light or dark mode. [docs/embedding.md](docs/embedding.md#docusaurus) shows the setup.
+- **Docusaurus:** add `<CLIscene walkthrough="figma-touch-id" />` to any MDX page. The native component needs no iframe and follows the site's light or dark mode. [docs/embedding.md](docs/embedding.md#docusaurus) shows the setup.
 - **Minimal by default:** embeds show the terminal, the app UI, and the controls. Your page supplies the title and introduction. Add `header` or `steps` (or `&header=1`, `&steps=1` on an iframe) to show more.
 - **Mintlify:** copy the ready-made component from [`examples/mintlify/`](examples/mintlify/). The component matches the site's light or dark mode and sets the iframe height.
 - **Other React sites:** import `CLIscene` from `cliscenes/react`.
 - **Light or dark mode:** add `&theme=light` or `&theme=dark` to the URL.
-- **Example page:** open `dist/embed-example.html` to see a live embed.
+- **Example page:** [embed-example.html](https://libutcher.github.io/CLIscenes/embed-example.html) is a documentation page with the walkthrough embedded in it. It is built from [`embed-example.html`](embed-example.html) into `dist/`.
 
 [docs/embedding.md](docs/embedding.md) covers other docs platforms.
 
 ## Accessibility
 
 - **Controls:** each control is a button with a clear name and a visible focus ring.
-- **Prompts:** each prompt is a labeled dialog. The terminal stays visible behind it.
+- **Prompts:** each image has alt text, and each clickable area is a button with its own label. The terminal stays visible behind the image.
 - **Focus:** when a prompt appears, focus moves to its main button, but only if the reader is already using the walkthrough. This keeps the page from jumping while someone scrolls past it.
 - **Announcements:** screen readers announce each new step and what the walkthrough waits for.
 - **Images:** each image needs alt text.

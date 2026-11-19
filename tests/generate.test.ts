@@ -28,7 +28,7 @@ describe("generator", () => {
   it("validates every walkthrough in demos/, including the built-in examples", async () => {
     const demos = await generateAll({ sourceDir: repoDemos, outDir: "unused", check: true });
     expect(demos.map((d) => d.id)).toEqual(await repoDemoIds());
-    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["cli-signin"]));
+    expect(demos.map((d) => d.id)).toEqual(expect.arrayContaining(["figma-touch-id"]));
   });
 
   it("writes a cast, manifest, assets, and index for each demo", async () => {
@@ -38,19 +38,19 @@ describe("generator", () => {
     const index: DemoIndexEntry[] = JSON.parse(await readFile(path.join(out, "demos/index.json"), "utf8"));
     expect(index.map((d) => d.id)).toEqual(await repoDemoIds());
 
-    const dir = path.join(out, "demos/cli-signin");
+    const dir = path.join(out, "demos/figma-touch-id");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
     const cast = parseCast(await readFile(path.join(dir, "demo.cast"), "utf8"));
     expect(manifest.cast).toBe("demo.cast");
     expect(cast.duration).toBeCloseTo(manifest.duration, 2);
 
-    const prompt = manifest.steps.flatMap((s) => s.overlays).find((o) => o.type === "auth-prompt");
-    expect(prompt).toMatchObject({ icon: "assets/yourapp-icon.svg" });
-    await expect(readFile(path.join(dir, "assets/yourapp-icon.svg"))).resolves.toBeTruthy();
+    const image = manifest.steps.flatMap((s) => s.overlays).find((o) => o.type === "image");
+    expect(image).toMatchObject({ src: "assets/figma-touch-id/prompt.svg" });
+    await expect(readFile(path.join(dir, "assets/figma-touch-id/prompt.svg"))).resolves.toBeTruthy();
 
   });
 
-  it("copies auth-prompt icons and keeps same-named images in different folders apart", async () => {
+  it("keeps same-named images in different folders apart", async () => {
     const src = await tempDir();
     const out = await tempDir();
     await mkdir(path.join(src, "assets/a"), { recursive: true });
@@ -64,17 +64,18 @@ describe("generator", () => {
         "steps:",
         "  - id: a",
         "    title: A",
-        "    overlay: { type: auth-prompt, title: T, message: M, icon: assets/a/logo.svg, requesterIcon: assets/b/logo.svg, actions: [{ label: OK }] }",
+        "    overlay: { type: image, src: assets/a/logo.svg, alt: Logo A }",
         "  - id: b",
         "    title: B",
-        "    overlay: { type: image, src: assets/a/logo.svg, alt: Logo }",
+        "    overlay: { type: image, src: assets/b/logo.svg, alt: Logo B }",
       ].join("\n"),
     );
 
     await generateAll({ sourceDir: src, outDir: out });
     const dir = path.join(out, "demos/icons");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
-    expect(manifest.steps[0]!.overlays[0]).toMatchObject({ icon: "assets/a/logo.svg", requesterIcon: "assets/b/logo.svg" });
+    expect(manifest.steps[0]!.overlays[0]).toMatchObject({ src: "assets/a/logo.svg" });
+    expect(manifest.steps[1]!.overlays[0]).toMatchObject({ src: "assets/b/logo.svg" });
     expect(await readFile(path.join(dir, "assets/a/logo.svg"), "utf8")).toBe("<svg>a</svg>");
     expect(await readFile(path.join(dir, "assets/b/logo.svg"), "utf8")).toBe("<svg>b</svg>");
   });
@@ -87,20 +88,22 @@ describe("generator", () => {
     await writeFile(path.join(src, "assets/logo.svg"), "<svg>in assets</svg>");
     await writeFile(
       path.join(src, "logos.yaml"),
-      "title: Logos\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, icon: logo.svg, requesterIcon: assets/logo.svg, actions: [{ label: OK }] }\n",
+      "title: Logos\nsteps:\n" +
+        "  - id: a\n    title: A\n    overlay: { type: image, src: logo.svg, alt: Beside the source }\n" +
+        "  - id: b\n    title: B\n    overlay: { type: image, src: assets/logo.svg, alt: In assets }\n",
     );
     await generateAll({ sourceDir: src, outDir: out });
     const dir = path.join(out, "demos/logos");
     const manifest: CompiledDemo = JSON.parse(await readFile(path.join(dir, "demo.json"), "utf8"));
-    const prompt = manifest.steps[0]!.overlays[0] as { icon: string; requesterIcon: string };
-    expect(prompt.icon).not.toBe(prompt.requesterIcon);
-    expect(await readFile(path.join(dir, prompt.icon), "utf8")).toBe("<svg>next to source</svg>");
-    expect(await readFile(path.join(dir, prompt.requesterIcon), "utf8")).toBe("<svg>in assets</svg>");
+    const [beside, inAssets] = manifest.steps.map((step) => (step.overlays[0] as { src: string }).src);
+    expect(beside).not.toBe(inAssets);
+    expect(await readFile(path.join(dir, beside!), "utf8")).toBe("<svg>next to source</svg>");
+    expect(await readFile(path.join(dir, inAssets!), "utf8")).toBe("<svg>in assets</svg>");
   });
 
   describe("asset safety", () => {
-    const withIcon = (icon: string) =>
-      `title: X\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, icon: "${icon}", actions: [{ label: OK }] }\n`;
+    const withIcon = (src: string) =>
+      `title: X\nsteps:\n  - id: a\n    title: A\n    overlay: { type: image, src: "${src}", alt: X }\n`;
 
     it("rejects paths that leave the walkthrough's folder", async () => {
       const root = await tempDir();
@@ -168,11 +171,11 @@ describe("generator", () => {
     });
   });
 
-  it("reports a missing icon", async () => {
+  it("reports a missing image", async () => {
     const src = await tempDir();
     await writeFile(
       path.join(src, "x.yaml"),
-      "title: X\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, icon: nope.svg, actions: [{ label: OK }] }\n",
+      "title: X\nsteps:\n  - id: a\n    title: A\n    overlay: { type: image, src: nope.svg, alt: X }\n",
     );
     await expect(generateAll({ sourceDir: src, outDir: src, check: true })).rejects.toThrow(/Image not found: nope\.svg/);
   });
@@ -181,7 +184,10 @@ describe("generator", () => {
     const src = await tempDir();
     const out = await tempDir();
     await writeFile(path.join(src, "good.yaml"), "title: OK\nsteps:\n  - id: a\n    title: A\n    terminal: { output: hi }\n");
-    await writeFile(path.join(src, "bad-ref.yaml"), "title: Bad\nsteps:\n  - id: a\n    title: A\n    overlay: { type: auth-prompt, title: T, message: M, actions: [{ label: Go, next: missing }] }\n");
+    await writeFile(
+      path.join(src, "bad-ref.yaml"),
+      'title: Bad\nsteps:\n  - id: a\n    title: A\n    overlay: { type: image, src: p.svg, alt: P, actions: [{ label: Go, area: { x: "1%", y: "1%", width: "9%", height: "9%" }, next: missing }] }\n',
+    );
     await writeFile(path.join(src, "bad-image.yaml"), "title: Bad\nsteps:\n  - id: a\n    title: A\n    overlay: { type: image, src: nope.png, alt: x }\n");
 
     const error = (await generateAll({ sourceDir: src, outDir: out }).catch((e: unknown) => e)) as Error;
