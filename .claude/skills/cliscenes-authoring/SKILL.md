@@ -26,15 +26,14 @@ The complete format is in `docs/authoring.md`. Read it before writing anything. 
 
 ## Choosing pieces
 
-**Overlay type** (UI outside the terminal):
+**Overlay** (UI outside the terminal). `image` is the only type: show a picture of the real app — a screenshot, or a frame from the design — never a drawing assembled from fields. There are two ways to use one:
 
-| The person needs to… | Use | Can wait for them |
+| The person needs to… | Use | Waits for them |
 | --- | --- | --- |
-| Approve or deny a request in a desktop app | `auth-prompt` | Yes, through `actions` |
-| See a simple app window with text and buttons | `app-window` | Yes, through `actions` |
-| See a screenshot or illustration | `image` (local file, with required `alt` text). With no `actions` it just shows for `pause` seconds, needs no layer names, positions file or Figma link, and works with any image | No |
-| See an app's real prompt, such as Touch ID | `image` with `frame: false`. Add `actions` for buttons the person clicks, each with an `area` (a measured percentage) or a `layer` (a name looked up in the image's `.layers.json`, see `demos/figma-touch-id.yaml`). Or give the step a `pause` to close it by itself. Optional `animation` (CSS) and `figma` link | Yes, through `actions` |
-| Read a short explanation | `annotation` | No |
+| See a screenshot, illustration or settings pane | `image` (local file, with required `alt` text) and no `actions`. It shows for `pause` seconds and moves on. Needs no layer names, positions file or Figma link, and works with any image | No |
+| Click a button in an app's real prompt, such as Touch ID | `image` with `frame: false` and `actions`, one per button, each with an `area` (a measured percentage) or a `layer` (a name looked up in the image's `.layers.json`, see `demos/figma-touch-id.yaml`). Optional `animation` (CSS) and `figma` link | Yes, with `waitForAction: true` |
+
+If the person asks for a dialog, window or callout that isn't a picture, tell them to supply an image of it. There is nothing to draw one with.
 
 **Flow control:**
 
@@ -55,12 +54,12 @@ Validation can't tell a missing `finish: true` from a deliberate skip ahead, so 
 ## Rules
 
 - **No real secrets or personal data.** Use fictional accounts (`demo@example.com`) and placeholder IDs. Make secrets unmistakably fake, such as `EXAMPLE-not-a-real-password-0000`, never something that looks real.
-- **Branding.** When documenting your own product, use its real name, icon (`icon:` on `auth-prompt`), and colors (`theme.accent`). Otherwise use the fictional `your-cli` and `YourApp`. Never copy another company's logo, colors, or exact interface. Describing the structure of a flow is fine.
+- **Branding.** When documenting your own product, use its real name, its own screenshots or design exports, and its colors (`theme.accent`). Otherwise use the fictional `your-cli` and `YourApp`. Never copy another company's logo, colors, or exact interface. Describing the structure of a flow is fine.
 - **Plausible output.** Write output the way the real tool would print it. When documenting a real CLI, copy its actual output, with secrets and personal details removed.
 - **Accessibility.**
   - Every `image` needs `alt` text that says what the person should notice.
   - Action labels must make sense on their own, like "Approve" or "Deny" rather than "Click here".
-  - Keep annotations to one or two sentences.
+  - Say what matters in the step's `title` and the terminal output, not in the picture alone.
 - **Readable terminals.** Use `terminal.cols` of about 64 for walkthroughs that will be read on phones or in narrow docs columns such as Mintlify. Use 80 for wide layouts.
 - **Theme.** Set only `theme.accent` unless there's a reason to set more. The text color on the accent is chosen automatically. A hand-picked `accentText` that's hard to read fails validation.
 

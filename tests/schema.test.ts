@@ -16,36 +16,19 @@ describe("source schema", () => {
     const demo = demoSchema.parse(parse(SIGNIN_YAML));
     expect(demo.terminal).toEqual({ cols: 80, rows: 16, prompt: "$ ", typingSpeed: 0.05 });
     expect(demo.steps[0]!.terminal?.typing).toBe(true);
-    expect(demo.steps[1]!.overlay).toMatchObject({ type: "auth-prompt", app: "Desktop app" });
+    expect(demo.steps[1]!.overlay).toMatchObject({ type: "image", frame: false });
   });
 
-  it("accepts every overlay type", () => {
+  it("accepts an image on its own, with a caption, and with click areas", () => {
     const steps = [
-      { id: "a", title: "A", overlay: { type: "auth-prompt", title: "T", message: "M", actions: [{ label: "OK" }] } },
-      { id: "b", title: "B", overlay: { type: "app-window", title: "App", body: "Hello", fields: [{ label: "x", value: "y" }] } },
-      { id: "c", title: "C", overlay: { type: "image", src: "assets/x.png", alt: "Alt" } },
-      { id: "d", title: "D", overlays: [{ type: "annotation", text: "Note" }] },
+      { id: "a", title: "A", overlay: { type: "image", src: "assets/x.png", alt: "Alt" } },
+      { id: "b", title: "B", overlay: { type: "image", src: "assets/x.png", alt: "Alt", caption: "A caption", frame: false } },
+      { id: "c", title: "C", overlay: { type: "image", src: "p.svg", alt: "P", actions: [{ label: "OK", area: { x: "10%", y: "70%", width: "30%", height: "12%" } }] } },
+      { id: "d", title: "D", overlays: [{ type: "image", src: "assets/x.png", alt: "" }] },
     ];
     expect(problems(minimal(steps))).toEqual([]);
-  });
-
-  it("accepts the optional auth-prompt details and defaults verification to none", () => {
-    const prompt = {
-      type: "auth-prompt",
-      requester: "Terminal",
-      title: "Allow?",
-      message: "M",
-      account: { name: "Demo Account", email: "demo@example.com" },
-      details: ["Run commands as you"],
-      verification: "biometric",
-      actions: [{ label: "Approve" }],
-    };
-    expect(problems(minimal([{ id: "a", title: "A", overlay: prompt }]))).toEqual([]);
-    const plain = demoSchema.parse(minimal([{ id: "a", title: "A", overlay: { ...prompt, verification: undefined } }]));
-    expect(plain.steps[0]!.overlay).toMatchObject({ verification: "none" });
-    expect(problems(minimal([{ id: "a", title: "A", overlay: { ...prompt, verification: "face" } }]))[0]).toMatch(
-      /verification/,
-    );
+    // `frame` defaults on, so a plain screenshot gets a card around it.
+    expect(demoSchema.parse(minimal(steps)).steps[0]!.overlay).toMatchObject({ frame: true });
   });
 
   it("accepts prerequisites", () => {
@@ -55,7 +38,7 @@ describe("source schema", () => {
 
   it("rejects an action pointing at an unknown step", () => {
     const steps = [
-      { id: "a", title: "A", overlay: { type: "auth-prompt", title: "T", message: "M", actions: [{ label: "OK", next: "nope" }] } },
+      { id: "a", title: "A", overlay: { type: "image", src: "p.svg", alt: "P", actions: [{ label: "OK", area: { x: "10%", y: "70%", width: "30%", height: "12%" }, next: "nope" }] } },
     ];
     expect(problems(minimal(steps))).toEqual([
       'steps[0].overlay.actions[0].next: Unknown step "nope". Known steps: a.',
@@ -71,18 +54,18 @@ describe("source schema", () => {
   });
 
   it("rejects waitForAction without any action to click", () => {
-    const steps = [{ id: "a", title: "A", overlay: { type: "annotation", text: "Hi" }, waitForAction: true }];
+    const steps = [{ id: "a", title: "A", overlay: { type: "image", src: "p.svg", alt: "P" }, waitForAction: true }];
     expect(problems(minimal(steps))[0]).toMatch(/^steps\[0\]\.waitForAction: .*stuck/);
   });
 
   it("rejects empty steps, mixed overlay keys, and conflicting stops", () => {
     expect(problems(minimal([{ id: "a", title: "A" }]))[0]).toMatch(/needs a terminal block, an overlay, or both/);
-    const both = { type: "annotation", text: "x" };
+    const both = { type: "image", src: "p.svg", alt: "P" };
     expect(problems(minimal([{ id: "a", title: "A", overlay: both, overlays: [both] }]))[0]).toMatch(/not both/);
     const gatedFinish = {
       id: "a",
       title: "A",
-      overlay: { type: "auth-prompt", title: "T", message: "M", actions: [{ label: "OK" }] },
+      overlay: { type: "image", src: "p.svg", alt: "P", actions: [{ label: "OK", area: { x: "10%", y: "70%", width: "30%", height: "12%" } }] },
       waitForAction: true,
       finish: true,
     };

@@ -213,252 +213,16 @@
 
 /* Overlays --------------------------------------------------------------- */
 
-.cs-window,
 .cs-image {
+  margin: 0;
+  padding: 8px;
   border: 1px solid var(--cs-border);
   border-radius: var(--cs-radius);
   background: var(--cs-surface);
 }
 
-/* Auth prompt: a plain wireframe window, matching the app window.
-   Only the primary button uses the accent color. */
-
-.cs-auth {
-  overflow: hidden;
-  border: 1px solid var(--cs-border);
-  border-radius: var(--cs-radius);
-  background: var(--cs-surface);
-  text-align: center;
-}
-
-.cs-auth .cs-window__chrome {
-  text-align: left;
-}
-
-.cs-auth__body {
-  padding: 16px 20px 18px;
-}
-
-.cs-auth__parties {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.cs-auth__party {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  width: 96px;
-}
-
-.cs-auth__party-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--cs-border);
-  border-radius: 10px;
-  background: var(--cs-surface-muted);
-  color: var(--cs-text-muted);
-}
-
-.cs-auth__party-icon--custom {
-  display: block;
-  padding: 0;
-  border: 0;
-  background: none;
-  object-fit: contain;
-}
-
-.cs-auth__party-label {
-  max-width: 100%;
-  color: var(--cs-text-muted);
-  font-size: 0.72rem;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.cs-auth__link {
-  display: inline-flex;
-  gap: 4px;
-  margin-top: 19px;
-}
-
-.cs-auth__link span {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--cs-border);
-}
-
-.cs-auth__title {
-  margin: 0 0 4px;
-  font-size: 1rem;
-  line-height: 1.3;
-}
-
-.cs-auth__message {
-  margin: 0 auto;
-  max-width: 34ch;
-  color: var(--cs-text-muted);
-  font-size: 0.86rem;
-}
-
-.cs-auth__account {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0 0;
-  padding: 8px 10px;
-  border: 1px solid var(--cs-border);
-  border-radius: 8px;
-  text-align: left;
-}
-
-.cs-auth__avatar {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--cs-border);
-  border-radius: 50%;
-  background: var(--cs-surface-muted);
-  color: var(--cs-text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.cs-auth__account-text {
-  display: grid;
-  min-width: 0;
-  line-height: 1.3;
-}
-
-.cs-auth__account-name {
-  font-size: 0.86rem;
-  font-weight: 600;
-}
-
-.cs-auth__account-email {
-  overflow: hidden;
-  color: var(--cs-text-muted);
-  font-size: 0.78rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cs-auth__details {
-  display: grid;
-  gap: 0;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.82rem;
-  text-align: left;
-}
-
-.cs-auth__details li {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  padding: 6px 2px;
-  border-top: 1px solid var(--cs-border);
-}
-
-.cs-auth__details li:first-child {
-  border-top: 0;
-}
-
-.cs-auth__check {
-  flex: none;
-  margin-top: 2px;
-  color: var(--cs-text-muted);
-}
-
-.cs-auth__verify {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  margin-top: 12px;
-  color: var(--cs-text-muted);
-  font-size: 0.78rem;
-}
-
-.cs-auth__fingerprint {
-  color: var(--cs-text-muted);
-}
-
-.cs-auth__password {
-  display: grid;
-  gap: 4px;
-  margin-top: 14px;
-  text-align: left;
-}
-
-.cs-auth__password-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.cs-auth__password-field {
-  padding: 6px 10px;
-  border: 1px solid var(--cs-border);
-  border-radius: 8px;
-  letter-spacing: 0.15em;
-}
-
-.cs-auth__waiting {
-  margin: 12px 0 0;
-  color: var(--cs-text-muted);
-  font-size: 0.78rem;
-}
-
-.cs-auth__actions .cs-actions {
-  display: grid;
-  grid-auto-columns: 1fr;
-  grid-auto-flow: column;
-  margin-top: 14px;
-}
-
-.cs-window {
-  overflow: hidden;
-}
-
-.cs-window__chrome {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--cs-border);
-  background: var(--cs-surface-muted);
-  font-size: 0.85rem;
-}
-
-.cs-window__dots {
-  display: inline-flex;
-  gap: 6px;
-}
-
-.cs-window__dots span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--cs-border);
-}
-
-.cs-window__title {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Marks every app window as practice, not a real app. */
-.cs-window__simulated {
+/* Marks an image shown as a dialog as practice, not a real app. */
+.cs-image__simulated {
   flex: none;
   margin-left: auto;
   padding: 0 7px;
@@ -469,54 +233,6 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1.6;
-}
-
-.cs-window__body {
-  padding: 14px 16px 16px;
-  font-size: 0.92rem;
-}
-
-.cs-window__body > p {
-  margin: 0 0 10px;
-}
-
-.cs-window__heading {
-  margin: 0 0 6px;
-  font-size: 1rem;
-}
-
-.cs-window__fields {
-  display: grid;
-  gap: 6px;
-  margin: 0 0 12px;
-}
-
-.cs-window__field {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--cs-surface-muted);
-}
-
-.cs-window__field dt {
-  font-weight: 500;
-}
-
-.cs-window__field dd {
-  margin: 0;
-  color: var(--cs-text-muted);
-}
-
-.cs-note {
-  color: var(--cs-text-muted);
-  font-size: 0.85rem;
-}
-
-.cs-image {
-  margin: 0;
-  padding: 8px;
 }
 
 .cs-image img {
@@ -549,7 +265,7 @@
   align-items: center;
 }
 
-.cs-image--bare .cs-window__simulated {
+.cs-image--bare .cs-image__simulated {
   background: var(--cs-surface);
 }
 
@@ -588,41 +304,7 @@
   outline-width: 3px;
 }
 
-.cs-annotation {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 10px 12px;
-  border-radius: var(--cs-radius);
-  background: var(--cs-accent-soft);
-  font-size: 0.9rem;
-}
-
-.cs-annotation p {
-  margin: 0;
-}
-
-.cs-annotation__mark {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  margin-top: 1px;
-  border-radius: 50%;
-  background: var(--cs-accent);
-  color: var(--cs-accent-text);
-  font: italic 700 0.75rem/1 Georgia, serif;
-}
-
 /* Buttons ---------------------------------------------------------------- */
-
-.cs-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
 
 .cs-button {
   min-height: 36px;
@@ -633,11 +315,6 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-}
-
-.cs-button--primary {
-  background: var(--cs-accent);
-  color: var(--cs-accent-text);
 }
 
 .cs-button--secondary {
@@ -806,10 +483,7 @@
 
 /* Motion: only animate for readers who have not asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .cs-auth,
-  .cs-window,
-  .cs-image,
-  .cs-annotation {
+  .cs-image {
     animation: cs-appear 160ms ease-out;
   }
   @keyframes cs-appear {

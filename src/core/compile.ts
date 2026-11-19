@@ -185,37 +185,26 @@ export function compileDemo(source: DemoSource, options: CompileOptions): Compil
 export type RewriteAsset = (src: string, options?: { animation?: string; reducedMotion?: boolean }) => string;
 
 /**
- * Point every local file an overlay references at its copy in the output
- * folder, and drop source-only fields that readers don't need.
+ * Point the image an overlay shows at its copy in the output folder, and drop
+ * source-only fields that readers don't need.
  */
 function rewriteOverlay(overlay: Overlay, rewriteAsset?: RewriteAsset): Overlay {
-  if (overlay.type === "image") {
-    // `animation` is built into the image, and `figma` may be an internal link.
-    const { animation, figma: _figma, ...rest } = overlay;
-    // Layer names are resolved into areas before compiling; don't publish them.
-    const published = rest.actions ? { ...rest, actions: rest.actions.map(({ layer: _layer, ...action }) => action) } : rest;
-    if (!rewriteAsset) return published;
-    // An animated SVG gets a reduced-motion copy unless the author chose one.
-    const srcReducedMotion = overlay.srcReducedMotion
-      ? rewriteAsset(overlay.srcReducedMotion)
-      : animation
-        ? rewriteAsset(overlay.src, { animation, reducedMotion: true })
-        : undefined;
-    return {
-      ...published,
-      src: rewriteAsset(overlay.src, animation ? { animation } : undefined),
-      ...(srcReducedMotion ? { srcReducedMotion } : {}),
-    };
-  }
-  if (!rewriteAsset) return overlay;
-  if (overlay.type === "auth-prompt") {
-    return {
-      ...overlay,
-      ...(overlay.icon ? { icon: rewriteAsset(overlay.icon) } : {}),
-      ...(overlay.requesterIcon ? { requesterIcon: rewriteAsset(overlay.requesterIcon) } : {}),
-    };
-  }
-  return overlay;
+  // `animation` is built into the image, and `figma` may be an internal link.
+  const { animation, figma: _figma, ...rest } = overlay;
+  // Layer names are resolved into areas before compiling; don't publish them.
+  const published = rest.actions ? { ...rest, actions: rest.actions.map(({ layer: _layer, ...action }) => action) } : rest;
+  if (!rewriteAsset) return published;
+  // An animated SVG gets a reduced-motion copy unless the author chose one.
+  const srcReducedMotion = overlay.srcReducedMotion
+    ? rewriteAsset(overlay.srcReducedMotion)
+    : animation
+      ? rewriteAsset(overlay.src, { animation, reducedMotion: true })
+      : undefined;
+  return {
+    ...published,
+    src: rewriteAsset(overlay.src, animation ? { animation } : undefined),
+    ...(srcReducedMotion ? { srcReducedMotion } : {}),
+  };
 }
 
 function round(n: number) {

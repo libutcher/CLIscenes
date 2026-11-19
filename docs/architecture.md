@@ -12,7 +12,7 @@ CLIscenes has three layers. Only the middle one is original. The other two are t
 | --- | --- | --- |
 | **Terminal playback** | Renders commands and output as selectable text | asciinema-player, wrapped by `src/player/terminal/asciinemaAdapter.ts` |
 | **Walkthrough orchestration** | Owns the timeline: which step is current, whether playback is waiting, which gates are answered | `src/core/orchestrator.ts` |
-| **UI simulation** | Draws prompts, app windows, screenshots, and annotations from orchestrator state | `src/player/overlays/` |
+| **UI simulation** | Shows the images an author supplies — prompts, windows, screenshots — from orchestrator state | `src/player/overlays/` |
 
 ## Folder layout
 
@@ -111,15 +111,17 @@ The orchestrator is the single source of truth. The terminal is only a renderer 
 
 ## Adding an overlay type
 
-1. **Schema:** in `src/core/schema.ts`, add a `z.strictObject({ type: z.literal("my-type"), ... })` and add it to `overlaySchema`.
-2. **Component:** create `src/player/overlays/MyType.tsx`. It receives `OverlayProps` (`overlay`, `waiting`, `baseUrl`, `onAction`). Use the shared `Actions` component for buttons.
+`image` is currently the only type, so an app's prompt, window or settings is shown as a picture of the real thing rather than as a drawing assembled from fields. Earlier versions also drew `auth-prompt`, `app-window` and `annotation` overlays; they were removed because an image of the real design is both more accurate and less to maintain. Adding a type back:
+
+1. **Schema:** in `src/core/schema.ts`, add a `z.strictObject({ type: z.literal("my-type"), ... })`, and make `overlaySchema` a `z.discriminatedUnion("type", [...])` over the types. `type` is already on every overlay, so existing files don't change.
+2. **Component:** create `src/player/overlays/MyType.tsx`. It receives `OverlayProps` (`overlay`, `waiting`, `baseUrl`, `onAction`).
 3. **Register it:** add it to `overlayComponents` in `src/player/overlays/registry.tsx`. TypeScript reports an error until you do.
 4. **Styles:** add `cs-`-prefixed styles to `src/player/player.css`. Scope every rule to `.cs-walkthrough` or a `cs-` class, so the library never styles the host page.
 5. **Tests and docs:** add a case to `tests/schema.test.ts` and document the fields in `docs/authoring.md`.
 
-If the overlay references files (like `image`, or the icons on `auth-prompt`), extend `rewriteOverlay` in `compile.ts`. The generator copies anything passed to `rewriteAsset`.
+If the overlay references files, extend `rewriteOverlay` in `compile.ts`. The generator copies anything passed to `rewriteAsset`.
 
-If readers can answer a gate with the new overlay, update `overlayCanAnswerGate` in `schema.ts`, and call `onAction` from the component when they do (see `AuthPrompt.tsx`).
+If readers can answer a gate with the new overlay, update `overlayCanAnswerGate` in `schema.ts` (it currently just looks for image `actions`), and call `onAction` from the component when they do (see `ImageOverlay.tsx`).
 
 ## Replacing the terminal player
 

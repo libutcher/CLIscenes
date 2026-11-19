@@ -42,60 +42,14 @@ Nothing in a source file is ever executed. All output is text you write.
 
 A terminal block needs at least one of `command`, `output`, or `clear: true`.
 
-## Overlay types
+## The overlay: `image`
 
-### `auth-prompt`
+An image is the only overlay. To show an app's prompt, window or settings, use a picture of the real thing — a screenshot, or a frame exported from your design — rather than a drawing of one. That way the reader sees what they will actually see, and the picture is updated by re-exporting it rather than by editing fields here.
 
-A desktop authentication request, drawn as a plain wireframe app window. Only `title`, `message`, and `actions` are required. The other fields add detail so the prompt looks like what the real app shows.
+There are two ways to use one:
 
-```yaml
-overlay:
-  type: auth-prompt
-  app: Example Desktop       # optional, default "Desktop app"; shown in the title bar
-  icon: assets/app-icon.svg  # optional; your app's icon (default: a generic icon)
-  requester: Terminal        # optional; shown as an icon beside the app
-  requesterIcon: assets/terminal.png  # optional (default: a terminal icon)
-  title: Allow CLI sign-in?
-  message: Terminal is running "example signin" and wants to access your account.
-  account:                   # optional
-    name: Demo Account
-    email: demo@example.com  # optional
-  details:                   # optional; what approving allows
-    - Run commands as you from this terminal
-    - Access ends after 30 minutes of inactivity
-  verification: biometric    # optional: none (default), biometric, or password
-  actions:
-    - label: Approve          # goes to the following step
-    - label: Deny
-      style: secondary        # primary (default) or secondary
-      next: denied            # step id to go to
-```
-
-Buttons are laid out the way desktop dialogs usually are: secondary actions on the left, the primary action on the right. `verification: biometric` shows a fingerprint cue, and `password` shows a filled-in, read-only password field. Neither asks the reader for anything real.
-
-Icons are local image files, relative to the source file, like `image` overlays. Square images work best. They're shown at 52 × 52 pixels with rounded corners, so SVG or a PNG of at least 104 × 104 pixels stays sharp.
-
-The prompt is a generic design. Use your own product's icon and colors (see [Theme](#theme)). When you model it on another product's prompt, copy its structure and wording, not its logo or brand colors.
-
-### `app-window`
-
-A simple mock application window with a title bar.
-
-```yaml
-overlay:
-  type: app-window
-  title: Example App — Settings   # title bar text
-  heading: Developer               # optional
-  body: |                          # optional; blank lines separate paragraphs
-    Turn on the integration to continue.
-  fields:                          # optional read-only settings
-    - label: Integration
-      value: "On"
-  actions:                         # optional
-    - label: Done
-  annotations:                     # optional notes inside the window
-    - Select Done to return to the walkthrough.
-```
+- **A static image.** No `actions`: the step shows it for `pause` seconds and moves on. Any image file works, and nothing else is needed.
+- **An image the reader clicks.** With `actions`, each button in the image gets a clickable area, placed by a measured percentage or by the name of its layer in a Figma design.
 
 ### `image`
 
@@ -113,7 +67,7 @@ Write `alt` text that describes what the reader needs from the image. Use `alt: 
 
 An image with no `actions` is simply shown: the step holds it for `pause` seconds and moves on, and the walkthrough never waits. A walkthrough built only from images like that has one path from start to finish, needs no layer names, no positions file, and no Figma link, and works with any image file. Add `actions` when the reader should click something in the image, as described in [Clickable images](#clickable-images).
 
-Image rules, which also apply to `icon` and `requesterIcon`:
+Image rules:
 
 - **Inside the walkthrough's folder:** the file must be in the same folder as the YAML file, or a folder below it, such as `demos/assets/`. Paths with `..`, absolute paths, and symlinks that point outside the folder are rejected. This keeps a walkthrough from publishing other files from your computer.
 - **Images only:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.avif`, or `.svg`.
@@ -157,7 +111,7 @@ An image that closes by itself stays open for the step's `pause`:
 
 #### Clickable images
 
-To make an image wait for the reader, add `actions` and set `waitForAction: true` on the step. Each action is a real button, placed over the button the image shows. It works like the buttons on an `auth-prompt`: `next` chooses the step to go to, so you can branch.
+To make an image wait for the reader, add `actions` and set `waitForAction: true` on the step. Each action is a real button, placed over the button the image shows: `next` chooses the step to go to, so you can branch.
 
 ```yaml
 - id: touch-id
@@ -286,19 +240,9 @@ To test the Figma steps against a real design, make a test file from the example
 
 When you're done, delete `demos/figma-test.yaml` and `demos/assets/figma-test/`, or keep them out of commits.
 
-### `annotation`
-
-A short callout.
-
-```yaml
-overlay:
-  type: annotation
-  text: The CLI waits until you approve the request.
-```
-
 ## Actions and transitions
 
-Actions appear on `auth-prompt` and `app-window` overlays. Clicking an action:
+Actions are the clickable areas on an `image` overlay. Clicking one:
 
 1. marks the step's gate as answered (if the step has `waitForAction`), and
 2. jumps to `next` (or the following step) and plays from there.
@@ -308,7 +252,13 @@ A typical branch:
 ```yaml
 steps:
   - id: approve
-    overlay: { type: auth-prompt, title: Allow?, message: ..., actions: [{ label: Approve }, { label: Deny, next: denied }] }
+    overlay:
+      type: image
+      src: assets/prompt.svg
+      alt: The app asks you to allow the sign-in.
+      actions:
+        - { label: Approve, layer: approve }
+        - { label: Deny, layer: deny, next: denied }
     waitForAction: true
   - id: success
     terminal: { output: Signed in. }

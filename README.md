@@ -2,7 +2,7 @@
 
 CLIscenes turns plain YAML files into interactive walkthroughs of developer workflows that move between a terminal and another app, such as a CLI sign-in that you approve in a desktop app.
 
-The terminal shows commands and output as real text that readers can select and copy. Approval prompts and screenshots appear at the right moment, with short notes that explain each step. When a step needs the reader to act, the walkthrough waits until they do.
+The terminal shows commands and output as real text that readers can select and copy. Your own screenshots and design exports — an approval prompt, a settings pane — appear beside it at the right moment. When a step needs the reader to act, the walkthrough waits until they do.
 
 > **Status:** early release (v0). The format and APIs may change.
 
@@ -31,7 +31,7 @@ Docs usually show this flow with code blocks, screenshots, videos, and prose. Re
 - **Real text.** Readers can select and copy terminal text. A **Copy command** button copies the current command.
 - **Docs as code.** Writers describe steps, commands, output, and apps in YAML or JSON. CLIscenes works out the timing. Error messages name the exact field to fix.
 - **Your own designs.** Show your app's real prompt as an image, such as a Touch ID request. Readers click the buttons it shows, and it can animate. Place each button by measuring it, or by naming its layer in the design so that a design change moves the button and its click area together. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
-- **Clearly practice.** Each app window, and each image shown as a dialog, carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
+- **Clearly practice.** Each image shown as a dialog carries a "Simulated" label. Nothing in a walkthrough runs commands or approves real requests.
 - **Static output.** CLIscenes builds a small web player that you can host anywhere and embed in any docs site.
 
 CLIscenes uses [asciinema-player](https://github.com/asciinema/asciinema-player) to show the terminal.
@@ -131,22 +131,11 @@ To add a walkthrough, create a `.yaml` file in `demos/`. The file name becomes t
 
 [docs/authoring.md](docs/authoring.md) describes the full format.
 
-## Overlay types
-
-An overlay shows an app or note outside the terminal.
-
-| Type | Shows | Can wait for the reader |
-| --- | --- | --- |
-| `auth-prompt` | An app's request for approval | Yes |
-| `app-window` | A simple app window with text and buttons | Yes |
-| `image` | A screenshot, illustration, or an app's real prompt, optionally animated and kept in step with a design | Yes, through clickable areas over its buttons |
-| `annotation` | A short note | No |
-
-[docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add a type.
-
 ## Images: a screenshot to read, or a design to click
 
-An `image` overlay does two jobs, and the difference is whether it has `actions`.
+An image is the only kind of overlay. To show your app's prompt, window or settings, you give CLIscenes a picture of the real thing — a screenshot, or a frame exported from your design — rather than describing a dialog for it to draw. The reader sees what they will actually see, and you update it by exporting it again.
+
+An `image` does two jobs, and the difference is whether it has `actions`. [docs/architecture.md](docs/architecture.md#adding-an-overlay-type) explains how to add another overlay type.
 
 ### A static screenshot, on one path
 
@@ -212,10 +201,9 @@ The GIF at the top of this README is the **Approve** path. Selecting **Cancel** 
 
 You can match a walkthrough to your product without code changes:
 
-- **Icon:** set `icon` on an `auth-prompt` to your app's icon.
-- **Colors:** set `theme.accent` to your brand color. CLIscenes picks a readable text color for you.
-- **Text:** set the app name, title, message, account, and button labels.
-- **Your own design:** show your app's real prompt as an image, with an optional CSS animation, such as a Touch ID sensor reading a fingerprint. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
+- **Your own design:** the prompt the reader sees is your image, so it already looks like your product. Add an optional CSS animation, such as a Touch ID sensor reading a fingerprint. See [Images](#images-a-screenshot-to-read-or-a-design-to-click).
+- **Colors:** set `theme.accent` to your brand color, for the player's own buttons and progress. CLIscenes picks a readable text color for you.
+- **Text:** set the walkthrough's title, each step's title, the commands, and the label on each clickable area.
 
 For example, to use your brand color:
 
@@ -271,7 +259,7 @@ Run `npm run build`, then host the `dist/` folder on any static web server. Add 
 ## Accessibility
 
 - **Controls:** each control is a button with a clear name and a visible focus ring.
-- **Prompts:** each prompt is a labeled dialog. The terminal stays visible behind it.
+- **Prompts:** each image has alt text, and each clickable area is a button with its own label. The terminal stays visible behind the image.
 - **Focus:** when a prompt appears, focus moves to its main button, but only if the reader is already using the walkthrough. This keeps the page from jumping while someone scrolls past it.
 - **Announcements:** screen readers announce each new step and what the walkthrough waits for.
 - **Images:** each image needs alt text.

@@ -120,46 +120,9 @@ export const imageActionSchema = actionSchema
   });
 
 // ---------------------------------------------------------------------------
-// Overlay types. To add a type: add a schema here, add it to `overlaySchema`,
-// then register a component in src/player/overlays/registry.tsx.
+// Overlays. An image is the only kind: to show an app's window, prompt or
+// settings, use a picture of the real thing rather than a drawing of one.
 // ---------------------------------------------------------------------------
-
-export const authPromptSchema = z.strictObject({
-  type: z.literal("auth-prompt"),
-  /** Name of the (fictional) desktop application showing the prompt. */
-  app: text.default("Desktop app"),
-  /** Local image for the app's icon. Defaults to a generic icon. */
-  icon: localPath.optional(),
-  /** The program asking for access, such as "Terminal". Shown beside the app. */
-  requester: text.optional(),
-  /** Local image for the requester's icon. Defaults to a terminal icon. */
-  requesterIcon: localPath.optional(),
-  title: text,
-  message: text,
-  /** The account the request is for. */
-  account: z.strictObject({ name: text, email: text.optional() }).optional(),
-  /** What approving allows, one short line each. */
-  details: z.array(text).optional(),
-  /** How the reader confirms: a fingerprint cue, a (simulated) password field, or buttons only. */
-  verification: z.enum(["none", "biometric", "password"]).default("none"),
-  actions: z.array(actionSchema).min(1),
-});
-
-export const appWindowSchema = z.strictObject({
-  type: z.literal("app-window"),
-  /** Text in the window's title bar. */
-  title: text,
-  heading: text.optional(),
-  /** Body text. Blank lines separate paragraphs. */
-  body: text.optional(),
-  /** Simple labelled settings, rendered as a read-only list. */
-  fields: z
-    .array(z.strictObject({ label: text, value: text }))
-    .optional(),
-  actions: z.array(actionSchema).optional(),
-  /** Short instructional notes rendered inside the window. */
-  annotations: z.array(text).optional(),
-});
 
 export const imageSchema = z
   .strictObject({
@@ -213,21 +176,17 @@ export const imageSchema = z
     }
   });
 
-export const annotationSchema = z.strictObject({
-  type: z.literal("annotation"),
-  text: text,
-});
-
-export const overlaySchema = z.discriminatedUnion("type", [
-  authPromptSchema,
-  appWindowSchema,
-  imageSchema,
-  annotationSchema,
-]);
+/**
+ * The one overlay type. `type` is still named, so a walkthrough reads the same
+ * if another type is added later: add a schema above, make this a
+ * `z.discriminatedUnion("type", [...])` again, and register a component in
+ * src/player/overlays/registry.tsx.
+ */
+export const overlaySchema = imageSchema;
 
 /** True when the reader can do something in this overlay to answer a gate. */
 export function overlayCanAnswerGate(overlay: z.infer<typeof overlaySchema>): boolean {
-  return "actions" in overlay && (overlay.actions?.length ?? 0) > 0;
+  return (overlay.actions?.length ?? 0) > 0;
 }
 
 export const terminalStepSchema = z

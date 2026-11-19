@@ -157,12 +157,14 @@ steps:
     terminal:
       command: demo signin
     overlay:
-      type: auth-prompt
-      title: Allow sign-in?
-      message: Approve to continue.
+      type: image
+      src: prompt.svg
+      alt: The app asks you to allow the sign-in.
       actions:
         - label: Approve
+          area: { x: 10%, y: 70%, width: 30%, height: 12% }
         - label: Deny
+          area: { x: 55%, y: 70%, width: 30%, height: 12% }
           next: denied
     waitForAction: true
   - id: main
