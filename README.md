@@ -4,7 +4,7 @@ CLIscenes turns plain YAML files into interactive walkthroughs of developer work
 
 The terminal shows commands and output as real text that readers can select and copy. Your own screenshots and design exports — an approval prompt, a settings pane — appear beside it at the right moment. When a step needs the reader to act, the walkthrough waits until they do.
 
-> **Status:** early release (v0). The format and APIs may change.
+> **Status:** in development.
 
 In this example, YourApp's Touch ID prompt appears over the terminal. The walkthrough waits until the reader touches the sensor, and takes a different path if they select **Cancel**.
 
